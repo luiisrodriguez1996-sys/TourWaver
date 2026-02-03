@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit3, ExternalLink, MoreVertical, Trash2, Eye, EyeOff, Globe, Briefcase, AlertTriangle } from 'lucide-react';
+import { Edit3, ExternalLink, MoreVertical, Trash2, Eye, EyeOff, Briefcase, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -31,7 +31,8 @@ import { useToast } from '@/hooks/use-toast';
 export default function AdminDashboard() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [tourToDelete, setTourToDelete] = useState<string | null>(null);
+  // Estado para el ID del tour a eliminar
+  const [tourToDeleteId, setTourToDeleteId] = useState<string | null>(null);
   
   const toursRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -52,21 +53,25 @@ export default function AdminDashboard() {
     const tourRef = doc(firestore, 'tours', id);
     updateDocumentNonBlocking(tourRef, { published: !currentStatus });
     toast({
-      title: currentStatus ? "Proyecto Privado" : "Proyecto Publicado",
-      description: currentStatus ? "El tour ya no es visible para el público." : "El tour ahora es accesible mediante su enlace.",
+      title: currentStatus ? (isSpanish ? "Proyecto Privado" : "Private Project") : (isSpanish ? "Proyecto Publicado" : "Project Published"),
+      description: currentStatus ? (isSpanish ? "El tour ya no es visible para el público." : "The tour is no longer visible to the public.") : (isSpanish ? "El tour ahora es accesible mediante su enlace." : "The tour is now accessible via its link."),
     });
   };
 
   const handleDeleteConfirm = () => {
-    if (!firestore || !tourToDelete) return;
-    const tourRef = doc(firestore, 'tours', tourToDelete);
+    if (!firestore || !tourToDeleteId) return;
+    
+    const tourRef = doc(firestore, 'tours', tourToDeleteId);
     deleteDocumentNonBlocking(tourRef);
+    
     toast({
       variant: "destructive",
-      title: "Proyecto Eliminado",
-      description: "El tour y todos sus datos asociados han sido borrados permanentemente.",
+      title: isSpanish ? "Proyecto Eliminado" : "Project Deleted",
+      description: isSpanish ? "El tour ha sido borrado permanentemente." : "The tour has been permanently deleted.",
     });
-    setTourToDelete(null);
+    
+    // Cerramos el diálogo limpiando el ID
+    setTourToDeleteId(null);
   };
 
   if (isLoading) {
@@ -134,7 +139,7 @@ export default function AdminDashboard() {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive" 
-                      onClick={() => setTourToDelete(tour.id)}
+                      onClick={() => setTourToDeleteId(tour.id)}
                     >
                       <Trash2 className="mr-2 h-4 w-4" /> {isSpanish ? 'Eliminar Proyecto' : 'Delete Project'}
                     </DropdownMenuItem>
@@ -168,16 +173,25 @@ export default function AdminDashboard() {
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Briefcase className="text-muted-foreground w-8 h-8" />
           </div>
-          <h2 className="text-xl font-bold mb-2">No tienes proyectos activos</h2>
-          <p className="text-muted-foreground mb-6">Comienza a registrar tu primer encargo profesional.</p>
+          <h2 className="text-xl font-bold mb-2">
+            {isSpanish ? 'No tienes proyectos activos' : 'No active projects'}
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            {isSpanish ? 'Comienza a registrar tu primer encargo profesional.' : 'Start registering your first professional assignment.'}
+          </p>
           <Link href="/admin/tours/new">
-            <Button>Registrar Proyecto</Button>
+            <Button>{isSpanish ? 'Registrar Proyecto' : 'Register Project'}</Button>
           </Link>
         </div>
       )}
 
-      {/* Diálogo de Confirmación de Eliminación */}
-      <AlertDialog open={!!tourToDelete} onOpenChange={(open) => !open && setTourToDelete(null)}>
+      {/* Diálogo de Confirmación de Eliminación robusto */}
+      <AlertDialog 
+        open={tourToDeleteId !== null} 
+        onOpenChange={(open) => {
+          if (!open) setTourToDeleteId(null);
+        }}
+      >
         <AlertDialogContent className="rounded-[2rem]">
           <AlertDialogHeader>
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-2">
