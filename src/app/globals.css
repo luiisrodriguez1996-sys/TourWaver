@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -53,7 +54,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-body;
+    @apply bg-background text-foreground font-body overflow-x-hidden;
   }
   h1, h2, h3, h4, h5, h6 {
     @apply font-headline;
@@ -62,8 +63,16 @@
 
 .panoramic-viewer {
   cursor: grab;
+  touch-action: none !important;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .panoramic-viewer:active {
   cursor: grabbing;
+}
+
+/* Fix for mobile dynamic viewport height */
+.h-dvh {
+  height: 100dvh;
 }

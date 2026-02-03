@@ -82,7 +82,7 @@ export default function PublicTourViewer() {
   // Estado de carga inicial
   if (isTourLoading || (tours === null) || (tour && isScenesLoading) || (tour && !tour.published && isAdminLoading)) {
     return (
-      <div className="h-screen bg-black flex flex-col items-center justify-center text-white gap-4">
+      <div className="h-[100dvh] bg-black flex flex-col items-center justify-center text-white gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <p className="text-sm font-medium animate-pulse">Cargando experiencia inmersiva...</p>
       </div>
@@ -92,7 +92,7 @@ export default function PublicTourViewer() {
   // Si no hay tour o es privado y no es admin
   if (!tour || !canView) {
     return (
-      <div className="h-screen bg-black flex items-center justify-center text-white p-6">
+      <div className="h-[100dvh] bg-black flex items-center justify-center text-white p-6">
         <div className="text-center p-12 bg-white/5 backdrop-blur-lg rounded-[2.5rem] border border-white/10 max-w-md shadow-2xl">
           <div className="w-20 h-20 bg-destructive/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <Globe className="text-destructive w-10 h-10" />
@@ -113,7 +113,7 @@ export default function PublicTourViewer() {
   }
 
   return (
-    <div className="h-screen relative overflow-hidden bg-black flex flex-col">
+    <div className="h-[100dvh] w-full relative overflow-hidden bg-black flex flex-col touch-none">
       {/* Header Info */}
       <div className="absolute top-0 left-0 right-0 p-6 z-20 pointer-events-none flex justify-between items-start">
         <div className="pointer-events-auto">
@@ -166,7 +166,7 @@ export default function PublicTourViewer() {
       </div>
 
       {/* Main Viewer */}
-      <div className="flex-grow">
+      <div className="flex-grow w-full h-full relative">
         {activeScene && (
           <ThreeSixtyViewer 
             imageUrl={activeScene.imageUrl} 
@@ -178,7 +178,7 @@ export default function PublicTourViewer() {
 
       {/* Controls Bar */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4">
-        <div className="bg-black/40 backdrop-blur-md px-6 py-1 rounded-full border border-white/10 flex items-center gap-2 text-white shadow-2xl">
+        <div className="bg-black/40 backdrop-blur-md px-6 py-1 rounded-full border border-white/10 flex items-center gap-2 text-white shadow-2xl pointer-events-auto">
            
            <Popover>
              <PopoverTrigger asChild>

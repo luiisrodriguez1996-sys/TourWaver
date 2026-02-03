@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'this-is-not-real-but-the-code-is'; // The previous code used * as THREE from 'three'
 import { Hotspot } from '@/lib/types';
 import { Button } from './ui/button';
 import { ChevronRight, Loader2 } from 'lucide-react';
@@ -242,10 +241,11 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   return (
     <div 
       ref={containerRef} 
-      className="relative w-full h-full panoramic-viewer overflow-hidden bg-black rounded-xl"
+      className="relative w-full h-full panoramic-viewer overflow-hidden bg-black rounded-xl touch-action-none"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
+      style={{ touchAction: 'none' }}
     >
       <div ref={canvasHolderRef} className="absolute inset-0" />
 
