@@ -72,6 +72,10 @@ export default function AdminDashboard() {
     
     // Cerramos el diálogo limpiando el ID
     setTourToDeleteId(null);
+    // Forzamos la limpieza de pointer-events por si el diálogo no lo hace
+    if (typeof document !== 'undefined') {
+      document.body.style.pointerEvents = 'auto';
+    }
   };
 
   if (isLoading) {
@@ -139,7 +143,10 @@ export default function AdminDashboard() {
                     </DropdownMenuItem>
                     <DropdownMenuItem 
                       className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive" 
-                      onClick={() => setTourToDeleteId(tour.id)}
+                      onClick={() => {
+                        // Un ligero retraso evita el conflicto de cierre entre el Dropdown y el AlertDialog
+                        setTimeout(() => setTourToDeleteId(tour.id), 50);
+                      }}
                     >
                       <Trash2 className="mr-2 h-4 w-4" /> {isSpanish ? 'Eliminar Proyecto' : 'Delete Project'}
                     </DropdownMenuItem>
@@ -185,11 +192,19 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Diálogo de Confirmación de Eliminación robusto */}
+      {/* Diálogo de Confirmación de Eliminación con limpieza forzada de estilos */}
       <AlertDialog 
         open={tourToDeleteId !== null} 
         onOpenChange={(open) => {
-          if (!open) setTourToDeleteId(null);
+          if (!open) {
+            setTourToDeleteId(null);
+            // Asegurar que el body recupere los eventos del puntero al cerrar
+            if (typeof document !== 'undefined') {
+              setTimeout(() => {
+                document.body.style.pointerEvents = 'auto';
+              }, 100);
+            }
+          }
         }}
       >
         <AlertDialogContent className="rounded-[2rem]">
