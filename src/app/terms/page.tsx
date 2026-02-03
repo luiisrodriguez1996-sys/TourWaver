@@ -10,7 +10,7 @@ const content = {
   es: {
     title: "Condiciones de Uso",
     back: "Volver al Inicio",
-    updated: "Última actualización: Marzo 2026",
+    updated: "Última actualización: Enero 2026",
     section1: "1. Aceptación de los Términos",
     text1: "Al acceder y utilizar Tour Weaver, usted acepta estar sujeto a estos términos de servicio. Nuestros servicios están diseñados para profesionales inmobiliarios que buscan mejorar la visualización de sus propiedades.",
     section2: "2. Uso del Servicio",
@@ -21,7 +21,7 @@ const content = {
   en: {
     title: "Terms of Use",
     back: "Back to Home",
-    updated: "Last updated: March 2026",
+    updated: "Last updated: January 2026",
     section1: "1. Acceptance of Terms",
     text1: "By accessing and using Tour Weaver, you agree to be bound by these terms of service. Our services are designed for real estate professionals looking to improve their property visualization.",
     section2: "2. Use of Service",
@@ -32,13 +32,13 @@ const content = {
   pt: {
     title: "Termos de Uso",
     back: "Voltar ao Início",
-    updated: "Última atualização: Março 2026",
+    updated: "Última atualização: Janeiro 2026",
     section1: "1. Aceitação de Termos",
     text1: "Ao acessar e usar o Tour Weaver, você concorda em cumprir estes termos de serviço. Nossos serviços são projetados para profissionais imobiliários que buscam melhorar a visualização de suas propriedades.",
     section2: "2. Uso do Serviço",
     text2: "Você concorda em usar a plataforma de forma ética e profissional. Não é permitido o uso de imagens que não lhe pertençam ou para as cuales você não tenha direitos de distribuição.",
     section3: "3. Propriedade Intelectual",
-    text3: "O software, design e marcas associadas ao Tour Weaver são de propriedade exclusiva da empresa. Os tours generados são de propriedade do cliente de acordo com o contrato de serviço específico."
+    text3: "O software, diseño e marcas associadas ao Tour Weaver são de propriedade exclusiva da empresa. Os tours generados são de propriedade do cliente de acordo com o contrato de serviço específico."
   }
 };
 
@@ -56,7 +56,7 @@ export default function TermsPage() {
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-3xl auto">
         <Link href="/">
           <Button variant="ghost" className="mb-8 gap-2">
             <ArrowLeft className="w-4 h-4" /> {t.back}

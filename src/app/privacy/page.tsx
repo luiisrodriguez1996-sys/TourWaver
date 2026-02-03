@@ -10,7 +10,7 @@ const content = {
   es: {
     title: "Política de Privacidad",
     back: "Volver al Inicio",
-    updated: "Última actualización: Marzo 2026",
+    updated: "Última actualización: Enero 2026",
     section1: "1. Recopilación de Datos",
     text1: "Recopilamos información básica necesaria para proporcionar nuestros servicios de tours virtuales, incluyendo datos de contacto y detalles de las propiedades que desea visualizar.",
     section2: "2. Uso de la Información",
@@ -21,7 +21,7 @@ const content = {
   en: {
     title: "Privacy Policy",
     back: "Back to Home",
-    updated: "Last updated: March 2026",
+    updated: "Last updated: January 2026",
     section1: "1. Data Collection",
     text1: "We collect basic information necessary to provide our virtual tour services, including contact details and details of the properties you wish to visualize.",
     section2: "2. Use of Information",
@@ -32,11 +32,11 @@ const content = {
   pt: {
     title: "Política de Privacidade",
     back: "Voltar ao Início",
-    updated: "Última atualização: Março 2026",
+    updated: "Última atualização: Janeiro 2026",
     section1: "1. Coleta de Dados",
     text1: "Coletamos informações básicas necessárias para fornecer nossos serviços de tours virtuais, incluindo detalhes de contato e detalhes das propriedades que você deseja visualizar.",
     section2: "2. Uso da Informação",
-    text2: "Suas informações são usadas exclusivamente para gerenciar seus tours e melhorar a experiência do usuário. Nunca vendemos seus dados para terceiros.",
+    text2: "Suas informações são usadas exclusivamente para gerenciar seus tours e melhorar a experiência do usuário. Nunca vendemos suas informações para terceiros.",
     section3: "3. Segurança",
     text3: "Implementamos medidas de segurança de nível industrial para proteger suas imagens e dados pessoais. Usamos infraestrutura de nuvem segura e protocolos de criptografia."
   }
