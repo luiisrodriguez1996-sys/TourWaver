@@ -1,0 +1,272 @@
+{
+  "entities": {
+    "Tour": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Tour",
+      "type": "object",
+      "description": "Represents a virtual tour with multiple scenes and hotspots.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Tour entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the tour."
+        },
+        "slug": {
+          "type": "string",
+          "description": "A URL-friendly slug for the tour."
+        },
+        "description": {
+          "type": "string",
+          "description": "A description of the tour."
+        },
+        "published": {
+          "type": "boolean",
+          "description": "Indicates whether the tour is published and publicly accessible."
+        },
+        "floorPlanUrl": {
+          "type": "string",
+          "description": "URL of the floor plan image associated with the tour.",
+          "format": "uri"
+        },
+        "sceneIds": {
+          "type": "array",
+          "description": "References to Scenes. (Relationship: Tour 1:N Scene)",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "slug",
+        "description",
+        "published"
+      ]
+    },
+    "Scene": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Scene",
+      "type": "object",
+      "description": "Represents a 360° scene within a virtual tour.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Scene entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the scene."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the 360° image for the scene.",
+          "format": "uri"
+        },
+        "tourId": {
+          "type": "string",
+          "description": "Reference to Tour. (Relationship: Tour 1:N Scene)"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "imageUrl",
+        "tourId"
+      ]
+    },
+    "Hotspot": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Hotspot",
+      "type": "object",
+      "description": "Represents a hotspot within a 360° scene that allows navigation to other scenes.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Hotspot entity."
+        },
+        "yaw": {
+          "type": "number",
+          "description": "Yaw coordinate of the hotspot."
+        },
+        "pitch": {
+          "type": "number",
+          "description": "Pitch coordinate of the hotspot."
+        },
+        "targetSceneId": {
+          "type": "string",
+          "description": "Reference to Scene. (Relationship: Scene 1:N Hotspot)"
+        },
+        "label": {
+          "type": "string",
+          "description": "Label for the hotspot."
+        },
+        "sceneId": {
+          "type": "string",
+          "description": "Reference to Scene. (Relationship: Scene 1:N Hotspot)"
+        }
+      },
+      "required": [
+        "id",
+        "yaw",
+        "pitch",
+        "targetSceneId",
+        "label",
+        "sceneId"
+      ]
+    },
+    "AdminUser": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminUser",
+      "type": "object",
+      "description": "Represents an administrator user with access to the admin dashboard.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the AdminUser entity."
+        },
+        "email": {
+          "type": "string",
+          "description": "Email address of the administrator.",
+          "format": "email"
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Indicates whether the user has administrative privileges."
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "isAdmin"
+      ]
+    },
+    "SiteConfiguration": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SiteConfiguration",
+      "type": "object",
+      "description": "Represents site-wide configuration settings.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the SiteConfiguration entity.  Only one record should exist."
+        },
+        "defaultLanguage": {
+          "type": "string",
+          "description": "The default language for the site (e.g., 'es' for Spanish, 'en' for English').",
+          "format": "string"
+        }
+      },
+      "required": [
+        "id",
+        "defaultLanguage"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "siteConfigurations/{siteConfigurationId}",
+        "definition": {
+          "entityName": "SiteConfiguration",
+          "schema": {
+            "$ref": "#/backend/entities/SiteConfiguration"
+          },
+          "description": "Stores site-wide configurations, such as the default language.  There should only be one document.",
+          "params": [
+            {
+              "name": "siteConfigurationId",
+              "description": "The ID of the site configuration document. Only one such document is expected."
+            }
+          ]
+        }
+      },
+      {
+        "path": "tours/{tourId}",
+        "definition": {
+          "entityName": "Tour",
+          "schema": {
+            "$ref": "#/backend/entities/Tour"
+          },
+          "description": "Stores tour metadata.",
+          "params": [
+            {
+              "name": "tourId",
+              "description": "The unique identifier for the tour."
+            }
+          ]
+        }
+      },
+      {
+        "path": "tours/{tourId}/scenes/{sceneId}",
+        "definition": {
+          "entityName": "Scene",
+          "schema": {
+            "$ref": "#/backend/entities/Scene"
+          },
+          "description": "Stores scene data associated with a specific tour.",
+          "params": [
+            {
+              "name": "tourId",
+              "description": "The unique identifier for the tour."
+            },
+            {
+              "name": "sceneId",
+              "description": "The unique identifier for the scene."
+            }
+          ]
+        }
+      },
+      {
+        "path": "tours/{tourId}/scenes/{sceneId}/hotspots/{hotspotId}",
+        "definition": {
+          "entityName": "Hotspot",
+          "schema": {
+            "$ref": "#/backend/entities/Hotspot"
+          },
+          "description": "Stores hotspot data associated with a specific scene.",
+          "params": [
+            {
+              "name": "tourId",
+              "description": "The unique identifier for the tour."
+            },
+            {
+              "name": "sceneId",
+              "description": "The unique identifier for the scene."
+            },
+            {
+              "name": "hotspotId",
+              "description": "The unique identifier for the hotspot."
+            }
+          ]
+        }
+      },
+      {
+        "path": "roles_admin/{userId}",
+        "definition": {
+          "entityName": "AdminUser",
+          "schema": {
+            "$ref": "#/backend/entities/AdminUser"
+          },
+          "description": "Collection used to manage administrator roles. Document existence determines admin status.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore data structure is designed to support the Tour Weaver application, emphasizing security, scalability, and maintainability. It incorporates key principles such as Authorization Independence, Structural Segregation, and explicit Access Modeling.  Authorization Independence is achieved by avoiding `get()` calls in security rules, eliminating hierarchical authorization dependencies, and denormalizing authorization data when necessary. This design uses structural segregation to group data with similar access requirements into separate collections. Path-based ownership secures user-specific data, while a dedicated collection secures admin-only data. QAPs (Rules are not Filters) are supported by explicit segregation and membership models.\n\nSpecifically:\n\n*   `siteConfigurations`: This collection holds site-wide configuration data, such as the default language. There will only be one record, so there is no possibility of filtering.\n*   `tours`: Contains all tour documents. The `tours` collection stores metadata about each tour. This is a global collection readable by anyone.\n*   `tours/{tourId}/scenes`: Contains all scene documents that belong to the tour. This is a subcollection under the tours collection.\n*   `tours/{tourId}/scenes/{sceneId}/hotspots`: Contains all hotspot documents that belong to the scene. This is a subcollection under the scenes collection.\n*   `roles_admin/{userId}`: Documents in this collection indicate admin privileges. Existence of a document grants admin access.\n\nTour creation, modification, and publishing are restricted to admins, enforced via the `roles_admin` collection. The site configuration is also restricted to admins."
+  }
+}
