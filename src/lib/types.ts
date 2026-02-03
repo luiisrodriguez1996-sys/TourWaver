@@ -2,11 +2,13 @@
 export interface Tour {
   id: string;
   name: string;
+  clientName: string; // Internal client name
   slug: string;
   description: string;
   published: boolean;
   floorPlanUrl?: string;
   showFloorPlan?: boolean;
+  thumbnailUrl?: string;
   createdAt: number;
   updatedAt: number;
   scenes: Scene[];

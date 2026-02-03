@@ -5,7 +5,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit3, ExternalLink, MoreVertical, Trash2, Eye, EyeOff, Briefcase, AlertTriangle } from 'lucide-react';
+import { Edit3, ExternalLink, MoreVertical, Trash2, Eye, EyeOff, Briefcase, AlertTriangle, User } from 'lucide-react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -31,7 +31,6 @@ import { useToast } from '@/hooks/use-toast';
 export default function AdminDashboard() {
   const firestore = useFirestore();
   const { toast } = useToast();
-  // Estado para el ID del tour a eliminar
   const [tourToDeleteId, setTourToDeleteId] = useState<string | null>(null);
   
   const toursRef = useMemoFirebase(() => {
@@ -70,9 +69,7 @@ export default function AdminDashboard() {
       description: isSpanish ? "El tour ha sido borrado permanentemente." : "The tour has been permanently deleted.",
     });
     
-    // Cerramos el diálogo limpiando el ID
     setTourToDeleteId(null);
-    // Forzamos la limpieza de pointer-events por si el diálogo no lo hace
     if (typeof document !== 'undefined') {
       document.body.style.pointerEvents = 'auto';
     }
@@ -122,7 +119,12 @@ export default function AdminDashboard() {
             </div>
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between">
-                <CardTitle className="text-xl line-clamp-1">{tour.name}</CardTitle>
+                <div>
+                  <div className="flex items-center gap-1.5 text-primary text-[10px] font-bold uppercase mb-1">
+                    <User className="w-3 h-3" /> {tour.clientName || (isSpanish ? 'Sin Cliente' : 'No Client')}
+                  </div>
+                  <CardTitle className="text-xl line-clamp-1">{tour.name}</CardTitle>
+                </div>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -144,7 +146,6 @@ export default function AdminDashboard() {
                     <DropdownMenuItem 
                       className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive" 
                       onClick={() => {
-                        // Un ligero retraso evita el conflicto de cierre entre el Dropdown y el AlertDialog
                         setTimeout(() => setTourToDeleteId(tour.id), 50);
                       }}
                     >
@@ -192,13 +193,11 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Diálogo de Confirmación de Eliminación con limpieza forzada de estilos */}
       <AlertDialog 
         open={tourToDeleteId !== null} 
         onOpenChange={(open) => {
           if (!open) {
             setTourToDeleteId(null);
-            // Asegurar que el body recupere los eventos del puntero al cerrar
             if (typeof document !== 'undefined') {
               setTimeout(() => {
                 document.body.style.pointerEvents = 'auto';

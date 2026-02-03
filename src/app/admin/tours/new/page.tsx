@@ -1,14 +1,14 @@
 
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Globe, ArrowLeft, Upload, Loader2 } from 'lucide-react';
+import { Briefcase, ArrowLeft, Loader2, User } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useFirestore, addDocumentNonBlocking } from '@/firebase';
@@ -20,10 +20,10 @@ export default function NewTour() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [formData, setFormData] = useState({
     name: '',
+    clientName: '',
     slug: '',
     description: ''
   });
@@ -36,16 +36,18 @@ export default function NewTour() {
 
     try {
       const tourData = {
-        ...formData,
+        name: formData.name,
+        clientName: formData.clientName,
+        slug: formData.slug,
+        description: formData.description,
         published: false,
         createdAt: Date.now(),
-        updatedAt: Date.now(),
-        scenes: []
+        updatedAt: Date.now()
       };
       
       const docRef = await addDocumentNonBlocking(collection(firestore, 'tours'), tourData);
       if (docRef) {
-        toast({ title: "Proyecto Inicializado", description: "Ahora añade tus escenas 360°." });
+        toast({ title: "Proyecto Inicializado", description: "Ahora puedes añadir tus escenas 360° en el editor." });
         router.push(`/admin/tours/${docRef.id}`);
       }
     } catch (error) {
@@ -57,27 +59,50 @@ export default function NewTour() {
   return (
     <div className="max-w-2xl mx-auto py-8">
       <Link href="/admin" className="flex items-center gap-2 text-muted-foreground hover:text-primary mb-8 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Volver a Tours
+        <ArrowLeft className="w-4 h-4" /> Volver a Proyectos
       </Link>
 
       <Card className="border-none shadow-xl">
         <CardHeader>
           <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-             <Globe className="text-primary w-6 h-6" />
+             <Briefcase className="text-primary w-6 h-6" />
           </div>
-          <CardTitle className="text-3xl font-bold font-headline">Crear Nuevo Proyecto</CardTitle>
-          <CardDescription>Configura los detalles del encargo inmobiliario.</CardDescription>
+          <CardTitle className="text-3xl font-bold font-headline">Nuevo Encargo Inmobiliario</CardTitle>
+          <CardDescription>Inicializa el proyecto con la información básica del cliente y la propiedad.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre de la Propiedad</Label>
+              <Label htmlFor="clientName" className="flex items-center gap-2">
+                <User className="w-3.5 h-3.5" /> Nombre del Cliente (Uso Interno)
+              </Label>
+              <Input 
+                id="clientName" 
+                placeholder="ej. Juan Pérez / Inmobiliaria Sol" 
+                required 
+                value={formData.clientName}
+                onChange={e => setFormData({ ...formData, clientName: e.target.value })}
+              />
+              <p className="text-[10px] text-muted-foreground italic">Este nombre no será visible en el tour público.</p>
+            </div>
+
+            <Separator />
+
+            <div className="space-y-2">
+              <Label htmlFor="name">Nombre público de la propiedad</Label>
               <Input 
                 id="name" 
                 placeholder="ej. Penthouse Torre Skyline" 
                 required 
                 value={formData.name}
-                onChange={e => setFormData({ ...formData, name: e.target.value, slug: e.target.value.toLowerCase().replace(/ /g, '-') })}
+                onChange={e => {
+                  const name = e.target.value;
+                  setFormData({ 
+                    ...formData, 
+                    name, 
+                    slug: name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '') 
+                  });
+                }}
               />
             </div>
             
@@ -99,38 +124,11 @@ export default function NewTour() {
               <Label htmlFor="description">Notas del Proyecto</Label>
               <Textarea 
                 id="description" 
-                placeholder="Detalles sobre la propiedad, broker o requisitos especiales..." 
+                placeholder="Detalles sobre la propiedad, requisitos especiales del broker..." 
                 rows={4}
                 value={formData.description}
                 onChange={e => setFormData({ ...formData, description: e.target.value })}
               />
-            </div>
-
-            <Separator />
-
-            <div className="space-y-4">
-              <Label>Añadir Escena Inicial</Label>
-              <div className="grid grid-cols-1 gap-4">
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  className="h-24 flex flex-col gap-2 border-dashed border-2 hover:bg-primary/5 hover:border-primary/50"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="w-6 h-6 text-primary" />
-                  <span>Subir Panorámica 360°</span>
-                </Button>
-                
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/*" 
-                />
-              </div>
-              <p className="text-xs text-muted-foreground text-center">
-                Te recomendamos usar fotos panorámicas 2:1 para la mejor experiencia inmersiva.
-              </p>
             </div>
           </CardContent>
           <CardFooter>
@@ -140,7 +138,7 @@ export default function NewTour() {
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Inicializando...
                 </>
-              ) : 'Crear Proyecto y Empezar'}
+              ) : 'Crear Proyecto e Ir al Editor'}
             </Button>
           </CardFooter>
         </form>

@@ -26,7 +26,8 @@ import {
   AlertCircle,
   MapPin,
   Settings,
-  Crosshair
+  Crosshair,
+  User
 } from 'lucide-react';
 import {
   Select,
@@ -63,6 +64,7 @@ export default function TourEditor() {
   
   const [localTourInfo, setLocalTourInfo] = useState({
     name: '',
+    clientName: '',
     description: '',
     floorPlanUrl: '',
     showFloorPlan: false
@@ -79,6 +81,7 @@ export default function TourEditor() {
     if (tour) {
       setLocalTourInfo({
         name: tour.name || '',
+        clientName: tour.clientName || '',
         description: tour.description || '',
         floorPlanUrl: tour.floorPlanUrl || '',
         showFloorPlan: !!tour.showFloorPlan
@@ -239,6 +242,7 @@ export default function TourEditor() {
       if (tourRef && tour) {
         batch.set(tourRef, { 
           name: localTourInfo.name,
+          clientName: localTourInfo.clientName,
           description: localTourInfo.description,
           floorPlanUrl: localTourInfo.floorPlanUrl,
           showFloorPlan: localTourInfo.showFloorPlan,
@@ -305,7 +309,10 @@ export default function TourEditor() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold font-headline">{localTourInfo.name || tour.name}</h1>
+            <div className="flex items-center gap-1.5 text-primary text-[10px] font-bold uppercase">
+              <User className="w-3 h-3" /> {localTourInfo.clientName}
+            </div>
+            <h1 className="text-2xl font-bold font-headline">{localTourInfo.name}</h1>
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               Editor de Proyecto • {localScenes.length} Estancias
               {hasUnsavedChanges && (
@@ -376,9 +383,20 @@ export default function TourEditor() {
 
           <section className="space-y-4 pb-10">
             <h3 className="font-semibold text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <Settings className="w-4 h-4" /> Configuración del Tour
+              <Settings className="w-4 h-4" /> Configuración del Proyecto
             </h3>
             <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Cliente (Privado)</Label>
+                <Input 
+                  value={localTourInfo.clientName} 
+                  className="h-8 text-xs"
+                  onChange={(e) => {
+                    setLocalTourInfo({ ...localTourInfo, clientName: e.target.value });
+                    setHasUnsavedChanges(true);
+                  }}
+                />
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Nombre Público</Label>
                 <Input 

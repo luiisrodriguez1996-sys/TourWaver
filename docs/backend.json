@@ -13,7 +13,11 @@
         },
         "name": {
           "type": "string",
-          "description": "The name of the tour."
+          "description": "The public name of the tour/property."
+        },
+        "clientName": {
+          "type": "string",
+          "description": "The private name of the client associated with this tour."
         },
         "slug": {
           "type": "string",
@@ -42,11 +46,16 @@
           "items": {
             "type": "string"
           }
+        },
+        "thumbnailUrl": {
+          "type": "string",
+          "description": "URL of the thumbnail image for the tour."
         }
       },
       "required": [
         "id",
         "name",
+        "clientName",
         "slug",
         "description",
         "published"
@@ -74,6 +83,21 @@
         "tourId": {
           "type": "string",
           "description": "Reference to Tour. (Relationship: Tour 1:N Scene)"
+        },
+        "description": {
+          "type": "string"
+        },
+        "floorPlanX": {
+          "type": "number"
+        },
+        "floorPlanY": {
+          "type": "number"
+        },
+        "hotspots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/backend/entities/Hotspot"
+          }
         }
       },
       "required": [
