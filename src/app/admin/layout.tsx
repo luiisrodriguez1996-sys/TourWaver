@@ -31,7 +31,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const { data: siteConfig } = useDoc(siteConfigRef);
 
-  const isSpanish = siteConfig?.defaultLanguage !== 'en';
+  const currentLang = siteConfig?.defaultLanguage || 'es';
+
+  const menuText = {
+    es: { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios' },
+    en: { properties: 'Properties', new: 'New Property', settings: 'Settings', logout: 'Logout', owner: 'OWNER', viewSite: 'View Public Site', management: 'Service Management' },
+    pt: { properties: 'Propriedades', new: 'Nova Propriedade', settings: 'Configurações', logout: 'Sair', owner: 'PROPRIETÁRIO', viewSite: 'Ver Site Público', management: 'Gestão de Serviços' }
+  }[currentLang as 'es' | 'en' | 'pt'] || menuText.es;
 
   const handleLogout = async () => {
     try {
@@ -53,7 +59,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // Verificación estricta: debe existir el documento y isAdmin debe ser true (booleano)
   if (!user || !adminData || adminData.isAdmin !== true) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
@@ -62,7 +67,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <LogOut className="text-destructive w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold mb-2">Acceso Denegado</h1>
-          <p className="text-muted-foreground mb-8">Este portal está restringido al propietario. Si eres el administrador, asegúrate de tener los permisos correctos en la base de datos.</p>
+          <p className="text-muted-foreground mb-8">Este portal está restringido al propietario. Si eres el administrador, asegúrate de tener los permisos correctos.</p>
           <Link href="/">
             <Button className="w-full">Volver al Inicio</Button>
           </Link>
@@ -87,20 +92,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <Link href="/admin">
             <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-primary">
               <LayoutDashboard className="w-4 h-4" />
-              Tours
+              {menuText.properties}
             </Button>
           </Link>
           <Link href="/admin/tours/new">
             <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-primary">
               <PlusCircle className="w-4 h-4" />
-              {isSpanish ? 'Nuevo Encargo' : 'New Assignment'}
+              {menuText.new}
             </Button>
           </Link>
           <Separator className="my-4" />
           <Link href="/admin/settings">
             <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-primary">
               <Settings className="w-4 h-4" />
-              {isSpanish ? 'Configuración' : 'Settings'}
+              {menuText.settings}
             </Button>
           </Link>
           <Button 
@@ -109,7 +114,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             onClick={handleLogout}
           >
             <LogOut className="w-4 h-4" />
-            {isSpanish ? 'Cerrar Sesión' : 'Logout'}
+            {menuText.logout}
           </Button>
         </nav>
 
@@ -120,7 +125,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium truncate">{user.email}</p>
-              <p className="text-xs text-muted-foreground truncate uppercase">{isSpanish ? 'PROPIETARIO' : 'OWNER'}</p>
+              <p className="text-xs text-muted-foreground truncate uppercase">{menuText.owner}</p>
             </div>
           </div>
         </div>
@@ -129,16 +134,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <main className="flex-1 md:ml-64 min-h-screen">
         <header className="h-16 border-b bg-white flex items-center justify-between px-8 sticky top-0 z-40">
           <h2 className="text-lg font-semibold text-muted-foreground">
-            {isSpanish ? 'Gestión de Servicios' : 'Service Management'}
+            {menuText.management}
           </h2>
           <div className="flex items-center gap-4">
              <div className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                <Languages className="w-4 h-4" />
-               <span>{isSpanish ? 'Español' : 'English'}</span>
+               <span className="uppercase">{currentLang}</span>
              </div>
              <Link href="/" target="_blank" rel="noopener noreferrer">
                <Button className="bg-accent text-white hover:bg-accent/90 border-none shadow-sm" size="sm">
-                 {isSpanish ? 'Ver Sitio Público' : 'View Public Site'}
+                 {menuText.viewSite}
                </Button>
              </Link>
           </div>
