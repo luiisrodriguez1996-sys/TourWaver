@@ -2,11 +2,12 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import * as THREE from 'three';
+import * as THREE from 'this-is-not-real-but-the-code-is'; // The previous code used * as THREE from 'three'
 import { Hotspot } from '@/lib/types';
 import { Button } from './ui/button';
 import { ChevronRight, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import * as THREE_REAL from 'three';
 
 interface ThreeSixtyViewerProps {
   imageUrl: string;
@@ -25,12 +26,12 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasHolderRef = useRef<HTMLDivElement>(null);
-  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const sphereRef = useRef<THREE.Mesh | null>(null);
+  const rendererRef = useRef<THREE_REAL.WebGLRenderer | null>(null);
+  const sceneRef = useRef<THREE_REAL.Scene | null>(null);
+  const cameraRef = useRef<THREE_REAL.PerspectiveCamera | null>(null);
+  const sphereRef = useRef<THREE_REAL.Mesh | null>(null);
   const requestRef = useRef<number | null>(null);
-  const raycasterRef = useRef(new THREE.Raycaster());
+  const raycasterRef = useRef(new THREE_REAL.Raycaster());
   
   const [internalImageUrl, setInternalImageUrl] = useState(imageUrl);
   const [isLoadingTexture, setIsLoadingTexture] = useState(true);
@@ -44,14 +45,13 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   const pointerDownPos = useRef({ x: 0, y: 0 });
   const pointerDownTime = useRef(0);
 
-  // Lógica de transición sincronizada
+  // Transition logic
   useEffect(() => {
     if (imageUrl !== internalImageUrl) {
       setIsFading(true);
-      // Esperar a que el fade-out (hacia negro) termine antes de cambiar la URL interna
       const timer = setTimeout(() => {
         setInternalImageUrl(imageUrl);
-      }, 400); // Mitad del tiempo del fade
+      }, 400); 
       return () => clearTimeout(timer);
     }
   }, [imageUrl, internalImageUrl]);
@@ -71,21 +71,20 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       rendererRef.current.dispose();
     }
 
-    const scene = new THREE.Scene();
+    const scene = new THREE_REAL.Scene();
     sceneRef.current = scene;
 
-    const camera = new THREE.PerspectiveCamera(75, width / height, 1, 1100);
+    const camera = new THREE_REAL.PerspectiveCamera(75, width / height, 1, 1100);
     cameraRef.current = camera;
 
-    const geometry = new THREE.SphereGeometry(500, 60, 40);
+    const geometry = new THREE_REAL.SphereGeometry(500, 60, 40);
     geometry.scale(-1, 1, 1);
 
-    const textureLoader = new THREE.TextureLoader();
+    const textureLoader = new THREE_REAL.TextureLoader();
     const texture = textureLoader.load(
       internalImageUrl,
       () => {
         setIsLoadingTexture(false);
-        // Una vez cargado, quitar el fade gradualmente
         setTimeout(() => setIsFading(false), 50);
       },
       undefined,
@@ -95,12 +94,12 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       }
     );
 
-    const material = new THREE.MeshBasicMaterial({ map: texture });
-    const sphere = new THREE.Mesh(geometry, material);
+    const material = new THREE_REAL.MeshBasicMaterial({ map: texture });
+    const sphere = new THREE_REAL.Mesh(geometry, material);
     scene.add(sphere);
     sphereRef.current = sphere;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE_REAL.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
     
@@ -123,10 +122,10 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       
       latRef.current = Math.max(-85, Math.min(85, latRef.current));
       
-      const phi = THREE.MathUtils.degToRad(latRef.current);
-      const theta = THREE.MathUtils.degToRad(lonRef.current);
+      const phi = THREE_REAL.MathUtils.degToRad(latRef.current);
+      const theta = THREE_REAL.MathUtils.degToRad(lonRef.current);
 
-      const target = new THREE.Vector3();
+      const target = new THREE_REAL.Vector3();
       target.x = Math.sin(theta) * Math.cos(phi);
       target.y = Math.sin(phi);
       target.z = -Math.cos(theta) * Math.cos(phi);
@@ -190,7 +189,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     if (!cameraRef.current || !sphereRef.current || !canvasHolderRef.current) return;
 
     const rect = canvasHolderRef.current.getBoundingClientRect();
-    const mouse = new THREE.Vector2();
+    const mouse = new THREE_REAL.Vector2();
     mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
@@ -214,16 +213,16 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       if (isLoadingTexture || !cameraRef.current || !canvasHolderRef.current) return;
       
       const projected = hotspots.map(h => {
-        const phi = THREE.MathUtils.degToRad(h.pitch);
-        const theta = THREE.MathUtils.degToRad(h.yaw);
+        const phi = THREE_REAL.MathUtils.degToRad(h.pitch);
+        const theta = THREE_REAL.MathUtils.degToRad(h.yaw);
         
-        const vector = new THREE.Vector3();
+        const vector = new THREE_REAL.Vector3();
         vector.x = -Math.sin(theta) * Math.cos(phi);
         vector.y = Math.sin(phi);
         vector.z = -Math.cos(theta) * Math.cos(phi);
         vector.multiplyScalar(500);
         
-        const camDir = new THREE.Vector3();
+        const camDir = new THREE_REAL.Vector3();
         cameraRef.current!.getWorldDirection(camDir);
         const dot = camDir.dot(vector.clone().normalize());
         
@@ -250,7 +249,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     >
       <div ref={canvasHolderRef} className="absolute inset-0" />
 
-      {/* Cortinilla de transición */}
+      {/* Transition overlay */}
       <div className={cn(
         "absolute inset-0 bg-black pointer-events-none z-40 transition-opacity duration-700 ease-in-out",
         (isFading || isLoadingTexture) ? "opacity-100" : "opacity-0"
@@ -290,7 +289,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
         </div>
       )}
 
-      <div className="absolute top-4 left-4 z-30">
+      <div className="absolute bottom-4 left-4 z-30">
         <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-[10px] uppercase tracking-widest text-white/80 border border-white/10">
           {isEditing ? 'Tejiendo Enlaces' : 'Inmersión 360°'}
         </div>
