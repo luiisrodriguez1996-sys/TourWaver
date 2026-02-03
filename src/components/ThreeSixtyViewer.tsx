@@ -72,6 +72,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     cameraRef.current = camera;
 
     const geometry = new THREE.SphereGeometry(500, 60, 40);
+    // Invertimos la esfera para verla desde el interior
     geometry.scale(-1, 1, 1);
 
     const textureLoader = new THREE.TextureLoader();
@@ -84,7 +85,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
         }
       },
       undefined,
-      (err) => {
+      () => {
         setIsLoadingTexture(false);
       }
     );
@@ -165,14 +166,14 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     if (event.isPrimary === false) return;
     setIsUserInteracting(false);
 
-    // Detect if it was a click or a drag
+    // Detectar si fue un clic limpio o un arrastre para rotar
     const moveX = Math.abs(event.clientX - pointerDownPos.current.x);
     const moveY = Math.abs(event.clientY - pointerDownPos.current.y);
     const moveDist = Math.sqrt(moveX * moveX + moveY * moveY);
     const duration = Date.now() - pointerDownTime.current;
 
-    // Threshold: 5px movement and less than 300ms duration for a "click"
-    if (isEditing && onSceneClick && !isLoadingTexture && moveDist < 5 && duration < 300) {
+    // Umbral: menos de 8px de movimiento y menos de 350ms para considerarlo "clic"
+    if (isEditing && onSceneClick && !isLoadingTexture && moveDist < 8 && duration < 350) {
       calculateClickCoordinates(event);
     }
   };
@@ -192,10 +193,14 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       const point = intersects[0].point;
       const radius = 500;
       
-      // Convert Cartesian to Spherical for longitude/latitude
-      // Note: Three.js Y is up. Sphere is mirrored (radius -500).
-      const phi = Math.acos(point.y / radius); // 0 to PI
-      const theta = Math.atan2(point.z, point.x); // -PI to PI
+      // CRÍTICO: Dado que la esfera tiene escala negativa en X (geometry.scale(-1, 1, 1)),
+      // debemos invertir el valor de X del punto de colisión para que los ángulos
+      // coincidan con el sistema de coordenadas "lógico" que usamos para rotar la cámara.
+      const logicalX = -point.x;
+      const logicalZ = point.z;
+      
+      const phi = Math.acos(point.y / radius); // 0 a PI
+      const theta = Math.atan2(logicalZ, logicalX); // -PI a PI
       
       const clickLat = 90 - (phi * 180 / Math.PI);
       const clickLon = (theta * 180 / Math.PI);
@@ -214,10 +219,13 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       500 * Math.sin(phi) * Math.sin(theta)
     );
     vector.project(cameraRef.current);
+    
     const camDir = new THREE.Vector3();
     cameraRef.current.getWorldDirection(camDir);
     const dot = camDir.dot(vector.clone().normalize());
+    
     if (dot < 0) return null;
+    
     const x = (vector.x * 0.5 + 0.5) * canvasHolderRef.current.clientWidth;
     const y = (-(vector.y * 0.5) + 0.5) * canvasHolderRef.current.clientHeight;
     return { x, y };
