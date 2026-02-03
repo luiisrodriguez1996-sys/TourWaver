@@ -26,6 +26,13 @@ import {
   Check,
   AlertCircle
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { suggestSceneLinks } from '@/ai/flows/ai-suggest-scene-links';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
@@ -59,7 +66,6 @@ export default function TourEditor() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Initialize local state from server data once
   useEffect(() => {
     if (serverScenes && localScenes.length === 0) {
       setLocalScenes(serverScenes);
@@ -136,7 +142,7 @@ export default function TourEditor() {
           setActiveSceneId(sceneId);
           setHasUnsavedChanges(true);
           setIsUploading(false);
-          toast({ title: "Escena añadida localmente", description: "Recuerda guardar los cambios para aplicarlos." });
+          toast({ title: "Estancia añadida", description: "Recuerda guardar para confirmar los cambios." });
         } catch (error) {
           setIsUploading(false);
           toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la imagen." });
@@ -153,9 +159,17 @@ export default function TourEditor() {
     setHasUnsavedChanges(true);
   };
 
+  const updateHotspot = (hotspotId: string, updates: Partial<Hotspot>) => {
+    if (!activeScene) return;
+    const updatedHotspots = activeScene.hotspots.map(h => 
+      h.id === hotspotId ? { ...h, ...updates } : h
+    );
+    updateLocalScene({ hotspots: updatedHotspots });
+  };
+
   const addHotspot = (yaw: number, pitch: number) => {
     if (!activeSceneId || localScenes.length < 2) {
-       toast({ variant: "destructive", title: "Acción no permitida", description: "Necesitas al menos dos escenas para crear un enlace." });
+       toast({ variant: "destructive", title: "Acción no permitida", description: "Necesitas al menos dos estancias para crear un enlace." });
        return;
     }
     
@@ -183,25 +197,24 @@ export default function TourEditor() {
     setIsSaving(true);
 
     try {
-      // Deletion of removed scenes (not implemented in local state logic above, 
-      // but if we were to handle deletions properly, we'd compare serverScenes with localScenes)
-      // For simplicity in this MVP, we focus on saving local state.
+      const batch = writeBatch(firestore);
       
       for (const scene of localScenes) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', scene.id);
-        await setDoc(sceneDocRef, scene, { merge: true });
+        batch.set(sceneDocRef, scene, { merge: true });
       }
 
-      // Update tour thumbnail if needed
       if (localScenes.length > 0 && tourRef) {
-        await setDoc(tourRef, { thumbnailUrl: localScenes[0].imageUrl }, { merge: true });
+        batch.set(tourRef, { thumbnailUrl: localScenes[0].imageUrl, updatedAt: Date.now() }, { merge: true });
       }
+
+      await batch.commit();
 
       setHasUnsavedChanges(false);
       setIsSaving(false);
       toast({ 
-        title: "Cambios guardados", 
-        description: "Todo el proyecto ha sido sincronizado con éxito.",
+        title: "Proyecto Guardado", 
+        description: "Todos los cambios han sido sincronizados.",
       });
     } catch (error) {
       setIsSaving(false);
@@ -211,7 +224,7 @@ export default function TourEditor() {
 
   const handleAiSuggest = async () => {
     if (localScenes.length < 2) {
-      toast({ variant: "destructive", title: "Escenas Insuficientes", description: "Añade al menos dos escenas." });
+      toast({ variant: "destructive", title: "Estancias Insuficientes", description: "Añade al menos dos estancias." });
       return;
     }
 
@@ -244,7 +257,7 @@ export default function TourEditor() {
 
       setLocalScenes(newScenes);
       setHasUnsavedChanges(true);
-      toast({ title: "Análisis de IA Completo", description: "Sugerencias añadidas localmente." });
+      toast({ title: "Análisis de IA Completo", description: "Se han añadido sugerencias de enlace." });
     } catch (error) {
       toast({ variant: "destructive", title: "Error de IA", description: "No se pudieron generar sugerencias." });
     } finally {
@@ -254,14 +267,14 @@ export default function TourEditor() {
 
   const deleteActiveScene = () => {
     if (localScenes.length <= 1) {
-       toast({ variant: "destructive", title: "Error", description: "Un tour debe tener al menos una escena." });
+       toast({ variant: "destructive", title: "Error", description: "Un tour debe tener al menos una estancia." });
        return;
     }
     const filtered = localScenes.filter(s => s.id !== activeSceneId);
     setLocalScenes(filtered);
     setActiveSceneId(filtered[0]?.id || null);
     setHasUnsavedChanges(true);
-    toast({ title: "Escena eliminada localmente" });
+    toast({ title: "Estancia eliminada localmente" });
   };
 
   if (isTourLoading || isScenesLoading) {
@@ -331,7 +344,7 @@ export default function TourEditor() {
                 {isUploading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Upload className="w-3 h-3" />}
                 {isUploading ? 'Procesando...' : 'Añadir Panorámica'}
              </Button>
-             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+             <input type="file" hide="true" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
           </div>
 
           <div className="space-y-2 max-h-[300px] lg:max-h-none overflow-y-auto">
@@ -367,7 +380,7 @@ export default function TourEditor() {
               />
             ) : (
               <div className="w-full h-full bg-muted flex items-center justify-center">
-                <p>Añade una escena para empezar</p>
+                <p>Añade una estancia para empezar</p>
               </div>
             )}
           </div>
@@ -404,7 +417,7 @@ export default function TourEditor() {
                 <Label>Notas de Escena</Label>
                 <Textarea 
                   value={activeScene?.description || ''} 
-                  placeholder="Detalles adicionales..." 
+                  placeholder="Detalles adicionales sobre esta zona..." 
                   className="resize-none h-24" 
                   onChange={(e) => updateLocalScene({ description: e.target.value })}
                 />
@@ -415,7 +428,7 @@ export default function TourEditor() {
                 className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10"
                 onClick={deleteActiveScene}
               >
-                <Trash2 className="w-4 h-4" /> Eliminar Escena
+                <Trash2 className="w-4 h-4" /> Eliminar Estancia
               </Button>
             </TabsContent>
 
@@ -426,21 +439,58 @@ export default function TourEditor() {
                    <p className="text-sm">Sin enlaces en esta estancia</p>
                 </div>
               ) : (
-                activeScene?.hotspots.map((h: any) => (
-                  <Card key={h.id} className="p-3 bg-white border">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-bold uppercase text-primary mb-1">Destino</p>
-                        <p className="text-sm font-medium truncate">
-                           {localScenes.find(s => s.id === h.targetSceneId)?.name || 'Cargando...'}
-                        </p>
+                <div className="space-y-4">
+                  {activeScene?.hotspots.map((h: any) => (
+                    <Card key={h.id} className="p-4 bg-white border-2 border-muted shadow-sm hover:border-primary/20 transition-colors">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] font-black uppercase text-primary tracking-widest">Enlace de Navegación</p>
+                          <Button 
+                            size="icon" 
+                            variant="ghost" 
+                            className="text-destructive h-7 w-7 hover:bg-destructive/10" 
+                            onClick={() => removeHotspot(h.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        
+                        <div className="space-y-1.5">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Etiqueta del Botón</Label>
+                          <Input 
+                            value={h.label} 
+                            placeholder="ej. Ir a Cocina"
+                            className="h-9 text-sm" 
+                            onChange={(e) => updateHotspot(h.id, { label: e.target.value })}
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-[11px] font-bold text-muted-foreground uppercase">Destino</Label>
+                          <Select 
+                            value={h.targetSceneId} 
+                            onValueChange={(val) => {
+                              const target = localScenes.find(s => s.id === val);
+                              updateHotspot(h.id, { 
+                                targetSceneId: val,
+                                label: h.label.startsWith('Ir a') ? `Ir a ${target?.name}` : h.label 
+                              });
+                            }}
+                          >
+                            <SelectTrigger className="h-9 text-sm">
+                              <SelectValue placeholder="Selecciona destino..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {localScenes.filter(s => s.id !== activeSceneId).map(s => (
+                                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
-                      <Button size="icon" variant="ghost" className="text-destructive" onClick={() => removeHotspot(h.id)}>
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </Card>
-                ))
+                    </Card>
+                  ))}
+                </div>
               )}
             </TabsContent>
           </Tabs>

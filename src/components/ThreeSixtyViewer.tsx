@@ -5,7 +5,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { Hotspot } from '@/lib/types';
 import { Button } from './ui/button';
-import { ChevronRight, Maximize, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface ThreeSixtyViewerProps {
   imageUrl: string;
@@ -31,12 +32,20 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   const requestRef = useRef<number | null>(null);
   
   const [isLoadingTexture, setIsLoadingTexture] = useState(true);
+  const [isFading, setIsFading] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
   const [onPointerDownMouseX, setOnPointerDownMouseX] = useState(0);
   const [onPointerDownMouseY, setOnPointerDownMouseY] = useState(0);
   
   const lonRef = useRef(0);
   const latRef = useRef(0);
+
+  // Animation effect when changing image
+  useEffect(() => {
+    setIsFading(true);
+    const timer = setTimeout(() => setIsFading(false), 800);
+    return () => clearTimeout(timer);
+  }, [imageUrl]);
 
   useEffect(() => {
     if (!canvasHolderRef.current || !imageUrl) return;
@@ -46,7 +55,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     const width = canvasHolderRef.current.clientWidth || 800;
     const height = canvasHolderRef.current.clientHeight || 600;
 
-    // Dispose old renderer if exists
     if (rendererRef.current) {
       if (canvasHolderRef.current.contains(rendererRef.current.domElement)) {
         canvasHolderRef.current.removeChild(rendererRef.current.domElement);
@@ -68,7 +76,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       imageUrl,
       () => {
         setIsLoadingTexture(false);
-        // Initial render to avoid black flicker
         if (rendererRef.current && sceneRef.current && cameraRef.current) {
           rendererRef.current.render(sceneRef.current, cameraRef.current);
         }
@@ -212,19 +219,25 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     >
       <div ref={canvasHolderRef} className="absolute inset-0" />
 
+      {/* Transition Overlay */}
+      <div className={cn(
+        "absolute inset-0 bg-black pointer-events-none z-40 transition-opacity duration-700 ease-in-out",
+        (isFading || isLoadingTexture) ? "opacity-100" : "opacity-0"
+      )} />
+
       {isLoadingTexture && (
-        <div className="absolute inset-0 bg-black flex flex-col items-center justify-center z-50">
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-50">
            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
            <p className="text-white text-sm font-medium animate-pulse">Iniciando vista inmersiva...</p>
         </div>
       )}
 
-      {!isLoadingTexture && (
+      {!isLoadingTexture && !isFading && (
         <div className="absolute inset-0 pointer-events-none">
           {visibleHotspots.map(({h, x, y}) => (
             <div 
               key={h.id}
-              className="absolute pointer-events-auto transition-transform hover:scale-110 active:scale-95"
+              className="absolute pointer-events-auto transition-transform hover:scale-110 active:scale-95 animate-in fade-in zoom-in duration-300"
               style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}
             >
               <Button
@@ -246,9 +259,9 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
         </div>
       )}
 
-      <div className="absolute top-4 left-4 flex gap-2">
+      <div className="absolute top-4 left-4 flex gap-2 z-30">
         <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs text-white/80 border border-white/10">
-          {isEditing ? 'Haz clic para enlazar estancias' : 'Vista Panorámica'}
+          {isEditing ? 'Toca para tejer enlaces' : 'Vista Panorámica'}
         </div>
       </div>
     </div>
