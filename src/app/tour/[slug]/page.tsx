@@ -6,7 +6,7 @@ import { useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { collection, query, where, limit } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, Share2, Info } from 'lucide-react';
+import { Globe, Map, ChevronUp, Share2, Info, Loader2 } from 'lucide-react';
 
 export default function PublicTourViewer() {
   const { slug } = useParams();
@@ -31,8 +31,25 @@ export default function PublicTourViewer() {
 
   const activeScene = tour?.scenes?.find((s: any) => s.id === activeSceneId);
 
-  if (isLoading) return <div className="h-screen bg-black flex items-center justify-center text-white">Cargando Tour...</div>;
-  if (!tour) return <div className="h-screen bg-black flex items-center justify-center text-white">Tour no encontrado.</div>;
+  if (isLoading) {
+    return (
+      <div className="h-screen bg-black flex flex-col items-center justify-center text-white gap-4">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <p className="text-sm font-medium animate-pulse">Cargando experiencia inmersiva...</p>
+      </div>
+    );
+  }
+
+  if (!tour) {
+    return (
+      <div className="h-screen bg-black flex items-center justify-center text-white">
+        <div className="text-center p-8 bg-white/5 backdrop-blur-lg rounded-3xl border border-white/10">
+          <h2 className="text-2xl font-bold mb-2">Tour no encontrado</h2>
+          <p className="text-white/60">El enlace podría estar roto o el tour ha sido desactivado.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen relative overflow-hidden bg-black flex flex-col">
@@ -48,10 +65,10 @@ export default function PublicTourViewer() {
         </div>
         
         <div className="flex gap-2 pointer-events-auto">
-          <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border-white/10 text-white">
+          <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/20">
             <Share2 className="w-4 h-4" />
           </Button>
-          <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border-white/10 text-white">
+          <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/20">
              <Globe className="w-4 h-4" />
           </Button>
         </div>
@@ -71,8 +88,8 @@ export default function PublicTourViewer() {
       {/* Controls Bar */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4">
         <div className="bg-black/40 backdrop-blur-md px-6 py-3 rounded-full border border-white/10 flex items-center gap-8 text-white">
-           <div className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors">
-              <ChevronUp className="w-4 h-4" />
+           <div className="flex items-center gap-2 cursor-pointer hover:text-primary transition-colors group">
+              <ChevronUp className="w-4 h-4 group-hover:translate-y-[-2px] transition-transform" />
               <span className="text-sm font-medium">Escenas</span>
            </div>
            
@@ -88,15 +105,15 @@ export default function PublicTourViewer() {
 
       {/* Floor Plan Overlay */}
       {showFloorPlan && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex items-center justify-center p-8">
-           <div className="bg-white rounded-3xl p-8 max-w-3xl w-full relative">
+        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex items-center justify-center p-8 animate-in fade-in duration-300">
+           <div className="bg-white rounded-3xl p-8 max-w-3xl w-full relative shadow-2xl">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="absolute top-4 right-4"
+                className="absolute top-4 right-4 h-8 w-8 rounded-full"
                 onClick={() => setShowFloorPlan(false)}
               >
-                ×
+                ✕
               </Button>
               <h2 className="text-2xl font-bold font-headline mb-4 text-primary">Mapa de Navegación</h2>
               <div className="aspect-video bg-muted rounded-xl overflow-hidden relative">

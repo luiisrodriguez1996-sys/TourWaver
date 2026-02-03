@@ -26,6 +26,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const sphereRef = useRef<THREE.Mesh | null>(null);
+  const requestRef = useRef<number | null>(null);
   
   const [isLoadingTexture, setIsLoadingTexture] = useState(true);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
@@ -36,34 +37,36 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   const latRef = useRef(0);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || !imageUrl) return;
 
     setIsLoadingTexture(true);
 
-    const width = containerRef.current.clientWidth;
-    const height = containerRef.current.clientHeight;
+    const width = containerRef.current.clientWidth || 800;
+    const height = containerRef.current.clientHeight || 600;
 
+    // Initialize Scene
     const scene = new THREE.Scene();
     sceneRef.current = scene;
 
+    // Initialize Camera
     const camera = new THREE.PerspectiveCamera(75, width / height, 1, 1100);
     cameraRef.current = camera;
 
+    // Initialize Geometry
     const geometry = new THREE.SphereGeometry(500, 60, 40);
     geometry.scale(-1, 1, 1);
 
     const textureLoader = new THREE.TextureLoader();
     
-    // Carga de la textura con callbacks de éxito y error
+    // Texture Loading
     const texture = textureLoader.load(
       imageUrl,
       () => {
-        // Éxito: La textura está lista
         setIsLoadingTexture(false);
       },
       undefined,
-      () => {
-        // Error: Fallo en la carga
+      (err) => {
+        console.error("Error loading texture:", err);
         setIsLoadingTexture(false);
       }
     );
@@ -73,13 +76,14 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     scene.add(sphere);
     sphereRef.current = sphere;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Initialize Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.setSize(width, height);
     
-    // Limpiamos el contenedor antes de añadir el nuevo canvas
-    if (containerRef.current.firstChild && containerRef.current.firstChild instanceof HTMLCanvasElement) {
-        containerRef.current.removeChild(containerRef.current.firstChild);
+    // Cleanup container
+    while (containerRef.current.firstChild) {
+      containerRef.current.removeChild(containerRef.current.firstChild);
     }
     containerRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -94,12 +98,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     };
 
     window.addEventListener('resize', handleResize);
-
-    const animate = () => {
-      if (!rendererRef.current) return;
-      requestAnimationFrame(animate);
-      update();
-    };
 
     const update = () => {
       if (!cameraRef.current || !rendererRef.current || !sceneRef.current) return;
@@ -116,13 +114,27 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       rendererRef.current.render(sceneRef.current, cameraRef.current);
     };
 
+    const animate = () => {
+      update();
+      requestRef.current = requestAnimationFrame(animate);
+    };
+
     animate();
 
     return () => {
       window.removeEventListener('resize', handleResize);
+      if (requestRef.current) cancelAnimationFrame(requestRef.current);
       if (rendererRef.current) {
         rendererRef.current.dispose();
         rendererRef.current = null;
+      }
+      if (sphereRef.current) {
+        sphereRef.current.geometry.dispose();
+        if (Array.isArray(sphereRef.current.material)) {
+          sphereRef.current.material.forEach(m => m.dispose());
+        } else {
+          sphereRef.current.material.dispose();
+        }
       }
     };
   }, [imageUrl]);
@@ -202,9 +214,9 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       onPointerUp={onPointerUp}
       onClick={onContainerClick}
     >
-      {/* Overlay de Carga Interno */}
+      {/* Loading Overlay */}
       {isLoadingTexture && (
-        <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-50 transition-opacity">
+        <div className="absolute inset-0 bg-black/90 flex flex-col items-center justify-center z-50">
            <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
            <p className="text-white text-sm font-medium animate-pulse">Iniciando vista inmersiva...</p>
         </div>

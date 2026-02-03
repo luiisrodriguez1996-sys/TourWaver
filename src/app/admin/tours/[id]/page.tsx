@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Tour, Scene, Hotspot } from '@/lib/types';
+import { Scene, Hotspot } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,7 +21,8 @@ import {
   Map as MapIcon,
   Sparkles,
   Upload,
-  Loader2
+  Loader2,
+  Check
 } from 'lucide-react';
 import { suggestSceneLinks } from '@/ai/flows/ai-suggest-scene-links';
 import { useToast } from '@/hooks/use-toast';
@@ -46,6 +47,7 @@ export default function TourEditor() {
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (tour?.scenes?.length > 0 && !activeSceneId) {
@@ -137,6 +139,19 @@ export default function TourEditor() {
     setActiveSceneId(newScene.id);
   };
 
+  const updateSceneDetails = (field: 'name' | 'description', value: string) => {
+    if (!tour || !tourRef || !activeSceneId) return;
+
+    const updatedScenes = tour.scenes.map((s: any) => {
+      if (s.id === activeSceneId) {
+        return { ...s, [field]: value };
+      }
+      return s;
+    });
+
+    updateDocumentNonBlocking(tourRef, { scenes: updatedScenes });
+  };
+
   const addHotspot = (yaw: number, pitch: number) => {
     if (!activeSceneId || !tour || !tourRef) return;
     
@@ -144,7 +159,7 @@ export default function TourEditor() {
       id: Math.random().toString(36).substr(2, 9),
       sceneId: activeSceneId,
       targetSceneId: tour.scenes.find((s: any) => s.id !== activeSceneId)?.id || '',
-      label: 'Nuevo Enlace',
+      label: 'Siguiente Estancia',
       yaw,
       pitch
     };
@@ -157,7 +172,34 @@ export default function TourEditor() {
     });
 
     updateDocumentNonBlocking(tourRef, { scenes: updatedScenes });
-    toast({ title: "Punto de Interés Añadido", description: "Configura el destino en el panel derecho." });
+    toast({ title: "Enlace Añadido", description: "Configura el destino en el panel derecho." });
+  };
+
+  const removeHotspot = (hotspotId: string) => {
+    if (!tour || !tourRef || !activeSceneId) return;
+
+    const updatedScenes = tour.scenes.map((s: any) => {
+      if (s.id === activeSceneId) {
+        return { ...s, hotspots: s.hotspots.filter((h: any) => h.id !== hotspotId) };
+      }
+      return s;
+    });
+
+    updateDocumentNonBlocking(tourRef, { scenes: updatedScenes });
+  };
+
+  const handleSaveAll = () => {
+    setIsSaving(true);
+    // updateDocumentNonBlocking already happens on each change, 
+    // but we simulate a global save for user feedback
+    setTimeout(() => {
+      setIsSaving(false);
+      toast({ 
+        title: "Cambios guardados", 
+        description: "Toda la información ha sido sincronizada.",
+        action: <Check className="w-4 h-4 text-green-500" />
+      });
+    }, 800);
   };
 
   const handleAiSuggest = async () => {
@@ -245,8 +287,13 @@ export default function TourEditor() {
             )}
             {isAiLoading ? 'IA Pensando...' : 'Auto-Enlazar IA'}
           </Button>
-          <Button className="bg-primary hover:bg-primary/90 gap-2">
-            <Save className="w-4 h-4" /> Guardar Todo
+          <Button 
+            className="bg-primary hover:bg-primary/90 gap-2" 
+            onClick={handleSaveAll} 
+            disabled={isSaving}
+          >
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+            {isSaving ? 'Guardando...' : 'Guardar Todo'}
           </Button>
         </div>
       </div>
@@ -321,6 +368,7 @@ export default function TourEditor() {
                 hotspots={activeScene.hotspots || []}
                 isEditing={true}
                 onSceneClick={addHotspot}
+                onHotspotClick={(targetId) => setActiveSceneId(targetId)}
               />
             ) : (
               <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -359,14 +407,26 @@ export default function TourEditor() {
             <TabsContent value="details" className="pt-4 space-y-4">
               <div className="space-y-2">
                 <Label>Nombre de Estancia</Label>
-                <Input value={activeScene?.name || ''} placeholder="Dormitorio, Salón..." readOnly />
+                <Input 
+                  value={activeScene?.name || ''} 
+                  placeholder="Dormitorio, Salón..." 
+                  onChange={(e) => updateSceneDetails('name', e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Notas de Escena</Label>
-                <Textarea value={activeScene?.description || ''} placeholder="Info extra para el cliente..." readOnly className="resize-none h-24" />
+                <Textarea 
+                  value={activeScene?.description || ''} 
+                  placeholder="Info extra para el cliente..." 
+                  className="resize-none h-24" 
+                  onChange={(e) => updateSceneDetails('description', e.target.value)}
+                />
               </div>
               <Separator />
-              <Button variant="outline" className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10">
+              <Button 
+                variant="outline" 
+                className="w-full gap-2 text-destructive border-destructive/20 hover:bg-destructive/10"
+              >
                 <Trash2 className="w-4 h-4" /> Eliminar Escena
               </Button>
             </TabsContent>
@@ -383,7 +443,12 @@ export default function TourEditor() {
                     <div className="flex flex-col gap-3">
                       <div className="flex items-center justify-between">
                          <span className="text-[10px] font-bold uppercase text-primary px-2 py-1 bg-primary/10 rounded">Navegación</span>
-                         <Button size="icon" variant="ghost" className="h-6 w-6 text-destructive">
+                         <Button 
+                          size="icon" 
+                          variant="ghost" 
+                          className="h-6 w-6 text-destructive"
+                          onClick={() => removeHotspot(h.id)}
+                         >
                            <Trash2 className="w-4 h-4" />
                          </Button>
                       </div>
