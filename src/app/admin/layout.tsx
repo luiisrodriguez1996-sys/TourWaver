@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -135,9 +136,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                <Languages className="w-4 h-4" />
                <span>{isSpanish ? 'Español' : 'English'}</span>
              </div>
-             <Button variant="outline" size="sm" onClick={() => router.push('/')}>
-               {isSpanish ? 'Ver Sitio Público' : 'View Public Site'}
-             </Button>
+             <Link href="/" target="_blank" rel="noopener noreferrer">
+               <Button className="bg-accent text-white hover:bg-accent/90 border-none shadow-sm" size="sm">
+                 {isSpanish ? 'Ver Sitio Público' : 'View Public Site'}
+               </Button>
+             </Link>
           </div>
         </header>
         <div className="p-8">

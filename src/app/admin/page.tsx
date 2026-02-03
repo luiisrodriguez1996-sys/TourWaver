@@ -192,8 +192,8 @@ export default function AdminDashboard() {
             <Edit3 className="w-4 h-4" /> {isSpanish ? 'Gestionar' : 'Manage'}
           </Button>
         </Link>
-        <Link href={`/tour/${tour.slug}`}>
-          <Button variant="ghost" size="icon" className="text-primary">
+        <Link href={`/tour/${tour.slug}`} target="_blank" rel="noopener noreferrer">
+          <Button variant="ghost" size="icon" className="text-accent hover:text-accent/80 transition-colors">
             <ExternalLink className="w-4 h-4" />
           </Button>
         </Link>
