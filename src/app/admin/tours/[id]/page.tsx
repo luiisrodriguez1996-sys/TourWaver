@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -8,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { 
@@ -56,7 +55,6 @@ export default function TourEditor() {
 
   const activeScene = tour?.scenes?.find((s: any) => s.id === activeSceneId);
 
-  // Función para comprimir la imagen si es necesario
   const compressImage = (dataUrl: string, maxWidth = 4096, quality = 0.8): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -66,7 +64,6 @@ export default function TourEditor() {
         let width = img.width;
         let height = img.height;
 
-        // Redimensionar si es extremadamente grande para ahorrar memoria
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
@@ -77,16 +74,12 @@ export default function TourEditor() {
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
 
-        // Intentar compresión inicial
         let compressed = canvas.toDataURL('image/jpeg', quality);
         
-        // Si sigue siendo mayor a ~900KB (en base64), reducir calidad agresivamente
-        // 1.2 millones de caracteres en base64 es aprox 900KB-1MB
         if (compressed.length > 900000) {
           compressed = canvas.toDataURL('image/jpeg', 0.5);
         }
         
-        // Si aún es grande, reducir resolución a la mitad
         if (compressed.length > 900000) {
           canvas.width = width / 2;
           canvas.height = height / 2;
@@ -109,7 +102,6 @@ export default function TourEditor() {
         try {
           let imageUrl = reader.result as string;
           
-          // Si el archivo original es grande, lo comprimimos
           if (file.size > 700000) {
             toast({ title: "Optimizando imagen", description: "Ajustando resolución para el servidor..." });
             imageUrl = await compressImage(imageUrl);
@@ -183,7 +175,7 @@ export default function TourEditor() {
       const inputScenes = tour.scenes.map((s: any) => ({
         id: s.id,
         description: s.description || s.name,
-        imageDataUri: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElUWFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqGhc4SFxlNWVlsZ2iPj50mJqpGSk5SFxwdJhoc4iJipjKlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9o-8QAsREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElUWFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqGhc4SFxlNWVlsZ2iPj50mJqpGSk5SFxwdJhoc4iJipjKlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oAAAIRAxEAPwD/AD/AP/Z'
+        imageDataUri: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElUWFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqGhc4SFxlNWVlsZ2iPj50mJqpGSk5SFxwdJhoc4iJipjKlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oAAAIRAxEAPwD/AD/AP/Z'
       }));
 
       const suggestions = await suggestSceneLinks({ scenes: inputScenes });
@@ -260,7 +252,6 @@ export default function TourEditor() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[calc(100vh-180px)]">
-        {/* Left Sidebar: Scene List */}
         <div className="lg:col-span-3 space-y-4 overflow-y-auto pr-0 lg:pr-2">
           <div className="flex items-center justify-between mb-2">
             <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
@@ -322,7 +313,6 @@ export default function TourEditor() {
           </div>
         </div>
 
-        {/* Center: 360 Viewer */}
         <div className="lg:col-span-6 flex flex-col gap-4 min-h-[400px]">
           <div className="flex-grow rounded-3xl overflow-hidden shadow-xl border relative">
             {activeScene ? (
@@ -359,7 +349,6 @@ export default function TourEditor() {
           </Card>
         </div>
 
-        {/* Right Sidebar: Details & Hotspots Editor */}
         <div className="lg:col-span-3 space-y-4 overflow-y-auto pl-0 lg:pl-2">
           <Tabs defaultValue="details">
             <TabsList className="w-full grid grid-cols-2">
