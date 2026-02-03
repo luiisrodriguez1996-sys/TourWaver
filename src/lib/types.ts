@@ -19,6 +19,8 @@ export interface Scene {
   description: string;
   imageUrl: string;
   hotspots: Hotspot[];
+  floorPlanX?: number; // Position X in percentage (0-100)
+  floorPlanY?: number; // Position Y in percentage (0-100)
 }
 
 export interface Hotspot {
