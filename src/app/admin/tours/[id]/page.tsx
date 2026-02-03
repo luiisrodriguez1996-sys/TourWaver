@@ -26,7 +26,8 @@ import {
   ExternalLink,
   Loader2,
   AlertCircle,
-  Upload
+  Upload,
+  Link as LinkIcon
 } from 'lucide-react';
 import {
   Select,
@@ -67,7 +68,8 @@ export default function TourEditor() {
     description: '',
     floorPlanUrl: '',
     showFloorPlan: false,
-    address: ''
+    address: '',
+    googleMapsUrl: ''
   });
 
   const [localScenes, setLocalScenes] = useState<Scene[]>([]);
@@ -85,7 +87,8 @@ export default function TourEditor() {
         description: tour.description || '',
         floorPlanUrl: tour.floorPlanUrl || '',
         showFloorPlan: !!tour.showFloorPlan,
-        address: tour.address || ''
+        address: tour.address || '',
+        googleMapsUrl: tour.googleMapsUrl || ''
       });
     }
   }, [tour]);
@@ -248,6 +251,7 @@ export default function TourEditor() {
           floorPlanUrl: localTourInfo.floorPlanUrl,
           showFloorPlan: localTourInfo.showFloorPlan,
           address: localTourInfo.address,
+          googleMapsUrl: localTourInfo.googleMapsUrl,
           thumbnailUrl: localScenes.length > 0 ? localScenes[0].imageUrl : tour.thumbnailUrl || '',
           updatedAt: Date.now() 
         }, { merge: true });
@@ -423,33 +427,59 @@ export default function TourEditor() {
                 />
               </div>
               
-              <div className="space-y-2 pt-2">
-                <Label className="text-xs flex items-center gap-2">
-                  <MapPin className="w-3 h-3 text-primary" /> Dirección de la Propiedad
-                </Label>
-                <div className="relative">
+              <div className="space-y-4 pt-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs flex items-center gap-2">
+                    <MapPin className="w-3 h-3 text-primary" /> Dirección de la Propiedad (Texto)
+                  </Label>
+                  <div className="relative">
+                    <Input 
+                      value={localTourInfo.address} 
+                      placeholder="ej. Av. Corrientes 1234, CABA"
+                      className="h-8 text-xs pr-8"
+                      onChange={(e) => {
+                        setLocalTourInfo({ ...localTourInfo, address: e.target.value });
+                        setHasUnsavedChanges(true);
+                      }}
+                    />
+                    {localTourInfo.address && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-0 top-0 h-8 w-8 text-primary"
+                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localTourInfo.address)}`, '_blank')}
+                        title="Ver en Google Maps"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs flex items-center gap-2">
+                    <LinkIcon className="w-3 h-3 text-primary" /> Enlace Manual Google Maps
+                  </Label>
                   <Input 
-                    value={localTourInfo.address} 
-                    placeholder="ej. Av. Corrientes 1234, CABA"
-                    className="h-8 text-xs pr-8"
+                    value={localTourInfo.googleMapsUrl} 
+                    placeholder="Pega el enlace directo aquí..."
+                    className="h-8 text-xs"
                     onChange={(e) => {
-                      setLocalTourInfo({ ...localTourInfo, address: e.target.value });
+                      setLocalTourInfo({ ...localTourInfo, googleMapsUrl: e.target.value });
                       setHasUnsavedChanges(true);
                     }}
                   />
-                  {localTourInfo.address && (
+                  {localTourInfo.googleMapsUrl && (
                     <Button 
                       variant="ghost" 
-                      size="icon" 
-                      className="absolute right-0 top-0 h-8 w-8 text-primary"
-                      onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localTourInfo.address)}`, '_blank')}
-                      title="Ver en Google Maps"
+                      size="sm" 
+                      className="h-6 text-[10px] text-primary gap-1 px-1"
+                      onClick={() => window.open(localTourInfo.googleMapsUrl, '_blank')}
                     >
-                      <ExternalLink className="w-3 h-3" />
+                      <ExternalLink className="w-2.5 h-2.5" /> Probar Enlace
                     </Button>
                   )}
                 </div>
-                <p className="text-[10px] text-muted-foreground italic">Se mostrará en la vista pública con un enlace a Maps.</p>
               </div>
 
               <div className="flex items-center justify-between p-2 bg-muted/40 rounded-lg">

@@ -55,6 +55,11 @@
           "type": "string",
           "description": "The physical address of the property."
         },
+        "googleMapsUrl": {
+          "type": "string",
+          "description": "Manual link to Google Maps for the property location.",
+          "format": "uri"
+        },
         "latitude": {
           "type": "number",
           "description": "Latitude coordinate for Google Maps location (Optional)."

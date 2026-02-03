@@ -69,7 +69,9 @@ export default function PublicTourViewer() {
   };
 
   const handleOpenMaps = () => {
-    if (tour?.address) {
+    if (tour?.googleMapsUrl) {
+      window.open(tour.googleMapsUrl, '_blank');
+    } else if (tour?.address) {
       window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tour.address)}`, '_blank');
     }
   };
@@ -136,7 +138,7 @@ export default function PublicTourViewer() {
         </div>
         
         <div className="flex gap-2 pointer-events-auto">
-          {tour.address && (
+          {(tour.address || tour.googleMapsUrl) && (
             <Button 
               variant="secondary" 
               size="icon" 

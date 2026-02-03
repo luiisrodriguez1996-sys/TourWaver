@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Briefcase, ArrowLeft, Loader2, User, Search, MapPin } from 'lucide-react';
+import { Briefcase, ArrowLeft, Loader2, User, Search, MapPin, Link as LinkIcon } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
@@ -26,7 +26,8 @@ export default function NewTour() {
     clientName: '',
     slug: '',
     description: '',
-    address: ''
+    address: '',
+    googleMapsUrl: ''
   });
 
   // Obtener clientes existentes para sugerencias
@@ -53,6 +54,7 @@ export default function NewTour() {
         slug: formData.slug || formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
         description: formData.description,
         address: formData.address,
+        googleMapsUrl: formData.googleMapsUrl,
         published: false,
         createdAt: Date.now(),
         updatedAt: Date.now()
@@ -156,20 +158,35 @@ export default function NewTour() {
               />
             </div>
 
-            <div className="space-y-2 pt-2">
-              <Label htmlFor="address" className="text-sm font-bold flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-primary" /> Dirección de la Propiedad
-              </Label>
-              <Input 
-                id="address" 
-                placeholder="ej. Av. Corrientes 1234, CABA, Argentina" 
-                value={formData.address}
-                onChange={e => setFormData({ ...formData, address: e.target.value })}
-                className="rounded-xl h-11"
-              />
-              <p className="text-[10px] text-muted-foreground italic">
-                Esta dirección se usará para que los clientes puedan buscar la propiedad en Google Maps.
-              </p>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-sm font-bold flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" /> Dirección de la Propiedad (Texto)
+                </Label>
+                <Input 
+                  id="address" 
+                  placeholder="ej. Av. Corrientes 1234, CABA, Argentina" 
+                  value={formData.address}
+                  onChange={e => setFormData({ ...formData, address: e.target.value })}
+                  className="rounded-xl h-11"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="googleMapsUrl" className="text-sm font-bold flex items-center gap-2">
+                  <LinkIcon className="w-4 h-4 text-primary" /> Enlace Manual de Google Maps
+                </Label>
+                <Input 
+                  id="googleMapsUrl" 
+                  placeholder="Pega aquí el enlace de compartir de Google Maps..." 
+                  value={formData.googleMapsUrl}
+                  onChange={e => setFormData({ ...formData, googleMapsUrl: e.target.value })}
+                  className="rounded-xl h-11"
+                />
+                <p className="text-[10px] text-muted-foreground italic">
+                  Si pegas un enlace aquí, se usará directamente. Si no, se buscará por la dirección escrita.
+                </p>
+              </div>
             </div>
           </CardContent>
           <CardFooter className="bg-gray-50/50 p-8 border-t">

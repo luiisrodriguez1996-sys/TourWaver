@@ -10,6 +10,7 @@ export interface Tour {
   showFloorPlan?: boolean;
   thumbnailUrl?: string;
   address?: string; // Physical address
+  googleMapsUrl?: string; // Manual Google Maps link
   latitude?: number;
   longitude?: number;
   createdAt: number;
