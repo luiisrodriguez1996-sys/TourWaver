@@ -236,7 +236,7 @@ export default function TourEditor() {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', sceneIdToDelete);
         batch.delete(sceneDocRef);
       }
-      if (tourRef) {
+      if (tourRef && tour) {
         batch.set(tourRef, { 
           name: localTourInfo.name,
           description: localTourInfo.description,
@@ -280,6 +280,18 @@ export default function TourEditor() {
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-10 h-10 animate-spin text-primary" />
           <p className="text-muted-foreground animate-pulse">Cargando editor profesional...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!tour) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-3xl shadow-xl max-w-md">
+          <h1 className="text-2xl font-bold mb-2">Proyecto no encontrado</h1>
+          <p className="text-muted-foreground mb-8">El tour que intentas editar no existe o no tienes permisos para acceder.</p>
+          <Button onClick={() => router.push('/admin')}>Volver al Panel</Button>
         </div>
       </div>
     );
