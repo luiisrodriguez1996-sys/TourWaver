@@ -325,8 +325,8 @@ export default function PublicTourViewer() {
       )}
 
       {/* Branding */}
-      <div className="absolute bottom-4 right-8 z-20 pointer-events-none opacity-40">
-        <span className="text-white/40 text-[10px] font-bold tracking-widest uppercase">Potenciado por Tour Weaver</span>
+      <div className="absolute bottom-4 right-8 z-20 pointer-events-none">
+        <span className="text-neutral-500/40 text-[10px] font-bold tracking-widest uppercase">Potenciado por Tour Weaver</span>
       </div>
     </div>
   );
