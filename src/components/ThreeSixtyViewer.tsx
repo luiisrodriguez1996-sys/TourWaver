@@ -115,14 +115,18 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       if (!cameraRef.current || !rendererRef.current || !sceneRef.current) return;
       
       latRef.current = Math.max(-85, Math.min(85, latRef.current));
-      const phi = THREE.MathUtils.degToRad(90 - latRef.current);
+      
+      const phi = THREE.MathUtils.degToRad(latRef.current);
       const theta = THREE.MathUtils.degToRad(lonRef.current);
 
-      const target = new THREE.Vector3(
-        500 * Math.sin(phi) * Math.cos(theta),
-        500 * Math.cos(phi),
-        500 * Math.sin(phi) * Math.sin(theta)
-      );
+      // Sincronizar con el sistema de coordenadas de hotspots (0 es -Z)
+      const target = new THREE.Vector3();
+      target.x = Math.sin(theta) * Math.cos(phi);
+      target.y = Math.sin(phi);
+      target.z = -Math.cos(theta) * Math.cos(phi);
+      
+      // Multiplicar por el radio de la esfera
+      target.multiplyScalar(500);
       
       cameraRef.current.lookAt(target);
       rendererRef.current.render(sceneRef.current, cameraRef.current);
@@ -159,8 +163,9 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
 
   const onPointerMove = (event: React.PointerEvent) => {
     if (event.isPrimary === false || !isUserInteracting) return;
-    lonRef.current = (onPointerDownMouseX.current - event.clientX) * 0.1 + lonRef.current;
-    latRef.current = (event.clientY - onPointerDownMouseY.current) * 0.1 + latRef.current;
+    // Sensibilidad ajustada para una rotación natural
+    lonRef.current = (onPointerDownMouseX.current - event.clientX) * 0.15 + lonRef.current;
+    latRef.current = (event.clientY - onPointerDownMouseY.current) * 0.15 + latRef.current;
     onPointerDownMouseX.current = event.clientX;
     onPointerDownMouseY.current = event.clientY;
   };
@@ -174,7 +179,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     const moveDist = Math.sqrt(moveX * moveX + moveY * moveY);
     const duration = Date.now() - pointerDownTime.current;
 
-    // Threshold: less than 10px move and short duration to consider it a "click"
+    // Solo crear enlace si es un clic rápido y estático (umbral de 10px)
     if (isEditing && onSceneClick && !isLoadingTexture && moveDist < 10 && duration < 300) {
       calculateClickCoordinates(event);
     }
@@ -192,39 +197,44 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     const intersects = raycasterRef.current.intersectObject(sphereRef.current);
 
     if (intersects.length > 0) {
-      const point = intersects[0].point;
+      const point = intersects[0].point.clone();
+      
+      // Compensar la inversión de la esfera geometry.scale(-1, 1, 1)
+      const correctedX = -point.x;
+      
       const radius = 500;
+      const lat = Math.asin(point.y / radius) * 180 / Math.PI;
+      const lon = Math.atan2(correctedX, -point.z) * 180 / Math.PI;
       
-      const phi = Math.acos(point.y / radius); 
-      const theta = Math.atan2(point.z, point.x); 
-      
-      const clickLat = 90 - (phi * 180 / Math.PI);
-      const clickLon = (theta * 180 / Math.PI);
-      
-      onSceneClick(clickLon, clickLat);
+      onSceneClick(lon, lat);
     }
   };
 
   const getHotspotPosition = (hLon: number, hLat: number) => {
     if (!cameraRef.current || !canvasHolderRef.current || isLoadingTexture) return null;
     
-    const phi = THREE.MathUtils.degToRad(90 - hLat);
+    const phi = THREE.MathUtils.degToRad(hLat);
     const theta = THREE.MathUtils.degToRad(hLon);
     
-    const vector = new THREE.Vector3(
-      500 * Math.sin(phi) * Math.cos(theta),
-      500 * Math.cos(phi),
-      500 * Math.sin(phi) * Math.sin(theta)
-    );
+    const vector = new THREE.Vector3();
+    // Usar la misma lógica de proyección inversa a la cámara
+    vector.x = Math.sin(theta) * Math.cos(phi);
+    vector.y = Math.sin(phi);
+    vector.z = -Math.cos(theta) * Math.cos(phi);
     
-    vector.project(cameraRef.current);
+    // Compensar la inversión de la escala de la esfera visualmente
+    vector.x = -vector.x;
     
+    vector.multiplyScalar(500);
+    
+    // Verificar si el punto está frente a la cámara
     const camDir = new THREE.Vector3();
     cameraRef.current.getWorldDirection(camDir);
     const dot = camDir.dot(vector.clone().normalize());
     
-    // Check if hotspot is behind the camera
     if (dot < 0) return null;
+    
+    vector.project(cameraRef.current);
     
     const x = (vector.x * 0.5 + 0.5) * canvasHolderRef.current.clientWidth;
     const y = (-(vector.y * 0.5) + 0.5) * canvasHolderRef.current.clientHeight;
