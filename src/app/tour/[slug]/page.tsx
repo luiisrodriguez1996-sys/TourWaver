@@ -9,10 +9,13 @@ import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
 import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield } from 'lucide-react';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -215,44 +218,46 @@ export default function PublicTourViewer() {
       <div className="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4">
         <div className="bg-black/40 backdrop-blur-md px-6 py-1 rounded-full border border-white/10 flex items-center gap-2 text-white shadow-2xl pointer-events-auto">
            
-           <Popover>
-             <PopoverTrigger asChild>
+           <Dialog>
+             <DialogTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-10 px-4">
                   <ChevronUp className="w-4 h-4" />
                   <span className="text-sm font-medium">Estancias ({scenes?.length || 0})</span>
                 </Button>
-             </PopoverTrigger>
-             <PopoverContent align="center" side="top" className="w-72 p-0 bg-black/80 backdrop-blur-xl border-white/10 text-white mb-2 rounded-2xl overflow-hidden shadow-2xl">
-                <div className="p-4 border-b border-white/10">
-                  <h3 className="font-bold text-sm">Explorar Estancias</h3>
-                </div>
-                <ScrollArea className="h-64">
-                  <div className="p-2 space-y-1">
+             </DialogTrigger>
+             <DialogContent className="sm:max-w-[425px] bg-black/80 backdrop-blur-xl border-white/10 text-white p-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <DialogHeader className="p-6 border-b border-white/10">
+                  <DialogTitle className="font-bold text-lg">Explorar Estancias</DialogTitle>
+                </DialogHeader>
+                <ScrollArea className="max-h-[60vh] p-4">
+                  <div className="grid grid-cols-1 gap-2">
                     {scenes?.map((scene: any) => (
-                      <button
-                        key={scene.id}
-                        onClick={() => setActiveSceneId(scene.id)}
-                        className={`w-full flex items-center gap-3 p-2 rounded-xl transition-all group ${
-                          activeSceneId === scene.id 
-                            ? 'bg-primary/20 text-primary border border-primary/20' 
-                            : 'hover:bg-white/10 text-white/70 hover:text-white'
-                        }`}
-                      >
-                        <div className="relative w-16 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                          <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
-                          {activeSceneId === scene.id && (
-                            <div className="absolute inset-0 bg-primary/40 flex items-center justify-center">
-                              <Check className="w-4 h-4 text-white" />
-                            </div>
+                      <DialogClose asChild key={scene.id}>
+                        <button
+                          onClick={() => setActiveSceneId(scene.id)}
+                          className={cn(
+                            "w-full flex items-center gap-4 p-3 rounded-2xl transition-all group border",
+                            activeSceneId === scene.id 
+                              ? 'bg-primary/20 text-primary border-primary/40' 
+                              : 'hover:bg-white/10 text-white/70 hover:text-white border-transparent'
                           )}
-                        </div>
-                        <span className="text-xs font-medium truncate flex-1 text-left">{scene.name}</span>
-                      </button>
+                        >
+                          <div className="relative w-24 h-16 rounded-xl overflow-hidden flex-shrink-0">
+                            <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
+                            {activeSceneId === scene.id && (
+                              <div className="absolute inset-0 bg-primary/40 flex items-center justify-center">
+                                <Check className="w-6 h-6 text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <span className="text-sm font-semibold truncate flex-1 text-left">{scene.name}</span>
+                        </button>
+                      </DialogClose>
                     ))}
                   </div>
                 </ScrollArea>
-             </PopoverContent>
-           </Popover>
+             </DialogContent>
+           </Dialog>
 
            {tour.showFloorPlan && (
              <>
