@@ -69,9 +69,7 @@ export default function PublicTourViewer() {
   };
 
   const handleOpenMaps = () => {
-    if (tour?.latitude && tour?.longitude) {
-      window.open(`https://www.google.com/maps/search/?api=1&query=${tour.latitude},${tour.longitude}`, '_blank');
-    } else if (tour?.address) {
+    if (tour?.address) {
       window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(tour.address)}`, '_blank');
     }
   };
@@ -138,7 +136,7 @@ export default function PublicTourViewer() {
         </div>
         
         <div className="flex gap-2 pointer-events-auto">
-          {(tour.address || (tour.latitude && tour.longitude)) && (
+          {tour.address && (
             <Button 
               variant="secondary" 
               size="icon" 

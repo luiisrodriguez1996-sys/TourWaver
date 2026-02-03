@@ -29,7 +29,9 @@ import {
   Crosshair,
   User,
   ExternalLink,
-  Search
+  Search,
+  CheckCircle2,
+  Map as MapIconLucide
 } from 'lucide-react';
 import {
   Select,
@@ -79,6 +81,7 @@ export default function TourEditor() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [showMapPreview, setShowMapPreview] = useState(false);
 
   useEffect(() => {
     if (tour) {
@@ -430,25 +433,54 @@ export default function TourEditor() {
                 <Label className="text-xs flex items-center gap-2">
                   <MapPin className="w-3 h-3 text-primary" /> Dirección de la Propiedad
                 </Label>
-                <div className="relative">
-                  <Input 
-                    value={localTourInfo.address} 
-                    placeholder="ej. Av. Corrientes 1234, CABA"
-                    className="h-8 text-xs pr-8"
-                    onChange={(e) => {
-                      setLocalTourInfo({ ...localTourInfo, address: e.target.value });
-                      setHasUnsavedChanges(true);
-                    }}
-                  />
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Input 
+                      value={localTourInfo.address} 
+                      placeholder="ej. Av. Corrientes 1234, CABA"
+                      className="h-8 text-xs pr-8"
+                      onChange={(e) => {
+                        setLocalTourInfo({ ...localTourInfo, address: e.target.value });
+                        setHasUnsavedChanges(true);
+                        setShowMapPreview(false); // Reset preview on change
+                      }}
+                    />
+                    {localTourInfo.address && (
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-0 top-0 h-8 w-8 text-primary"
+                        onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localTourInfo.address)}`, '_blank')}
+                        title="Ver en Google Maps"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    )}
+                  </div>
+                  
                   {localTourInfo.address && (
                     <Button 
-                      variant="ghost" 
-                      size="icon" 
-                      className="absolute right-0 top-0 h-8 w-8 text-primary"
-                      onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localTourInfo.address)}`, '_blank')}
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full h-7 text-[10px] gap-2 border-primary/20 hover:bg-primary/5"
+                      onClick={() => setShowMapPreview(!showMapPreview)}
                     >
-                      <ExternalLink className="w-3 h-3" />
+                      <MapIconLucide className="w-3 h-3" />
+                      {showMapPreview ? 'Ocultar Mapa' : 'Verificar en Mapa'}
                     </Button>
+                  )}
+
+                  {showMapPreview && localTourInfo.address && (
+                    <div className="aspect-video rounded-lg overflow-hidden border bg-muted animate-in fade-in slide-in-from-top-2 duration-300">
+                      <iframe
+                        width="100%"
+                        height="100%"
+                        frameBorder="0"
+                        style={{ border: 0 }}
+                        src={`https://www.google.com/maps/embed/v1/place?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}&q=${encodeURIComponent(localTourInfo.address)}`}
+                        allowFullScreen
+                      ></iframe>
+                    </div>
                   )}
                 </div>
               </div>
