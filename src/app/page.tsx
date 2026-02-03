@@ -40,7 +40,7 @@ const translations = {
     ctaRates: "Ver Tarifas",
     ctaGuarantee: "Servicio Garantizado",
     ctaQuality: "Calidad Profesional",
-    footerCopy: "© 2024 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
+    footerCopy: "© 2026 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
     footerTerms: "Condiciones de Uso",
     footerPrivacy: "Privacidad"
   },
@@ -70,7 +70,7 @@ const translations = {
     ctaRates: "See Rates",
     ctaGuarantee: "Guaranteed Service",
     ctaQuality: "Professional Quality",
-    footerCopy: "© 2024 Tour Weaver - 360° Visualization Services. All rights reserved.",
+    footerCopy: "© 2026 Tour Weaver - 360° Visualization Services. All rights reserved.",
     footerTerms: "Terms of Use",
     footerPrivacy: "Privacy"
   },
@@ -79,7 +79,7 @@ const translations = {
     heroTitle: "Mostre Propriedades com",
     heroTitleHighlight: "Tours 360°",
     heroTitleEnd: "de Alta Gama",
-    heroDesc: "Ajudamos corretores e imobiliárias a destacar suas propriedades como um negocio inovador. Criamos experiências imersivas que permitem aos seus clientes visitar seu futuro lar de qualquer lugar do mundo.",
+    heroDesc: "Ajudamos corretores e imobiliárias a destacar suas propiedades como um negocio innovador. Criamos experiências imersivas que permitem aos seus clientes visitar seu futuro lar de qualquer lugar do mundo.",
     btnPresupuesto: "Solicitar Orçamento",
     btnContratar: "Contratar Serviço",
     btnPortafolio: "Ver Portfólio",
@@ -98,9 +98,9 @@ const translations = {
     ctaDesc: "Oferecemos pacotes personalizados para agências e corretores individuais. Melhore o engajamento dos seus anúncios hoje mesmo.",
     ctaWa: "Contato via WhatsApp",
     ctaRates: "Ver Tarifas",
-    ctaGuarantee: "Serviço Garantido",
+    ctaGuarantee: "Serviço Garantizado",
     ctaQuality: "Qualidade Profissional",
-    footerCopy: "© 2024 Tour Weaver - Serviços de Visualização 360°. Todos os direitos reservados.",
+    footerCopy: "© 2026 Tour Weaver - Serviços de Visualização 360°. Todos os direitos reservados.",
     footerTerms: "Termos de Uso",
     footerPrivacy: "Privacidade"
   }
