@@ -1,11 +1,11 @@
 
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit3, ExternalLink, MoreVertical, Trash2, Eye, EyeOff, Globe, Briefcase } from 'lucide-react';
+import { Edit3, ExternalLink, MoreVertical, Trash2, Eye, EyeOff, Globe, Briefcase, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 import {
   DropdownMenu,
@@ -13,12 +13,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useCollection, useFirestore, useMemoFirebase, updateDocumentNonBlocking, deleteDocumentNonBlocking, useDoc } from '@/firebase';
 import { collection, doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function AdminDashboard() {
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [tourToDelete, setTourToDelete] = useState<string | null>(null);
   
   const toursRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -38,12 +51,22 @@ export default function AdminDashboard() {
     if (!firestore) return;
     const tourRef = doc(firestore, 'tours', id);
     updateDocumentNonBlocking(tourRef, { published: !currentStatus });
+    toast({
+      title: currentStatus ? "Proyecto Privado" : "Proyecto Publicado",
+      description: currentStatus ? "El tour ya no es visible para el público." : "El tour ahora es accesible mediante su enlace.",
+    });
   };
 
-  const deleteTour = (id: string) => {
-    if (!firestore) return;
-    const tourRef = doc(firestore, 'tours', id);
+  const handleDeleteConfirm = () => {
+    if (!firestore || !tourToDelete) return;
+    const tourRef = doc(firestore, 'tours', tourToDelete);
     deleteDocumentNonBlocking(tourRef);
+    toast({
+      variant: "destructive",
+      title: "Proyecto Eliminado",
+      description: "El tour y todos sus datos asociados han sido borrados permanentemente.",
+    });
+    setTourToDelete(null);
   };
 
   if (isLoading) {
@@ -109,7 +132,10 @@ export default function AdminDashboard() {
                         </>
                       )}
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive cursor-pointer" onClick={() => deleteTour(tour.id)}>
+                    <DropdownMenuItem 
+                      className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive" 
+                      onClick={() => setTourToDelete(tour.id)}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" /> {isSpanish ? 'Eliminar Proyecto' : 'Delete Project'}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -149,6 +175,36 @@ export default function AdminDashboard() {
           </Link>
         </div>
       )}
+
+      {/* Diálogo de Confirmación de Eliminación */}
+      <AlertDialog open={!!tourToDelete} onOpenChange={(open) => !open && setTourToDelete(null)}>
+        <AlertDialogContent className="rounded-[2rem]">
+          <AlertDialogHeader>
+            <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-2">
+              <AlertTriangle className="text-destructive w-6 h-6" />
+            </div>
+            <AlertDialogTitle className="text-xl font-bold">
+              {isSpanish ? '¿Estás completamente seguro?' : 'Are you absolutely sure?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
+              {isSpanish 
+                ? 'Esta acción no se puede deshacer. Se eliminará el proyecto permanentemente de nuestros servidores, incluyendo todas las escenas y enlaces configurados.' 
+                : 'This action cannot be undone. This will permanently delete your project from our servers, including all configured scenes and links.'}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel className="rounded-xl border-muted-foreground/20">
+              {isSpanish ? 'Cancelar' : 'Cancel'}
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDeleteConfirm}
+              className="bg-destructive hover:bg-destructive/90 rounded-xl"
+            >
+              {isSpanish ? 'Sí, eliminar proyecto' : 'Yes, delete project'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
