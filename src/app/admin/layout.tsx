@@ -5,13 +5,14 @@ import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Languages } from 
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter } from 'next/navigation';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const firestore = useFirestore();
   const router = useRouter();
 
@@ -30,6 +31,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { data: siteConfig } = useDoc(siteConfigRef);
 
   const isSpanish = siteConfig?.defaultLanguage !== 'en';
+
+  const handleLogout = async () => {
+    try {
+      await auth.signOut();
+      router.push('/');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   if (isUserLoading || isAdminLoading) {
     return (
@@ -92,6 +102,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {isSpanish ? 'Configuración' : 'Settings'}
             </Button>
           </Link>
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/5 mt-auto"
+            onClick={handleLogout}
+          >
+            <LogOut className="w-4 h-4" />
+            {isSpanish ? 'Cerrar Sesión' : 'Logout'}
+          </Button>
         </nav>
 
         <div className="p-4 border-t">
