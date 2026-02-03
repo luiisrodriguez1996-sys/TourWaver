@@ -32,9 +32,9 @@ const content = {
   pt: {
     title: "Termos de Uso",
     back: "Voltar ao Início",
-    updated: "Última atualização: Janeiro 2026",
+    updated: "Última actualización: Janeiro 2026",
     section1: "1. Aceitação de Termos",
-    text1: "Ao acessar e usar o Tour Weaver, você concorda em cumprir estes termos de serviço. Nossos serviços são projetados para profissionais imobiliários que buscam melhorar a visualização de suas propriedades.",
+    text1: "Ao acessar e usar o Tour Weaver, você concorda em cumprir estes termos de serviço. Nossos servicios são projetados para profissionais imobiliários que buscam melhorar a visualização de suas propriedades.",
     section2: "2. Uso do Serviço",
     text2: "Você concorda em usar a plataforma de forma ética e profissional. Não é permitido o uso de imagens que não lhe pertençam ou para as cuales você não tenha direitos de distribuição.",
     section3: "3. Propriedade Intelectual",
@@ -56,7 +56,7 @@ export default function TermsPage() {
 
   return (
     <div className="min-h-screen bg-background py-12 px-4">
-      <div className="max-w-3xl auto">
+      <div className="max-w-3xl mx-auto">
         <Link href="/">
           <Button variant="ghost" className="mb-8 gap-2">
             <ArrowLeft className="w-4 h-4" /> {t.back}
