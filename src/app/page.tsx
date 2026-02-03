@@ -27,11 +27,11 @@ const translations = {
     portafolio: "Portafolio",
     contacto: "Contacto",
     servTitle: "Soluciones de Visualización Inmobiliaria",
-    servDesc: "Ofrecemos un servicio integral de captura y creación de tours virtuales optimizados para la venta de inmuebles.",
+    servDesc: "Ofrecemos un servicio integral de captura y creación de tours virtuales optimizados para tus listados inmobiliarios.",
     serv1Title: "Captura de Alta Fidelidad",
     serv1Desc: "Fotografía panorámica profesional con post-procesamiento para que cada estancia luzca impecable y luminosa.",
     serv2Title: "Navegación Fluida",
-    serv2Desc: "Diseñamos una interfaz personalizada e intuitiva para que los compradores naveguen por la propiedad de forma natural.",
+    serv2Desc: "Diseñamos una interfaz personalizada e intuitiva para que tus clientes naveguen por la propiedad de forma natural.",
     serv3Title: "Enfoque Comercial",
     serv3Desc: "Tours diseñados específicamente para brokers, incluyendo información relevante y puntos de contacto directos.",
     ctaTitle: "¿Interesado en potenciar tus listados?",
@@ -40,7 +40,9 @@ const translations = {
     ctaRates: "Ver Tarifas",
     ctaGuarantee: "Servicio Garantizado",
     ctaQuality: "Calidad Profesional",
-    footerCopy: "© 2024 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados."
+    footerCopy: "© 2024 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
+    footerTerms: "Condiciones de Uso",
+    footerPrivacy: "Privacidad"
   },
   en: {
     heroBadge: "Professional Real Estate Service",
@@ -55,11 +57,11 @@ const translations = {
     portafolio: "Portfolio",
     contacto: "Contact",
     servTitle: "Real Estate Visualization Solutions",
-    servDesc: "We offer a comprehensive service of capturing and creating virtual tours optimized for real estate sales.",
+    servDesc: "We offer a comprehensive service of capturing and creating virtual tours optimized for your real estate listings.",
     serv1Title: "High Fidelity Capture",
     serv1Desc: "Professional panoramic photography with post-processing so that each room looks impeccable and bright.",
     serv2Title: "Fluid Navigation",
-    serv2Desc: "We design a personalized and intuitive interface so that buyers navigate the property naturally.",
+    serv2Desc: "We design a personalized and intuitive interface so that your clients navigate the property naturally.",
     serv3Title: "Commercial Focus",
     serv3Desc: "Tours designed specifically for brokers, including relevant information and direct contact points.",
     ctaTitle: "Interested in boosting your listings?",
@@ -68,14 +70,16 @@ const translations = {
     ctaRates: "See Rates",
     ctaGuarantee: "Guaranteed Service",
     ctaQuality: "Professional Quality",
-    footerCopy: "© 2024 Tour Weaver - 360° Visualization Services. All rights reserved."
+    footerCopy: "© 2024 Tour Weaver - 360° Visualization Services. All rights reserved.",
+    footerTerms: "Terms of Use",
+    footerPrivacy: "Privacy"
   },
   pt: {
     heroBadge: "Serviço Profissional para Real Estate",
     heroTitle: "Mostre Propriedades com",
     heroTitleHighlight: "Tours 360°",
     heroTitleEnd: "de Alta Gama",
-    heroDesc: "Ajudamos corretores e imobiliárias a destacar suas propriedades como um negócio inovador. Criamos experiências imersivas que permitem aos seus clientes visitar seu futuro lar de qualquer lugar do mundo.",
+    heroDesc: "Ajudamos corretores e imobiliárias a destacar suas propriedades como um negocio inovador. Criamos experiências imersivas que permitem aos seus clientes visitar seu futuro lar de qualquer lugar do mundo.",
     btnPresupuesto: "Solicitar Orçamento",
     btnContratar: "Contratar Serviço",
     btnPortafolio: "Ver Portfólio",
@@ -83,11 +87,11 @@ const translations = {
     portafolio: "Portfólio",
     contacto: "Contato",
     servTitle: "Soluções de Visualização Imobiliária",
-    servDesc: "Oferecemos um serviço integral de captura e criação de tours virtuais otimizados para a venda de imóveis.",
+    servDesc: "Oferecemos um serviço integral de captura e criação de tours virtuais otimizados para as suas listagens de imóveis.",
     serv1Title: "Captura de Alta Fidelidade",
-    serv1Desc: "Fotografia panorâmica profissional com pós-processamento para que cada ambiente pareça impecável e luminoso.",
+    serv1Desc: "Fotografia panorâmica profesional com pós-processamento para que cada ambiente pareça impecável e luminoso.",
     serv2Title: "Navegação Fluida",
-    serv2Desc: "Desenhamos uma interface personalizada e intuitiva para que os compradores naveguem pela propriedade de forma natural.",
+    serv2Desc: "Desenhamos uma interface personalizada e intuitiva para que seus clientes naveguem pela propriedade de forma natural.",
     serv3Title: "Foco Comercial",
     serv3Desc: "Tours desenhados especificamente para corretores, incluindo informações relevantes e pontos de contato diretos.",
     ctaTitle: "Interessado em impulsionar seus anúncios?",
@@ -96,7 +100,9 @@ const translations = {
     ctaRates: "Ver Tarifas",
     ctaGuarantee: "Serviço Garantido",
     ctaQuality: "Qualidade Profissional",
-    footerCopy: "© 2024 Tour Weaver - Serviços de Visualização 360°. Todos os direitos reservados."
+    footerCopy: "© 2024 Tour Weaver - Serviços de Visualização 360°. Todos os direitos reservados.",
+    footerTerms: "Termos de Uso",
+    footerPrivacy: "Privacidade"
   }
 };
 
@@ -256,17 +262,24 @@ export default function Home() {
       </main>
 
       <footer className="bg-background border-t py-12">
-        <div className="container mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
-              <Globe className="text-white w-4 h-4" />
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
+                <Globe className="text-white w-4 h-4" />
+              </div>
+              <span className="font-bold font-headline text-primary">Tour Weaver</span>
             </div>
-            <span className="font-bold font-headline text-primary">Tour Weaver</span>
+            <nav className="flex flex-wrap justify-center gap-6">
+              <Link href="#servicios" className="text-sm text-muted-foreground hover:text-primary">{t.servicios}</Link>
+              <Link href="#portafolio" className="text-sm text-muted-foreground hover:text-primary">{t.portafolio}</Link>
+              <Link href="#contacto" className="text-sm text-muted-foreground hover:text-primary">{t.contacto}</Link>
+              <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary">{t.footerTerms}</Link>
+              <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary">{t.footerPrivacy}</Link>
+            </nav>
           </div>
-          <p className="text-sm text-muted-foreground">{t.footerCopy}</p>
-          <div className="flex gap-6">
-            <Link href="#servicios" className="text-sm text-muted-foreground hover:text-primary">{t.servicios}</Link>
-            <Link href="#contacto" className="text-sm text-muted-foreground hover:text-primary">{t.contacto}</Link>
+          <div className="border-t pt-8 text-center">
+            <p className="text-sm text-muted-foreground">{t.footerCopy}</p>
           </div>
         </div>
       </footer>
