@@ -19,7 +19,6 @@ import {
   Link as LinkIcon,
   PlusCircle,
   Map as MapIcon,
-  Sparkles,
   Upload,
   Loader2,
   Check,
@@ -33,7 +32,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { suggestSceneLinks } from '@/ai/flows/ai-suggest-scene-links';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
@@ -61,7 +59,6 @@ export default function TourEditor() {
   
   const [localScenes, setLocalScenes] = useState<Scene[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
-  const [isAiLoading, setIsAiLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -222,49 +219,6 @@ export default function TourEditor() {
     }
   };
 
-  const handleAiSuggest = async () => {
-    if (localScenes.length < 2) {
-      toast({ variant: "destructive", title: "Estancias Insuficientes", description: "Añade al menos dos estancias." });
-      return;
-    }
-
-    setIsAiLoading(true);
-    try {
-      const inputScenes = localScenes.map((s: any) => ({
-        id: s.id,
-        description: s.description || s.name,
-        imageDataUri: 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAABAAEDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElUWFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqGhc4SFxlNWVlsZ2iPj50mJqpGSk5SFxwdJhoc4iJipjKlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oAAAIRAxEAPwD/AD/AP/Z'
-      }));
-
-      const suggestions = await suggestSceneLinks({ scenes: inputScenes });
-      
-      const newScenes = [...localScenes];
-      suggestions.forEach(sug => {
-        const sourceIdx = newScenes.findIndex(s => s.id === sug.sourceSceneId);
-        if (sourceIdx !== -1) {
-          const target = newScenes.find(s => s.id === sug.targetSceneId);
-          const newHotspot: Hotspot = {
-            id: 'ai-' + Math.random().toString(36).substr(2, 9),
-            sceneId: sug.sourceSceneId,
-            targetSceneId: sug.targetSceneId,
-            label: `Ir a ${target?.name || 'Siguiente Escena'}`,
-            yaw: Math.random() * 360,
-            pitch: 0
-          };
-          newScenes[sourceIdx].hotspots = [...(newScenes[sourceIdx].hotspots || []), newHotspot];
-        }
-      });
-
-      setLocalScenes(newScenes);
-      setHasUnsavedChanges(true);
-      toast({ title: "Análisis de IA Completo", description: "Se han añadido sugerencias de enlace." });
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error de IA", description: "No se pudieron generar sugerencias." });
-    } finally {
-      setIsAiLoading(false);
-    }
-  };
-
   const deleteActiveScene = () => {
     if (localScenes.length <= 1) {
        toast({ variant: "destructive", title: "Error", description: "Un tour debe tener al menos una estancia." });
@@ -310,10 +264,6 @@ export default function TourEditor() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" className="hidden sm:flex gap-2" onClick={handleAiSuggest} disabled={isAiLoading}>
-            {isAiLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4 text-accent" />}
-            IA Auto-Enlazar
-          </Button>
           <Button 
             className="bg-primary hover:bg-primary/90 gap-2" 
             onClick={handleSaveAll} 
@@ -388,7 +338,7 @@ export default function TourEditor() {
           <Card className="bg-accent/5 border-accent/20">
             <CardContent className="py-3 px-4 flex items-center gap-4">
               <div className="w-8 h-8 bg-accent/20 rounded-full flex items-center justify-center">
-                <Sparkles className="w-4 h-4 text-accent" />
+                <PlusCircle className="w-4 h-4 text-accent" />
               </div>
               <p className="text-xs sm:text-sm text-accent-foreground">
                 <span className="font-bold">Modo Tejedor:</span> Toca en la vista 360 para crear un enlace hacia otra estancia.
