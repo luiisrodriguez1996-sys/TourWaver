@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/tabs';
 import { Separator } from '@/components/ui/separator';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Switch } from '@/components/ui/switch';
@@ -33,7 +33,8 @@ import {
   Info,
   Layers,
   ImageOff,
-  AlignLeft
+  AlignLeft,
+  XCircle
 } from 'lucide-react';
 import {
   Select,
@@ -255,6 +256,12 @@ export default function TourEditor() {
     updateLocalScene({ floorPlanX: x, floorPlanY: y });
   };
 
+  const clearSceneLocation = () => {
+    if (!activeSceneId) return;
+    updateLocalScene({ floorPlanX: undefined, floorPlanY: undefined });
+    toast({ title: "Ubicación eliminada" });
+  };
+
   const addHotspot = (yaw: number, pitch: number) => {
     if (!activeSceneId || localScenes.length < 2) return;
     const targetScene = localScenes.find(s => s.id !== activeSceneId);
@@ -427,7 +434,21 @@ export default function TourEditor() {
                 
                 {activeFloor && (
                   <div className="space-y-2 pt-2">
-                    <Label className="text-xs font-bold flex items-center gap-2"><Crosshair className="w-3.5 h-3.5" /> Ubicación en {activeFloor.name}</Label>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold flex items-center gap-2">
+                        <Crosshair className="w-3.5 h-3.5" /> Ubicación en {activeFloor.name}
+                      </Label>
+                      {activeScene?.floorPlanX !== undefined && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={clearSceneLocation}
+                        >
+                          <XCircle className="w-3 h-3 mr-1" /> Quitar ubicación
+                        </Button>
+                      )}
+                    </div>
                     {activeFloor.imageUrl ? (
                       <div className="relative aspect-video bg-muted rounded-xl border-2 border-primary/20 cursor-crosshair overflow-hidden" onClick={handleFloorPlanClick}>
                         <img src={activeFloor.imageUrl} className="w-full h-full object-contain pointer-events-none" alt="Plano" />
