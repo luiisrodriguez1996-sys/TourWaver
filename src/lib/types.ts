@@ -1,21 +1,26 @@
-
 export interface Tour {
   id: string;
   name: string;
-  clientName: string; // Internal client name for grouping
+  clientName: string;
   slug: string;
   description: string;
   published: boolean;
-  floorPlanUrl?: string;
+  floors?: Floor[];
   showFloorPlan?: boolean;
   thumbnailUrl?: string;
-  address?: string; // Physical address
-  googleMapsUrl?: string; // Manual Google Maps link
+  address?: string;
+  googleMapsUrl?: string;
   latitude?: number;
   longitude?: number;
   createdAt: number;
   updatedAt: number;
-  scenes: Scene[];
+  sceneIds?: string[];
+}
+
+export interface Floor {
+  id: string;
+  name: string;
+  imageUrl: string;
 }
 
 export interface Scene {
@@ -24,9 +29,10 @@ export interface Scene {
   name: string;
   description: string;
   imageUrl: string;
+  floorId?: string; // ID of the floor this scene belongs to
   hotspots: Hotspot[];
-  floorPlanX?: number; // Position X in percentage (0-100)
-  floorPlanY?: number; // Position Y in percentage (0-100)
+  floorPlanX?: number;
+  floorPlanY?: number;
 }
 
 export interface Hotspot {
@@ -34,8 +40,8 @@ export interface Hotspot {
   sceneId: string;
   targetSceneId: string;
   label: string;
-  yaw: number; // in degrees
-  pitch: number; // in degrees
+  yaw: number;
+  pitch: number;
 }
 
 export interface User {

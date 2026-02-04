@@ -1,9 +1,8 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Scene, Hotspot, Tour } from '@/lib/types';
+import { Scene, Hotspot, Tour, Floor } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,13 +26,11 @@ import {
   Loader2,
   AlertCircle,
   Upload,
-  Link as LinkIcon,
   Search,
-  CheckCircle2,
   ChevronUp,
   ChevronDown,
-  Navigation,
-  Info
+  Info,
+  Layers
 } from 'lucide-react';
 import {
   Select,
@@ -79,7 +76,7 @@ export default function TourEditor() {
     name: '',
     clientName: '',
     description: '',
-    floorPlanUrl: '',
+    floors: [] as Floor[],
     showFloorPlan: false,
     address: '',
     googleMapsUrl: ''
@@ -101,7 +98,7 @@ export default function TourEditor() {
         name: tour.name || '',
         clientName: tour.clientName || '',
         description: tour.description || '',
-        floorPlanUrl: tour.floorPlanUrl || '',
+        floors: tour.floors || [],
         showFloorPlan: !!tour.showFloorPlan,
         address: tour.address || '',
         googleMapsUrl: tour.googleMapsUrl || ''
@@ -135,6 +132,7 @@ export default function TourEditor() {
     : [];
 
   const activeScene = localScenes.find((s) => s.id === activeSceneId);
+  const activeFloor = localTourInfo.floors.find(f => f.id === activeScene?.floorId);
 
   const compressImage = (dataUrl: string, maxWidth = 4096, quality = 0.7): Promise<string> => {
     return new Promise((resolve) => {
@@ -176,16 +174,17 @@ export default function TourEditor() {
             name: 'Nueva Estancia',
             description: '',
             imageUrl: imageUrl,
-            hotspots: []
+            hotspots: [],
+            floorId: localTourInfo.floors[0]?.id || undefined
           };
           setLocalScenes(prev => [...prev, newScene]);
           setActiveSceneId(sceneId);
           setHasUnsavedChanges(true);
           setIsUploading(false);
-          toast({ title: "Estancia añadida", description: "Recuerda guardar para confirmar los cambios." });
+          toast({ title: "Estancia añadida" });
         } catch (error) {
           setIsUploading(false);
-          toast({ variant: "destructive", title: "Error", description: "No se pudo procesar la imagen." });
+          toast({ variant: "destructive", title: "Error" });
         }
       };
       reader.readAsDataURL(file);
@@ -196,13 +195,39 @@ export default function TourEditor() {
     const newScenes = [...localScenes];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
     if (targetIndex < 0 || targetIndex >= newScenes.length) return;
-    
     [newScenes[index], newScenes[targetIndex]] = [newScenes[targetIndex], newScenes[index]];
     setLocalScenes(newScenes);
     setHasUnsavedChanges(true);
   };
 
-  const handleFloorPlanFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const addFloor = () => {
+    const newFloor: Floor = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: `Planta ${localTourInfo.floors.length + 1}`,
+      imageUrl: ''
+    };
+    setLocalTourInfo(prev => ({ ...prev, floors: [...prev.floors, newFloor], showFloorPlan: true }));
+    setHasUnsavedChanges(true);
+  };
+
+  const updateFloor = (floorId: string, updates: Partial<Floor>) => {
+    setLocalTourInfo(prev => ({
+      ...prev,
+      floors: prev.floors.map(f => f.id === floorId ? { ...f, ...updates } : f)
+    }));
+    setHasUnsavedChanges(true);
+  };
+
+  const removeFloor = (floorId: string) => {
+    setLocalTourInfo(prev => ({
+      ...prev,
+      floors: prev.floors.filter(f => f.id !== floorId)
+    }));
+    setLocalScenes(prev => prev.map(s => s.floorId === floorId ? { ...s, floorId: undefined, floorPlanX: undefined, floorPlanY: undefined } : s));
+    setHasUnsavedChanges(true);
+  };
+
+  const handleFloorImageUpload = async (floorId: string, event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       setIsUploading(true);
@@ -211,15 +236,13 @@ export default function TourEditor() {
         try {
           let imageUrl = reader.result as string;
           if (file.size > 300000) {
-            imageUrl = await compressImage(imageUrl, 1024, 0.7);
+            imageUrl = await compressImage(imageUrl, 1500, 0.7);
           }
-          setLocalTourInfo(prev => ({ ...prev, floorPlanUrl: imageUrl, showFloorPlan: true }));
-          setHasUnsavedChanges(true);
+          updateFloor(floorId, { imageUrl });
           setIsUploading(false);
-          toast({ title: "Plano cargado", description: "El plano ha sido añadido a la propiedad." });
         } catch (error) {
           setIsUploading(false);
-          toast({ variant: "destructive", title: "Error", description: "No se pudo procesar el plano." });
+          toast({ variant: "destructive", title: "Error al subir plano" });
         }
       };
       reader.readAsDataURL(file);
@@ -233,27 +256,15 @@ export default function TourEditor() {
   };
 
   const handleFloorPlanClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!activeSceneId) return;
+    if (!activeSceneId || !activeFloor) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
     updateLocalScene({ floorPlanX: x, floorPlanY: y });
-    toast({ title: "Ubicación marcada", description: `Posición fijada para ${activeScene?.name}` });
-  };
-
-  const updateHotspot = (hotspotId: string, updates: Partial<Hotspot>) => {
-    if (!activeScene) return;
-    const updatedHotspots = activeScene.hotspots.map(h => 
-      h.id === hotspotId ? { ...h, ...updates } : h
-    );
-    updateLocalScene({ hotspots: updatedHotspots });
   };
 
   const addHotspot = (yaw: number, pitch: number) => {
-    if (!activeSceneId || localScenes.length < 2) {
-       toast({ variant: "destructive", title: "Acción no permitida", description: "Necesitas al menos dos estancias para crear un enlace." });
-       return;
-    }
+    if (!activeSceneId || localScenes.length < 2) return;
     const targetScene = localScenes.find(s => s.id !== activeSceneId);
     const newHotspot: Hotspot = {
       id: Math.random().toString(36).substr(2, 9),
@@ -263,29 +274,20 @@ export default function TourEditor() {
       yaw,
       pitch
     };
-    const updatedHotspots = [...(activeScene?.hotspots || []), newHotspot];
-    updateLocalScene({ hotspots: updatedHotspots });
-    
+    updateLocalScene({ hotspots: [...(activeScene?.hotspots || []), newHotspot] });
     setActiveTab('links');
     setHighlightedHotspotId(newHotspot.id);
   };
 
   const removeHotspot = (hotspotId: string) => {
-    const updatedHotspots = activeScene?.hotspots.filter((h: any) => h.id !== hotspotId) || [];
-    updateLocalScene({ hotspots: updatedHotspots });
-    if (highlightedHotspotId === hotspotId) setHighlightedHotspotId(null);
+    updateLocalScene({ hotspots: activeScene?.hotspots.filter(h => h.id !== hotspotId) || [] });
   };
 
-  const handleHotspotViewerClick = (_targetSceneId: string, hotspotId: string) => {
-    setActiveTab('links');
-    setHighlightedHotspotId(hotspotId);
-    
-    setTimeout(() => {
-      const element = document.getElementById(`hotspot-card-${hotspotId}`);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }, 100);
+  const updateHotspot = (hotspotId: string, updates: Partial<Hotspot>) => {
+    if (!activeScene) return;
+    updateLocalScene({
+      hotspots: activeScene.hotspots.map(h => h.id === hotspotId ? { ...h, ...updates } : h)
+    });
   };
 
   const handleSaveAll = async () => {
@@ -293,394 +295,189 @@ export default function TourEditor() {
     setIsSaving(true);
     try {
       const batch = writeBatch(firestore);
-      
       for (const scene of localScenes) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', scene.id);
         batch.set(sceneDocRef, scene, { merge: true });
       }
-      
       for (const sceneIdToDelete of deletedSceneIds) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', sceneIdToDelete);
         batch.delete(sceneDocRef);
       }
-      
-      if (tourRef && tour) {
+      if (tourRef) {
         batch.set(tourRef, { 
-          name: localTourInfo.name,
-          clientName: localTourInfo.clientName,
-          description: localTourInfo.description,
-          floorPlanUrl: localTourInfo.floorPlanUrl,
-          showFloorPlan: localTourInfo.showFloorPlan,
-          address: localTourInfo.address,
-          googleMapsUrl: localTourInfo.googleMapsUrl,
-          thumbnailUrl: localScenes.length > 0 ? localScenes[0].imageUrl : tour.thumbnailUrl || '',
+          ...localTourInfo,
+          thumbnailUrl: localScenes[0]?.imageUrl || '',
           sceneIds: localScenes.map(s => s.id),
           updatedAt: Date.now() 
         }, { merge: true });
       }
-      
       await batch.commit();
       setDeletedSceneIds([]);
       setHasUnsavedChanges(false);
       setIsSaving(false);
-      toast({ title: "Propiedad Guardada", description: "Todos los cambios han sido sincronizados." });
+      toast({ title: "Guardado con éxito" });
     } catch (error) {
-      console.error(error);
       setIsSaving(false);
-      toast({ variant: "destructive", title: "Error al guardar", description: "Ocurrió un problema al subir los datos." });
+      toast({ variant: "destructive", title: "Error al guardar" });
     }
   };
 
-  const deleteActiveScene = () => {
-    if (localScenes.length <= 1) {
-       toast({ variant: "destructive", title: "Error", description: "Un tour debe tener al menos una estancia." });
-       return;
-    }
-    if (activeSceneId) {
-      if (serverScenes?.some(s => s.id === activeSceneId)) {
-        setDeletedSceneIds(prev => [...prev, activeSceneId]);
-      }
-      const filtered = localScenes.filter(s => s.id !== activeSceneId);
-      setLocalScenes(filtered);
-      setActiveSceneId(filtered[0]?.id || null);
-      setHasUnsavedChanges(true);
-      toast({ title: "Estancia removida", description: "Presiona Guardar Todo para aplicar los cambios." });
-    }
-  };
-
-  if (isTourLoading || isScenesLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-10 h-10 animate-spin text-primary" />
-          <p className="text-muted-foreground animate-pulse">Cargando editor profesional...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!tour) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-3xl shadow-xl max-w-md">
-          <h1 className="text-2xl font-bold mb-2">Propiedad no encontrada</h1>
-          <p className="text-muted-foreground mb-8">La propiedad que intentas editar no existe o no tienes permisos para acceder.</p>
-          <Button onClick={() => router.push('/admin')}>Volver al Panel</Button>
-        </div>
-      </div>
-    );
-  }
+  if (isTourLoading || isScenesLoading) return <div className="p-8"><Loader2 className="animate-spin" /></div>;
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => router.push('/admin')}>
-            <ArrowLeft className="w-5 h-5" />
-          </Button>
+          <Button variant="ghost" size="icon" onClick={() => router.push('/admin')}><ArrowLeft className="w-5 h-5" /></Button>
           <div>
-            <div className="flex items-center gap-1.5 text-primary text-[10px] font-bold uppercase">
-              <User className="w-3 h-3" /> {localTourInfo.clientName}
-            </div>
-            <h1 className="text-2xl font-bold font-headline">{localTourInfo.name || tour.name}</h1>
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              Editor de Propiedad • {localScenes.length} Estancias
-              {hasUnsavedChanges && (
-                <span className="flex items-center gap-1 text-accent font-bold animate-pulse">
-                  <AlertCircle className="w-3 h-3" /> Cambios sin guardar
-                </span>
-              )}
-            </p>
+            <div className="flex items-center gap-1.5 text-primary text-[10px] font-bold uppercase"><User className="w-3 h-3" /> {localTourInfo.clientName}</div>
+            <h1 className="text-2xl font-bold">{localTourInfo.name}</h1>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button 
-            className="bg-primary hover:bg-primary/90 gap-2" 
-            onClick={handleSaveAll} 
-            disabled={isSaving || !hasUnsavedChanges}
-          >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {isSaving ? 'Guardando...' : 'Guardar Todo'}
-          </Button>
-        </div>
+        <Button className="bg-primary gap-2" onClick={handleSaveAll} disabled={isSaving || !hasUnsavedChanges}>
+          {isSaving ? <Loader2 className="animate-spin w-4 h-4" /> : <Save className="w-4 h-4" />} Guardar Todo
+        </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:h-[calc(100vh-220px)]">
-        <div className="lg:col-span-3 space-y-6 overflow-y-auto pr-2 custom-scrollbar bg-white rounded-3xl p-4 border shadow-sm">
-          <section className="space-y-4">
-            <h3 className="font-semibold text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-              <ImageIcon className="w-4 h-4" /> Estancias
-            </h3>
-            <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full gap-2 border-dashed h-12" 
-                onClick={() => sceneFileInputRef.current?.click()}
-                disabled={isUploading}
-            >
-                {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                {isUploading ? 'Procesando...' : 'Añadir Estancia'}
-            </Button>
-            <input type="file" ref={sceneFileInputRef} className="hidden" accept="image/*" onChange={handleSceneFileChange} />
-            <div className="space-y-2">
-              {localScenes.map((scene, index) => (
-                <Card 
-                  key={scene.id} 
-                  className={`transition-all border-2 relative group ${activeSceneId === scene.id ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
-                >
-                  <div className="p-2 flex items-center gap-3">
-                    <div 
-                      className="w-14 h-10 rounded bg-muted overflow-hidden flex-shrink-0 cursor-pointer"
-                      onClick={() => {
-                        setActiveSceneId(scene.id);
-                        setHighlightedHotspotId(null);
-                      }}
-                    >
-                      <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
-                    </div>
-                    <div 
-                      className="flex-1 min-w-0 cursor-pointer"
-                      onClick={() => {
-                        setActiveSceneId(scene.id);
-                        setHighlightedHotspotId(null);
-                      }}
-                    >
-                      <p className="text-xs font-bold truncate">{scene.name}</p>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-muted-foreground">{(scene.hotspots || []).length} enlaces</span>
-                        {index === 0 && <span className="text-[10px] text-primary font-black uppercase">Inicial</span>}
-                        {scene.floorPlanX !== undefined && <MapPin className="w-2.5 h-2.5 text-primary" />}
-                      </div>
-                    </div>
-                    
-                    <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button size="icon" variant="ghost" className="h-5 w-5" disabled={index === 0} onClick={(e) => { e.stopPropagation(); moveScene(index, 'up'); }}>
-                        <ChevronUp className="w-3 h-3" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-5 w-5" disabled={index === localScenes.length - 1} onClick={(e) => { e.stopPropagation(); moveScene(index, 'down'); }}>
-                        <ChevronDown className="w-3 h-3" />
-                      </Button>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-auto lg:min-h-[600px]">
+        <div className="lg:col-span-3 space-y-4 bg-white rounded-3xl p-4 border shadow-sm h-full overflow-y-auto">
+          <h3 className="font-semibold text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Estancias</h3>
+          <Button variant="outline" className="w-full gap-2 border-dashed h-12" onClick={() => sceneFileInputRef.current?.click()}>
+            {isUploading ? <Loader2 className="animate-spin w-4 h-4" /> : <Plus className="w-4 h-4" />} Añadir Estancia
+          </Button>
+          <input type="file" ref={sceneFileInputRef} className="hidden" accept="image/*" onChange={handleSceneFileChange} />
+          
+          <div className="space-y-2">
+            {localScenes.map((scene, index) => (
+              <Card key={scene.id} className={cn("p-2 transition-all cursor-pointer border-2", activeSceneId === scene.id ? 'border-primary bg-primary/5' : 'border-transparent')}>
+                <div className="flex items-center gap-3">
+                  <div className="w-14 h-10 rounded bg-muted overflow-hidden flex-shrink-0" onClick={() => setActiveSceneId(scene.id)}>
+                    <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
+                  </div>
+                  <div className="flex-1 min-w-0" onClick={() => setActiveSceneId(scene.id)}>
+                    <p className="text-xs font-bold truncate">{scene.name}</p>
+                    <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+                      {scene.floorId && <Layers className="w-2.5 h-2.5" />}
+                      {scene.floorPlanX !== undefined && <MapPin className="w-2.5 h-2.5 text-primary" />}
                     </div>
                   </div>
-                </Card>
-              ))}
-            </div>
-          </section>
+                  <div className="flex flex-col gap-0.5">
+                    <Button size="icon" variant="ghost" className="h-6 w-6" disabled={index === 0} onClick={() => moveScene(index, 'up')}><ChevronUp className="w-3 h-3" /></Button>
+                    <Button size="icon" variant="ghost" className="h-6 w-6" disabled={index === localScenes.length - 1} onClick={() => moveScene(index, 'down')}><ChevronDown className="w-3 h-3" /></Button>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
         </div>
 
-        <div className="lg:col-span-6 flex flex-col gap-4 min-h-[400px]">
-          <div className="flex-grow rounded-3xl overflow-hidden shadow-xl border relative bg-black">
-            {activeScene ? (
+        <div className="lg:col-span-6 flex flex-col gap-4">
+          <div className="flex-grow rounded-3xl overflow-hidden shadow-xl border relative bg-black aspect-video">
+            {activeScene && (
               <ThreeSixtyViewer 
                 imageUrl={activeScene.imageUrl} 
                 hotspots={activeScene.hotspots || []}
                 isEditing={true}
                 onSceneClick={addHotspot}
-                onHotspotClick={handleHotspotViewerClick}
+                onHotspotClick={(tid, hid) => { setActiveTab('links'); setHighlightedHotspotId(hid); }}
               />
-            ) : (
-              <div className="w-full h-full bg-muted flex items-center justify-center">
-                <p>Añade una estancia para empezar</p>
-              </div>
             )}
           </div>
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="py-2.5 px-4 flex items-center gap-3">
-              <PlusCircle className="w-4 h-4 text-primary" />
-              <p className="text-[11px] text-primary-foreground/80">
-                <span className="font-bold">Modo Tejedor:</span> Toca en la vista 360 para enlazar. La primera estancia es la portada del tour.
-              </p>
-            </CardContent>
-          </Card>
+          <div className="p-3 bg-primary/5 rounded-2xl flex items-center gap-3 text-[10px] font-medium text-primary border border-primary/20">
+            <Info className="w-4 h-4" /> Toca en la vista 360 para tejer un enlace entre estancias.
+          </div>
         </div>
 
-        <div className="lg:col-span-3 space-y-4 overflow-y-auto pl-2 custom-scrollbar bg-white rounded-3xl p-4 border shadow-sm">
+        <div className="lg:col-span-3 space-y-4 bg-white rounded-3xl p-4 border shadow-sm h-full overflow-y-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="details">Estancia</TabsTrigger>
-              <TabsTrigger value="links">Enlaces</TabsTrigger>
-            </TabsList>
+            <TabsList className="w-full grid grid-cols-2"><TabsTrigger value="details">Estancia</TabsTrigger><TabsTrigger value="links">Enlaces</TabsTrigger></TabsList>
             
-            <TabsContent value="details" className="pt-4 space-y-6">
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Nombre de la Estancia</Label>
-                  <Input value={activeScene?.name || ''} placeholder="ej. Cocina Americana" onChange={(e) => updateLocalScene({ name: e.target.value })} />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Descripción de la Estancia</Label>
-                  <Textarea value={activeScene?.description || ''} placeholder="Describe acabados, detalles..." className="h-24 text-xs resize-none" onChange={(e) => updateLocalScene({ description: e.target.value })} />
+            <TabsContent value="details" className="pt-4 space-y-4">
+              <div className="space-y-3">
+                <div className="space-y-1.5"><Label className="text-xs">Nombre</Label><Input value={activeScene?.name || ''} onChange={e => updateLocalScene({ name: e.target.value })} /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Planta / Piso</Label>
+                  <Select value={activeScene?.floorId || 'none'} onValueChange={val => updateLocalScene({ floorId: val === 'none' ? undefined : val })}>
+                    <SelectTrigger><SelectValue placeholder="Seleccionar planta..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Sin planta</SelectItem>
+                      {localTourInfo.floors.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
                 
-                {localTourInfo.showFloorPlan && localTourInfo.floorPlanUrl && (
-                  <div className="space-y-3">
-                    <Label className="text-xs flex items-center gap-2">
-                      <Crosshair className="w-3 h-3 text-primary" /> Ubicación en el Plano
-                    </Label>
-                    <div className="relative aspect-video bg-muted rounded-xl border-2 border-primary/20 cursor-crosshair overflow-hidden group" onClick={handleFloorPlanClick}>
-                      <img src={localTourInfo.floorPlanUrl} className="w-full h-full object-contain pointer-events-none" alt="Mini Plano" />
-                      {localScenes.map(s => s.floorPlanX !== undefined && (
-                        <div key={s.id} className={`absolute w-3 h-3 rounded-full border-2 border-white shadow-sm -translate-x-1/2 -translate-y-1/2 transition-all ${s.id === activeSceneId ? 'bg-primary scale-150 z-20' : 'bg-muted-foreground/60 z-10'}`} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} />
+                {activeFloor?.imageUrl && (
+                  <div className="space-y-2">
+                    <Label className="text-xs flex items-center gap-2"><Crosshair className="w-3 h-3" /> Ubicación en {activeFloor.name}</Label>
+                    <div className="relative aspect-video bg-muted rounded-xl border-2 border-primary/20 cursor-crosshair overflow-hidden" onClick={handleFloorPlanClick}>
+                      <img src={activeFloor.imageUrl} className="w-full h-full object-contain pointer-events-none" alt="Plano" />
+                      {localScenes.filter(s => s.floorId === activeScene?.floorId).map(s => s.floorPlanX !== undefined && (
+                        <div key={s.id} className={cn("absolute w-3 h-3 rounded-full border-2 border-white -translate-x-1/2 -translate-y-1/2", s.id === activeSceneId ? 'bg-primary scale-150 z-20' : 'bg-muted-foreground/50 z-10')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} />
                       ))}
                     </div>
                   </div>
                 )}
               </div>
-              <Separator />
-              <Button variant="outline" className="w-full gap-2 text-destructive border-destructive/10 hover:bg-destructive/10 h-9 text-xs" onClick={deleteActiveScene}>
-                <Trash2 className="w-4 h-4" /> Eliminar Estancia
-              </Button>
+              <Button variant="outline" className="w-full text-destructive border-destructive/20 mt-4" onClick={() => { if(activeSceneId) { setDeletedSceneIds(prev => [...prev, activeSceneId]); setLocalScenes(prev => prev.filter(s => s.id !== activeSceneId)); setActiveSceneId(localScenes[0]?.id || null); } }}>Eliminar Estancia</Button>
             </TabsContent>
 
-            <TabsContent value="links" className="pt-4 space-y-4">
-              {(!activeScene?.hotspots || activeScene.hotspots.length === 0) ? (
-                <div className="text-center py-12 opacity-40 border rounded-2xl border-dashed">
-                   <PlusCircle className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-                   <p className="text-xs">Usa la vista 360 para crear enlaces</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {activeScene?.hotspots.map((h) => (
-                    <Card key={h.id} id={`hotspot-card-${h.id}`} className={cn("p-3 bg-white border-2 shadow-sm transition-all duration-300", highlightedHotspotId === h.id ? "border-accent ring-1 ring-accent/30" : "border-muted")}>
-                      <div className="space-y-3">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[9px] font-black uppercase text-primary">Navegación</p>
-                          <Button size="icon" variant="ghost" className="text-destructive h-6 w-6" onClick={() => removeHotspot(h.id)}>
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground font-bold">Etiqueta</Label>
-                          <Input value={h.label} className="h-7 text-xs" onChange={(e) => updateHotspot(h.id, { label: e.target.value })} />
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-[10px] text-muted-foreground font-bold">Destino</Label>
-                          <Select value={h.targetSceneId} onValueChange={(val) => {
-                            const target = localScenes.find(s => s.id === val);
-                            updateHotspot(h.id, { targetSceneId: val, label: h.label.startsWith('Ir a') ? `Ir a ${target?.name}` : h.label });
-                          }}>
-                            <SelectTrigger className="h-7 text-xs">
-                              <SelectValue placeholder="Elegir..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {localScenes.filter(s => s.id !== activeSceneId).map(s => (
-                                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <Separator className="my-1 opacity-50" />
-                        <div className="grid grid-cols-2 gap-2">
-                          <div className="space-y-1">
-                            <Label className="text-[8px] uppercase opacity-60">Yaw</Label>
-                            <Input type="number" step="0.1" value={Math.round(h.yaw * 10) / 10} className="h-7 text-[10px] font-mono" onChange={(e) => updateHotspot(h.id, { yaw: parseFloat(e.target.value) || 0 })} />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-[8px] uppercase opacity-60">Pitch</Label>
-                            <Input type="number" step="0.1" value={Math.round(h.pitch * 10) / 10} className="h-7 text-[10px] font-mono" onChange={(e) => updateHotspot(h.id, { pitch: parseFloat(e.target.value) || 0 })} />
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              )}
+            <TabsContent value="links" className="pt-4 space-y-3">
+              {activeScene?.hotspots.map(h => (
+                <Card key={h.id} className={cn("p-3 border-2", highlightedHotspotId === h.id ? 'border-primary' : 'border-muted')}>
+                  <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-primary">Enlace</span><Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeHotspot(h.id)}><Trash2 className="w-3 h-3" /></Button></div>
+                  <Input value={h.label} className="h-7 text-xs mb-2" onChange={e => updateHotspot(h.id, { label: e.target.value })} />
+                  <Select value={h.targetSceneId} onValueChange={val => updateHotspot(h.id, { targetSceneId: val })}>
+                    <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>{localScenes.filter(s => s.id !== activeSceneId).map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </Card>
+              ))}
             </TabsContent>
           </Tabs>
         </div>
       </div>
 
-      <div className="mt-12 space-y-6">
-        <div className="flex items-center gap-2">
-          <Settings className="w-6 h-6 text-primary" />
-          <h2 className="text-xl font-bold font-headline">Configuración de la Propiedad</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="rounded-3xl border shadow-md overflow-hidden">
-            <CardHeader className="bg-primary/5 pb-4">
-              <CardTitle className="text-sm flex items-center gap-2"><Info className="w-4 h-4 text-primary" /> Detalles Generales</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Cliente (Uso Interno)</Label>
-                <div className="relative">
-                  <Input list="edit-clients-list" value={localTourInfo.clientName} className="h-10 rounded-xl" onChange={(e) => { setLocalTourInfo({ ...localTourInfo, clientName: e.target.value }); setHasUnsavedChanges(true); }} />
-                  <Search className="w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <datalist id="edit-clients-list">
-                    {existingClients.map((client: any) => (<option key={client} value={client} />))}
-                  </datalist>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Nombre Público</Label>
-                <Input value={localTourInfo.name} className="h-10 rounded-xl" onChange={(e) => { setLocalTourInfo({ ...localTourInfo, name: e.target.value }); setHasUnsavedChanges(true); }} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Descripción</Label>
-                <Textarea value={localTourInfo.description} className="h-24 rounded-xl resize-none" onChange={(e) => { setLocalTourInfo({ ...localTourInfo, description: e.target.value }); setHasUnsavedChanges(true); }} />
-              </div>
-            </CardContent>
-          </Card>
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Card className="rounded-3xl border shadow-md">
+          <CardHeader className="bg-primary/5 pb-4"><CardTitle className="text-sm">Detalles de Propiedad</CardTitle></CardHeader>
+          <CardContent className="pt-6 space-y-4">
+            <div className="space-y-1.5"><Label className="text-xs font-bold">Cliente</Label><Input value={localTourInfo.clientName} onChange={e => { setLocalTourInfo({...localTourInfo, clientName: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold">Nombre del Tour</Label><Input value={localTourInfo.name} onChange={e => { setLocalTourInfo({...localTourInfo, name: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold">Descripción</Label><Textarea value={localTourInfo.description} onChange={e => { setLocalTourInfo({...localTourInfo, description: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-3xl border shadow-md overflow-hidden">
-            <CardHeader className="bg-primary/5 pb-4">
-              <CardTitle className="text-sm flex items-center gap-2"><MapPin className="w-4 h-4 text-primary" /> Ubicación Geográfica</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Dirección Física</Label>
-                <div className="relative">
-                  <Input value={localTourInfo.address} placeholder="ej. Av. Corrientes 1234, CABA" className="h-10 rounded-xl pr-10" onChange={(e) => { setLocalTourInfo({ ...localTourInfo, address: e.target.value }); setHasUnsavedChanges(true); }} />
-                  {localTourInfo.address && (
-                    <Button variant="ghost" size="icon" className="absolute right-0 top-0 h-10 w-10 text-primary" onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(localTourInfo.address)}`, '_blank')}>
-                      <ExternalLink className="w-4 h-4" />
-                    </Button>
-                  )}
+        <Card className="lg:col-span-2 rounded-3xl border shadow-md">
+          <CardHeader className="bg-primary/5 pb-4 flex flex-row items-center justify-between"><CardTitle className="text-sm">Gestión de Plantas y Planos</CardTitle><Button size="sm" onClick={addFloor} className="h-8 gap-1"><Plus className="w-3 h-3" /> Añadir Planta</Button></CardHeader>
+          <CardContent className="pt-6">
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {localTourInfo.floors.map(floor => (
+                  <Card key={floor.id} className="p-4 border-muted">
+                    <div className="flex items-center justify-between mb-4">
+                      <Input value={floor.name} className="h-8 font-bold border-none bg-muted/50 w-2/3" onChange={e => updateFloor(floor.id, { name: e.target.value })} />
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive" onClick={() => removeFloor(floor.id)}><Trash2 className="w-4 h-4" /></Button>
+                    </div>
+                    <div className="relative aspect-video bg-muted rounded-xl border-2 border-dashed flex flex-col items-center justify-center overflow-hidden cursor-pointer hover:bg-muted/80" onClick={() => document.getElementById(`floor-input-${floor.id}`)?.click()}>
+                      {floor.imageUrl ? (
+                        <img src={floor.imageUrl} className="w-full h-full object-contain" alt={floor.name} />
+                      ) : (
+                        <div className="text-center p-4">
+                          <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
+                          <span className="text-[10px] text-muted-foreground">Subir plano</span>
+                        </div>
+                      )}
+                      <input id={`floor-input-${floor.id}`} type="file" className="hidden" accept="image/*" onChange={e => handleFloorImageUpload(floor.id, e)} />
+                    </div>
+                  </Card>
+                ))}
+             </div>
+             {localTourInfo.floors.length > 0 && (
+                <div className="mt-6 flex items-center justify-between p-3 bg-muted/40 rounded-2xl border">
+                  <Label className="text-xs font-bold">Mostrar selector de planos en el sitio público</Label>
+                  <Switch checked={localTourInfo.showFloorPlan} onCheckedChange={checked => { setLocalTourInfo({...localTourInfo, showFloorPlan: checked}); setHasUnsavedChanges(true); }} />
                 </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-bold">Enlace Manual Google Maps</Label>
-                <Input value={localTourInfo.googleMapsUrl} placeholder="Pega el enlace directo aquí..." className="h-10 rounded-xl" onChange={(e) => { setLocalTourInfo({ ...localTourInfo, googleMapsUrl: e.target.value }); setHasUnsavedChanges(true); }} />
-                {localTourInfo.googleMapsUrl && (
-                  <Button variant="ghost" size="sm" className="h-6 text-[10px] text-primary gap-1 px-1 mt-1" onClick={() => window.open(localTourInfo.googleMapsUrl, '_blank')}>
-                    <ExternalLink className="w-2.5 h-2.5" /> Probar Enlace
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-3xl border shadow-md overflow-hidden">
-            <CardHeader className="bg-primary/5 pb-4">
-              <CardTitle className="text-sm flex items-center gap-2"><Crosshair className="w-4 h-4 text-primary" /> Gestión de Plano</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-4">
-              <div className="flex items-center justify-between p-3 bg-muted/40 rounded-2xl border">
-                <Label className="text-xs cursor-pointer font-bold" htmlFor="floorplan-toggle">Habilitar Plano de Navegación</Label>
-                <Switch id="floorplan-toggle" checked={localTourInfo.showFloorPlan} onCheckedChange={(checked) => { setLocalTourInfo({ ...localTourInfo, showFloorPlan: checked }); setHasUnsavedChanges(true); }} />
-              </div>
-              
-              {localTourInfo.showFloorPlan && (
-                <div className="space-y-3">
-                  <div className="aspect-video bg-muted rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer hover:bg-muted/80 transition-colors overflow-hidden relative" onClick={() => floorPlanFileInputRef.current?.click()}>
-                    {localTourInfo.floorPlanUrl ? (
-                      <img src={localTourInfo.floorPlanUrl} className="w-full h-full object-contain" alt="Plano" />
-                    ) : (
-                      <div className="text-center p-4">
-                        <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                        <span className="text-xs text-muted-foreground">Subir imagen del plano</span>
-                      </div>
-                    )}
-                  </div>
-                  <input type="file" ref={floorPlanFileInputRef} className="hidden" accept="image/*" onChange={handleFloorPlanFileChange} />
-                  <p className="text-[10px] text-muted-foreground italic text-center">Para posicionar estancias en el plano, selecciónalas arriba y toca el mapa en la pestaña "Estancia".</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+             )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
