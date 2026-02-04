@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -50,18 +51,33 @@ export default function PublicTourViewer() {
     return collection(firestore, 'tours', tour.id, 'scenes');
   }, [firestore, tour]);
 
-  const { data: scenes, isLoading: isScenesLoading } = useCollection(scenesRef);
+  const { data: serverScenes, isLoading: isScenesLoading } = useCollection(scenesRef);
 
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [showFloorPlan, setShowFloorPlan] = useState(false);
+  const [orderedScenes, setOrderedScenes] = useState<any[]>([]);
 
   useEffect(() => {
-    if (scenes && scenes.length > 0 && !activeSceneId) {
-      setActiveSceneId(scenes[0].id);
+    if (serverScenes && tour) {
+      let sorted = [...serverScenes];
+      if (tour.sceneIds && tour.sceneIds.length > 0) {
+        sorted.sort((a, b) => {
+          const indexA = tour.sceneIds!.indexOf(a.id);
+          const indexB = tour.sceneIds!.indexOf(b.id);
+          if (indexA === -1 && indexB === -1) return 0;
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+      }
+      setOrderedScenes(sorted);
+      if (sorted.length > 0 && !activeSceneId) {
+        setActiveSceneId(sorted[0].id);
+      }
     }
-  }, [scenes, activeSceneId]);
+  }, [serverScenes, tour, activeSceneId]);
 
-  const activeScene = scenes?.find((s: any) => s.id === activeSceneId);
+  const activeScene = orderedScenes?.find((s: any) => s.id === activeSceneId);
 
   const handleShare = () => {
     if (typeof window !== 'undefined') {
@@ -225,7 +241,7 @@ export default function PublicTourViewer() {
              <DialogTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-10 px-3 md:px-4 flex-shrink-0">
                   <ChevronUp className="w-4 h-4" />
-                  <span className="text-xs md:text-sm font-medium whitespace-nowrap">Estancias ({scenes?.length || 0})</span>
+                  <span className="text-xs md:text-sm font-medium whitespace-nowrap">Estancias ({orderedScenes?.length || 0})</span>
                 </Button>
              </DialogTrigger>
              <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[425px] bg-black/80 backdrop-blur-xl border-white/10 text-white p-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
@@ -234,7 +250,7 @@ export default function PublicTourViewer() {
                 </DialogHeader>
                 <ScrollArea className="max-h-[60vh] p-4">
                   <div className="grid grid-cols-1 gap-2">
-                    {scenes?.map((scene: any) => (
+                    {orderedScenes?.map((scene: any) => (
                       <DialogClose asChild key={scene.id}>
                         <button
                           onClick={() => setActiveSceneId(scene.id)}
@@ -299,7 +315,7 @@ export default function PublicTourViewer() {
                    className="w-full h-full object-contain"
                    data-ai-hint="house floorplan"
                  />
-                 {scenes?.map((s: any) => s.floorPlanX !== undefined && (
+                 {orderedScenes?.map((s: any) => s.floorPlanX !== undefined && (
                    <button
                      key={s.id}
                      onClick={() => {

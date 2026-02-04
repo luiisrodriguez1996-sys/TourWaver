@@ -29,7 +29,10 @@ import {
   Upload,
   Link as LinkIcon,
   Search,
-  CheckCircle2
+  CheckCircle2,
+  ChevronUp,
+  ChevronDown,
+  Navigation
 } from 'lucide-react';
 import {
   Select,
@@ -106,13 +109,26 @@ export default function TourEditor() {
   }, [tour]);
 
   useEffect(() => {
-    if (serverScenes && localScenes.length === 0) {
-      setLocalScenes(serverScenes);
-      if (serverScenes.length > 0 && !activeSceneId) {
-        setActiveSceneId(serverScenes[0].id);
+    if (serverScenes && tour) {
+      // Sort scenes based on tour.sceneIds if it exists
+      let sorted = [...serverScenes];
+      if (tour.sceneIds && tour.sceneIds.length > 0) {
+        sorted.sort((a, b) => {
+          const indexA = tour.sceneIds!.indexOf(a.id);
+          const indexB = tour.sceneIds!.indexOf(b.id);
+          if (indexA === -1 && indexB === -1) return 0;
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          return indexA - indexB;
+        });
+      }
+      
+      setLocalScenes(sorted);
+      if (sorted.length > 0 && !activeSceneId) {
+        setActiveSceneId(sorted[0].id);
       }
     }
-  }, [serverScenes]);
+  }, [serverScenes, tour]);
 
   const existingClients = allTours 
     ? Array.from(new Set(allTours.map((t: any) => t.clientName).filter(Boolean)))
@@ -174,6 +190,16 @@ export default function TourEditor() {
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const moveScene = (index: number, direction: 'up' | 'down') => {
+    const newScenes = [...localScenes];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= newScenes.length) return;
+    
+    [newScenes[index], newScenes[targetIndex]] = [newScenes[targetIndex], newScenes[index]];
+    setLocalScenes(newScenes);
+    setHasUnsavedChanges(true);
   };
 
   const handleFloorPlanFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -240,7 +266,6 @@ export default function TourEditor() {
     const updatedHotspots = [...(activeScene?.hotspots || []), newHotspot];
     updateLocalScene({ hotspots: updatedHotspots });
     
-    // Enfocar automáticamente el nuevo enlace
     setActiveTab('links');
     setHighlightedHotspotId(newHotspot.id);
   };
@@ -252,11 +277,9 @@ export default function TourEditor() {
   };
 
   const handleHotspotViewerClick = (_targetSceneId: string, hotspotId: string) => {
-    // En el editor, no navegamos al destino. En su lugar, enfocamos la configuración.
     setActiveTab('links');
     setHighlightedHotspotId(hotspotId);
     
-    // Temporizador para quitar el resaltado visual después de un momento
     setTimeout(() => {
       const element = document.getElementById(`hotspot-card-${hotspotId}`);
       if (element) {
@@ -270,14 +293,20 @@ export default function TourEditor() {
     setIsSaving(true);
     try {
       const batch = writeBatch(firestore);
+      
+      // Save scenes
       for (const scene of localScenes) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', scene.id);
         batch.set(sceneDocRef, scene, { merge: true });
       }
+      
+      // Delete scenes
       for (const sceneIdToDelete of deletedSceneIds) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', sceneIdToDelete);
         batch.delete(sceneDocRef);
       }
+      
+      // Update tour metadata including order of scenes
       if (tourRef && tour) {
         batch.set(tourRef, { 
           name: localTourInfo.name,
@@ -288,9 +317,11 @@ export default function TourEditor() {
           address: localTourInfo.address,
           googleMapsUrl: localTourInfo.googleMapsUrl,
           thumbnailUrl: localScenes.length > 0 ? localScenes[0].imageUrl : tour.thumbnailUrl || '',
+          sceneIds: localScenes.map(s => s.id), // Persist the order
           updatedAt: Date.now() 
         }, { merge: true });
       }
+      
       await batch.commit();
       setDeletedSceneIds([]);
       setHasUnsavedChanges(false);
@@ -397,25 +428,55 @@ export default function TourEditor() {
                <input type="file" ref={sceneFileInputRef} className="hidden" accept="image/*" onChange={handleSceneFileChange} />
             </div>
             <div className="space-y-2">
-              {localScenes.map((scene) => (
+              {localScenes.map((scene, index) => (
                 <Card 
                   key={scene.id} 
-                  className={`cursor-pointer transition-all border-2 relative ${activeSceneId === scene.id ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
-                  onClick={() => {
-                    setActiveSceneId(scene.id);
-                    setHighlightedHotspotId(null);
-                  }}
+                  className={`transition-all border-2 relative group ${activeSceneId === scene.id ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
                 >
                   <div className="p-2 flex items-center gap-3">
-                    <div className="w-14 h-10 rounded bg-muted overflow-hidden flex-shrink-0">
+                    <div 
+                      className="w-14 h-10 rounded bg-muted overflow-hidden flex-shrink-0 cursor-pointer"
+                      onClick={() => {
+                        setActiveSceneId(scene.id);
+                        setHighlightedHotspotId(null);
+                      }}
+                    >
                       <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div 
+                      className="flex-1 min-w-0 cursor-pointer"
+                      onClick={() => {
+                        setActiveSceneId(scene.id);
+                        setHighlightedHotspotId(null);
+                      }}
+                    >
                       <p className="text-xs font-bold truncate">{scene.name}</p>
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] text-muted-foreground">{(scene.hotspots || []).length} enlaces</span>
-                        {scene.floorPlanX !== undefined && <MapPin className="w-2.5 h-2.5 text-primary" />}
+                        {index === 0 && <span className="text-[10px] text-primary font-black uppercase">Inicial</span>}
                       </div>
+                    </div>
+                    
+                    {/* Reordering Controls */}
+                    <div className="flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-5 w-5" 
+                        disabled={index === 0}
+                        onClick={() => moveScene(index, 'up')}
+                      >
+                        <ChevronUp className="w-3 h-3" />
+                      </Button>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="h-5 w-5" 
+                        disabled={index === localScenes.length - 1}
+                        onClick={() => moveScene(index, 'down')}
+                      >
+                        <ChevronDown className="w-3 h-3" />
+                      </Button>
                     </div>
                   </div>
                 </Card>
@@ -581,7 +642,7 @@ export default function TourEditor() {
             <CardContent className="py-2.5 px-4 flex items-center gap-3">
               <PlusCircle className="w-4 h-4 text-primary" />
               <p className="text-[11px] text-primary-foreground/80">
-                <span className="font-bold">Modo Tejedor:</span> Toca en la vista 360 para enlazar con otra estancia.
+                <span className="font-bold">Modo Tejedor:</span> Toca en la vista 360 para enlazar con otra estancia. La primera estancia en la lista será la portada del tour.
               </p>
             </CardContent>
           </Card>
@@ -713,11 +774,36 @@ export default function TourEditor() {
                             </SelectContent>
                           </Select>
                         </div>
-                        <div className="flex items-center gap-2 pt-1">
-                          <MapPin className="w-2.5 h-2.5 text-muted-foreground" />
-                          <p className="text-[8px] text-muted-foreground font-mono opacity-60">
-                            YAW: {Math.round(h.yaw)}° • PITCH: {Math.round(h.pitch)}°
-                          </p>
+                        
+                        <Separator className="my-1 opacity-50" />
+                        
+                        {/* Manual Position Editing */}
+                        <div className="space-y-2">
+                           <Label className="text-[10px] text-muted-foreground font-bold flex items-center gap-1">
+                             <Navigation className="w-2.5 h-2.5" /> Ajuste de Posición (Grados)
+                           </Label>
+                           <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-[8px] uppercase opacity-60">Yaw</Label>
+                                <Input 
+                                  type="number"
+                                  step="0.1"
+                                  value={Math.round(h.yaw * 10) / 10} 
+                                  className="h-7 text-[10px] font-mono"
+                                  onChange={(e) => updateHotspot(h.id, { yaw: parseFloat(e.target.value) || 0 })}
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[8px] uppercase opacity-60">Pitch</Label>
+                                <Input 
+                                  type="number"
+                                  step="0.1"
+                                  value={Math.round(h.pitch * 10) / 10} 
+                                  className="h-7 text-[10px] font-mono"
+                                  onChange={(e) => updateHotspot(h.id, { pitch: parseFloat(e.target.value) || 0 })}
+                                />
+                              </div>
+                           </div>
                         </div>
                       </div>
                     </Card>
