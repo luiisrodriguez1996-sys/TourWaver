@@ -6,17 +6,13 @@ import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
 
-// IMPORTANT: DO NOT MODIFY THIS FUNCTION STRUCTURE
+/**
+ * Initializes Firebase services and App Check.
+ * App Check is configured with reCAPTCHA Enterprise for production-grade security.
+ */
 export function initializeFirebase() {
   if (!getApps().length) {
-    let firebaseApp;
-    try {
-      // Initialize with config object for consistency across environments
-      firebaseApp = initializeApp(firebaseConfig);
-    } catch (e) {
-      console.warn('Firebase initialization fallback triggered.', e);
-      firebaseApp = initializeApp(firebaseConfig);
-    }
+    const firebaseApp = initializeApp(firebaseConfig);
 
     // Initialize App Check only on the client side
     if (typeof window !== 'undefined') {
@@ -24,17 +20,17 @@ export function initializeFirebase() {
       
       if (appCheckSiteKey) {
         try {
-          // Explicit initialization of reCAPTCHA Enterprise
+          // Initialize App Check with reCAPTCHA Enterprise provider
           initializeAppCheck(firebaseApp, {
             provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
             isTokenAutoRefreshEnabled: true,
           });
         } catch (err) {
-          // Failure to init App Check shouldn't crash the entire app load
+          // Prevent App Check initialization errors from blocking the entire app
           console.error('Firebase App Check failed to initialize:', err);
         }
       } else {
-        console.warn('App Check Site Key is missing. Please set NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY in your environment variables.');
+        console.warn('App Check Site Key is missing. Set NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY for production security.');
       }
     }
 
