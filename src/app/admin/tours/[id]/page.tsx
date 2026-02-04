@@ -516,7 +516,6 @@ export default function TourEditor() {
                     placeholder="Describe los detalles destacados de esta habitación..." 
                     className="text-xs min-h-[120px] resize-none"
                   />
-                  <p className="text-[9px] text-muted-foreground italic">Esta descripción aparecerá en el visor público sobre la estancia.</p>
                 </div>
 
                 <div className="space-y-1.5">
