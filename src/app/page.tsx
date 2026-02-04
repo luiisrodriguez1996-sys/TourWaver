@@ -107,7 +107,7 @@ const translations = {
     ctaRates: "Ver Tarifas",
     ctaGuarantee: "Serviço Garantizado",
     ctaQuality: "Qualidade Profissional",
-    footerCopy: "© 2026 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
+    footerCopy: "© 2026 Tour Weaver - Servicios de Visualización 360°. Todos os derechos reservados.",
     footerTerms: "Termos de Uso",
     footerPrivacy: "Privacidade",
     viewTour: "Ver Tour Virtual"
@@ -219,7 +219,7 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 {hasContactInfo && (
-                  <Link href={getWhatsAppLink() || '#contacto'} target={getWhatsAppLink() ? "_blank" : "_self"}>
+                  <Link href="#contacto">
                     <Button size="lg" className="px-8 text-lg bg-accent hover:bg-accent/90 w-full sm:w-auto">{t.btnContratar}</Button>
                   </Link>
                 )}
