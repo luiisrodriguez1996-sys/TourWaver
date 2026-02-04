@@ -43,8 +43,21 @@ export default function PublicTourViewer() {
 
   const tourQuery = useMemoFirebase(() => {
     if (!firestore || !slug) return null;
-    return query(collection(firestore, 'tours'), where('slug', '==', slug), limit(1));
-  }, [firestore, slug]);
+    const toursCol = collection(firestore, 'tours');
+    
+    // Si somos admin, podemos ver cualquier tour por su slug para previsualizar
+    if (isAdmin) {
+      return query(toursCol, where('slug', '==', slug), limit(1));
+    }
+    
+    // Para el público, las reglas de seguridad exigen filtrar por 'published'
+    // para que la operación 'list' (query) sea permitida.
+    return query(toursCol, 
+      where('slug', '==', slug), 
+      where('published', '==', true), 
+      limit(1)
+    );
+  }, [firestore, slug, isAdmin]);
 
   const { data: tours, isLoading: isTourLoading } = useCollection(tourQuery);
   const tour = tours?.[0];
