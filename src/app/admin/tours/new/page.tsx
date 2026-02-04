@@ -8,11 +8,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Briefcase, ArrowLeft, Loader2, User, Search, MapPin, Link as LinkIcon } from 'lucide-react';
+import { Briefcase, ArrowLeft, Loader2, User, Search, MapPin, Link as LinkIcon, AlertTriangle } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
 import { useFirestore, addDocumentNonBlocking, useCollection, useMemoFirebase } from '@/firebase';
-import { collection } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 export default function NewTour() {
@@ -48,10 +48,26 @@ export default function NewTour() {
     if (!firestore) return;
 
     try {
+      const targetSlug = formData.slug || formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '');
+
+      // Auditoría de Seguridad: Verificar unicidad de Slug
+      const q = query(collection(firestore, 'tours'), where('slug', '==', targetSlug), limit(1));
+      const querySnapshot = await getDocs(q);
+
+      if (!querySnapshot.empty) {
+        setIsLoading(false);
+        toast({
+          variant: "destructive",
+          title: "Error de Unicidad",
+          description: "Ya existe una propiedad con este Identificador de URL (Slug). Por favor, elige uno diferente.",
+        });
+        return;
+      }
+
       const tourData = {
         name: formData.name,
         clientName: formData.clientName,
-        slug: formData.slug || formData.name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, ''),
+        slug: targetSlug,
         description: formData.description,
         address: formData.address,
         googleMapsUrl: formData.googleMapsUrl,
@@ -68,6 +84,11 @@ export default function NewTour() {
     } catch (error) {
       console.error(error);
       setIsLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "No se pudo crear la propiedad. Inténtalo de nuevo.",
+      });
     }
   };
 
@@ -140,10 +161,13 @@ export default function NewTour() {
                   placeholder="propiedad-exclusiva" 
                   required 
                   value={formData.slug}
-                  onChange={e => setFormData({ ...formData, slug: e.target.value })}
+                  onChange={e => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/ /g, '-').replace(/[^\w-]/g, '') })}
                   className="rounded-xl h-11"
                 />
               </div>
+              <p className="text-[10px] text-muted-foreground italic flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Debe ser único para esta propiedad.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -194,7 +218,7 @@ export default function NewTour() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Inicializando...
+                  Verificando Disponibilidad...
                 </>
               ) : 'Crear Propiedad e Ir al Editor'}
             </Button>
