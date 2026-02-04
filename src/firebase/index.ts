@@ -1,4 +1,3 @@
-
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -17,7 +16,7 @@ export function initializeFirebase() {
 
     // Initialize App Check only on the client side
     if (typeof window !== 'undefined') {
-      const appCheckSiteKey = process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY;
+      const appCheckSiteKey = process.env.NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY || (firebaseConfig as any).appCheckSiteKey;
       
       if (appCheckSiteKey) {
         try {
