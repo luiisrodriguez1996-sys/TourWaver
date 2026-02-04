@@ -1,8 +1,9 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Scene, Hotspot, Tour, Floor } from '@/lib/types';
+import { Scene, Hotspot, Tour, Floor, Annotation } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -33,7 +34,9 @@ import {
   Layers,
   ImageOff,
   AlignLeft,
-  XCircle
+  XCircle,
+  Link as LinkIcon,
+  StickyNote
 } from 'lucide-react';
 import {
   Select,
@@ -48,10 +51,6 @@ import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase
 import { doc, collection, writeBatch } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
-/**
- * Sanitiza un objeto para Firestore, eliminando campos undefined y 
- * reemplazándolos con null si es necesario para merge: true.
- */
 function sanitizeForFirestore(data: any): any {
   if (data === null || typeof data !== 'object') return data;
   
@@ -105,7 +104,8 @@ export default function TourEditor() {
   const [deletedSceneIds, setDeletedSceneIds] = useState<string[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('details');
-  const [highlightedHotspotId, setHighlightedHotspotId] = useState<string | null>(null);
+  const [editorMode, setEditorMode] = useState<'hotspot' | 'annotation'>('hotspot');
+  const [highlightedElementId, setHighlightedElementId] = useState<string | null>(null);
   
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -190,6 +190,7 @@ export default function TourEditor() {
             description: '',
             imageUrl: imageUrl,
             hotspots: [],
+            annotations: [],
             floorId: localTourInfo.floors[0]?.id || undefined
           };
           setLocalScenes(prev => [...prev, newScene]);
@@ -238,7 +239,6 @@ export default function TourEditor() {
       ...prev,
       floors: prev.floors.filter(f => f.id !== floorId)
     }));
-    // Al eliminar una planta, limpiamos la referencia en las escenas usando null para Firestore
     setLocalScenes(prev => prev.map(s => s.floorId === floorId ? { ...s, floorId: null as any, floorPlanX: null as any, floorPlanY: null as any } : s));
     setHasUnsavedChanges(true);
   };
@@ -267,7 +267,6 @@ export default function TourEditor() {
 
   const updateLocalScene = (updates: Partial<Scene>) => {
     if (!activeSceneId) return;
-    // Sanitizar actualizaciones para evitar undefined
     const sanitizedUpdates = { ...updates };
     Object.keys(sanitizedUpdates).forEach(key => {
       if ((sanitizedUpdates as any)[key] === undefined) {
@@ -292,20 +291,39 @@ export default function TourEditor() {
     toast({ title: "Ubicación eliminada" });
   };
 
-  const addHotspot = (yaw: number, pitch: number) => {
-    if (!activeSceneId || localScenes.length < 2) return;
-    const targetScene = localScenes.find(s => s.id !== activeSceneId);
-    const newHotspot: Hotspot = {
-      id: Math.random().toString(36).substr(2, 9),
-      sceneId: activeSceneId,
-      targetSceneId: targetScene?.id || '',
-      label: `Ir a ${targetScene?.name || 'Siguiente Estancia'}`,
-      yaw: Math.round(yaw),
-      pitch: Math.round(pitch)
-    };
-    updateLocalScene({ hotspots: [...(activeScene?.hotspots || []), newHotspot] });
-    setActiveTab('links');
-    setHighlightedHotspotId(newHotspot.id);
+  const handleSceneClick = (yaw: number, pitch: number) => {
+    if (!activeSceneId) return;
+    
+    if (editorMode === 'hotspot') {
+      if (localScenes.length < 2) {
+        toast({ title: "Necesitas al menos 2 estancias para crear un enlace." });
+        return;
+      }
+      const targetScene = localScenes.find(s => s.id !== activeSceneId);
+      const newHotspot: Hotspot = {
+        id: Math.random().toString(36).substr(2, 9),
+        sceneId: activeSceneId,
+        targetSceneId: targetScene?.id || '',
+        label: `Ir a ${targetScene?.name || 'Siguiente Estancia'}`,
+        yaw: Math.round(yaw),
+        pitch: Math.round(pitch)
+      };
+      updateLocalScene({ hotspots: [...(activeScene?.hotspots || []), newHotspot] });
+      setActiveTab('links');
+      setHighlightedElementId(newHotspot.id);
+    } else {
+      const newAnnotation: Annotation = {
+        id: Math.random().toString(36).substr(2, 9),
+        sceneId: activeSceneId,
+        title: 'Nueva Nota',
+        content: '',
+        yaw: Math.round(yaw),
+        pitch: Math.round(pitch)
+      };
+      updateLocalScene({ annotations: [...(activeScene?.annotations || []), newAnnotation] });
+      setActiveTab('annotations');
+      setHighlightedElementId(newAnnotation.id);
+    }
   };
 
   const removeHotspot = (hotspotId: string) => {
@@ -319,13 +337,23 @@ export default function TourEditor() {
     });
   };
 
+  const removeAnnotation = (annotationId: string) => {
+    updateLocalScene({ annotations: activeScene?.annotations?.filter(a => a.id !== annotationId) || [] });
+  };
+
+  const updateAnnotation = (annotationId: string, updates: Partial<Annotation>) => {
+    if (!activeScene) return;
+    updateLocalScene({
+      annotations: activeScene.annotations?.map(a => a.id === annotationId ? { ...a, ...updates } : a) || []
+    });
+  };
+
   const handleSaveAll = async () => {
     if (!firestore || !id) return;
     setIsSaving(true);
     try {
       const batch = writeBatch(firestore);
       
-      // Sanitizar escenas antes de guardar
       for (const scene of localScenes) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', scene.id);
         batch.set(sceneDocRef, sanitizeForFirestore(scene), { merge: true });
@@ -337,7 +365,6 @@ export default function TourEditor() {
       }
       
       if (tourRef) {
-        // Sanitizar información del tour
         const sanitizedTourInfo = sanitizeForFirestore({ 
           ...localTourInfo,
           thumbnailUrl: localScenes[0]?.imageUrl || '',
@@ -384,7 +411,7 @@ export default function TourEditor() {
           <Button variant="outline" className="w-full gap-2 border-dashed h-12" onClick={() => sceneFileInputRef.current?.click()}>
             {isUploading ? <Loader2 className="animate-spin w-4 h-4" /> : <Plus className="w-4 h-4" />} Añadir Estancia
           </Button>
-          <input type="file" ref={sceneFileInputRef} className="hidden" accept="image/*" onChange={handleSceneFileChange} />
+          <input type="file" min="0" ref={sceneFileInputRef} className="hidden" accept="image/*" onChange={handleSceneFileChange} />
           
           <div className="space-y-2">
             {localScenes.map((scene, index) => (
@@ -429,21 +456,50 @@ export default function TourEditor() {
               <ThreeSixtyViewer 
                 imageUrl={activeScene.imageUrl} 
                 hotspots={activeScene.hotspots || []}
+                annotations={activeScene.annotations || []}
                 isEditing={true}
-                onSceneClick={addHotspot}
-                onHotspotClick={(tid, hid) => { setActiveTab('links'); setHighlightedHotspotId(hid); }}
+                onSceneClick={handleSceneClick}
+                onHotspotClick={(tid, hid) => { setActiveTab('links'); setHighlightedElementId(hid); }}
+                onAnnotationClick={(aid) => { setActiveTab('annotations'); setHighlightedElementId(aid); }}
               />
             )}
+            
+            {/* Mode Switcher */}
+            <div className="absolute top-4 left-4 z-50 flex bg-white/10 backdrop-blur-md p-1 rounded-full border border-white/20">
+               <Button 
+                variant={editorMode === 'hotspot' ? 'default' : 'ghost'} 
+                size="sm" 
+                className={cn("rounded-full h-8 text-[10px]", editorMode === 'hotspot' && "bg-accent hover:bg-accent/90")}
+                onClick={() => setEditorMode('hotspot')}
+               >
+                 <LinkIcon className="w-3 h-3 mr-1" /> Enlaces
+               </Button>
+               <Button 
+                variant={editorMode === 'annotation' ? 'default' : 'ghost'} 
+                size="sm" 
+                className={cn("rounded-full h-8 text-[10px] text-white", editorMode === 'annotation' && "bg-blue-500 hover:bg-blue-600")}
+                onClick={() => setEditorMode('annotation')}
+               >
+                 <StickyNote className="w-3 h-3 mr-1" /> Notas
+               </Button>
+            </div>
           </div>
           <div className="p-3 bg-primary/5 rounded-2xl flex items-center gap-3 text-[10px] font-medium text-primary border border-primary/20">
-            <Info className="w-4 h-4" /> Toca en la vista 360 para tejer un enlace entre estancias.
+            <Info className="w-4 h-4" /> 
+            {editorMode === 'hotspot' 
+              ? 'Toca en la vista 360 para crear un punto de navegación entre estancias.' 
+              : 'Toca en la vista 360 para añadir una nota informativa sobre algún detalle.'}
           </div>
         </div>
 
-        {/* Right: Scene/Links Details */}
+        {/* Right: Scene/Links/Annotations Details */}
         <div className="lg:col-span-3 space-y-4 bg-white rounded-3xl p-4 border shadow-sm max-h-[calc(100vh-220px)] overflow-y-auto">
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="w-full grid grid-cols-2"><TabsTrigger value="details">Estancia</TabsTrigger><TabsTrigger value="links">Enlaces</TabsTrigger></TabsList>
+            <TabsList className="w-full grid grid-cols-3">
+              <TabsTrigger value="details" className="text-[10px]">Estancia</TabsTrigger>
+              <TabsTrigger value="links" className="text-[10px]">Enlaces</TabsTrigger>
+              <TabsTrigger value="annotations" className="text-[10px]">Notas</TabsTrigger>
+            </TabsList>
             
             <TabsContent value="details" className="pt-4 space-y-4">
               <div className="space-y-4">
@@ -514,8 +570,8 @@ export default function TourEditor() {
 
             <TabsContent value="links" className="pt-4 space-y-3">
               {activeScene?.hotspots.map(h => (
-                <Card key={h.id} className={cn("p-3 border-2", highlightedHotspotId === h.id ? 'border-primary' : 'border-muted')}>
-                  <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-primary">Enlace</span><Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeHotspot(h.id)}><Trash2 className="w-3 h-3" /></Button></div>
+                <Card key={h.id} className={cn("p-3 border-2", highlightedElementId === h.id ? 'border-accent' : 'border-muted')}>
+                  <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-accent">Enlace</span><Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeHotspot(h.id)}><Trash2 className="w-3 h-3" /></Button></div>
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     <div className="space-y-1">
                       <Label className="text-[9px] uppercase font-bold text-muted-foreground">Yaw (Horizontal)</Label>
@@ -547,8 +603,42 @@ export default function TourEditor() {
               ))}
               {(!activeScene?.hotspots || activeScene.hotspots.length === 0) && (
                 <div className="text-center py-10 text-muted-foreground">
-                  <PlusCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
-                  <p className="text-[10px]">No hay enlaces en esta estancia.</p>
+                  <LinkIcon className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-[10px]">No hay enlaces de navegación.</p>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="annotations" className="pt-4 space-y-3">
+              {activeScene?.annotations?.map(a => (
+                <Card key={a.id} className={cn("p-3 border-2", highlightedElementId === a.id ? 'border-blue-500' : 'border-muted')}>
+                  <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-blue-500">Nota Informativa</span><Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeAnnotation(a.id)}><Trash2 className="w-3 h-3" /></Button></div>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Título</Label>
+                      <Input value={a.title} className="h-7 text-xs" onChange={e => updateAnnotation(a.id, { title: e.target.value })} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Contenido</Label>
+                      <Textarea value={a.content} className="text-[10px] min-h-[80px]" onChange={e => updateAnnotation(a.id, { content: e.target.value })} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-1">
+                        <Label className="text-[9px] uppercase font-bold text-muted-foreground">Yaw</Label>
+                        <Input type="number" step="1" value={Math.round(a.yaw)} className="h-7 text-[10px]" onChange={e => updateAnnotation(a.id, { yaw: parseInt(e.target.value) || 0 })} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-[9px] uppercase font-bold text-muted-foreground">Pitch</Label>
+                        <Input type="number" step="1" value={Math.round(a.pitch)} className="h-7 text-[10px]" onChange={e => updateAnnotation(a.id, { pitch: parseInt(e.target.value) || 0 })} />
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+              {(!activeScene?.annotations || activeScene.annotations.length === 0) && (
+                <div className="text-center py-10 text-muted-foreground">
+                  <StickyNote className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-[10px]">No hay notas informativas.</p>
                 </div>
               )}
             </TabsContent>

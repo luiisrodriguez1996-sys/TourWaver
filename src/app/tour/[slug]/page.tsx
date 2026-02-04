@@ -7,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@
 import { collection, query, where, limit, doc } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff } from 'lucide-react';
+import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { VersionIndicator } from '@/components/VersionIndicator';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function PublicTourViewer() {
   const { slug } = useParams();
@@ -30,6 +31,7 @@ export default function PublicTourViewer() {
   
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
+  const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -79,8 +81,8 @@ export default function PublicTourViewer() {
   }, [serverScenes, tour, activeSceneId]);
 
   const activeScene = orderedScenes?.find((s: any) => s.id === activeSceneId);
+  const activeAnnotation = activeScene?.annotations?.find((a: any) => a.id === selectedAnnotationId);
 
-  // Sync active floor with active scene
   useEffect(() => {
     if (activeScene?.floorId) {
       setActiveFloorId(activeScene.floorId);
@@ -173,7 +175,42 @@ export default function PublicTourViewer() {
       </div>
 
       <div className="flex-grow w-full h-full relative">
-        {activeScene && <ThreeSixtyViewer imageUrl={activeScene.imageUrl} hotspots={activeScene.hotspots || []} onHotspotClick={(targetId) => setActiveSceneId(targetId)} />}
+        {activeScene && (
+          <ThreeSixtyViewer 
+            imageUrl={activeScene.imageUrl} 
+            hotspots={activeScene.hotspots || []} 
+            annotations={activeScene.annotations || []}
+            onHotspotClick={(targetId) => {
+              setActiveSceneId(targetId);
+              setSelectedAnnotationId(null);
+            }} 
+            onAnnotationClick={(annotationId) => {
+              setSelectedAnnotationId(annotationId);
+            }}
+          />
+        )}
+
+        {/* Annotation Overlay */}
+        {activeAnnotation && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/20 backdrop-blur-[2px] pointer-events-none">
+            <Card className="w-full max-w-sm pointer-events-auto animate-in zoom-in-95 duration-300 rounded-[2rem] border-white/10 bg-black/60 text-white backdrop-blur-xl shadow-2xl overflow-hidden">
+              <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/10">
+                <CardTitle className="text-lg font-bold flex items-center gap-2">
+                  <StickyNote className="w-5 h-5 text-blue-400" />
+                  {activeAnnotation.title}
+                </CardTitle>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-white/10 text-white" onClick={() => setSelectedAnnotationId(null)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">
+                  {activeAnnotation.content}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <div className="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center">
@@ -191,7 +228,7 @@ export default function PublicTourViewer() {
                   <div className="grid grid-cols-1 gap-2">
                     {orderedScenes?.map((scene: any) => (
                       <DialogClose asChild key={scene.id}>
-                        <button onClick={() => setActiveSceneId(scene.id)} className={cn("w-full flex items-center gap-4 p-3 rounded-2xl transition-all group border", activeSceneId === scene.id ? 'bg-primary/20 text-primary border-primary/40' : 'hover:bg-white/10 text-white/70 hover:text-white border-transparent')}>
+                        <button onClick={() => { setActiveSceneId(scene.id); setSelectedAnnotationId(null); }} className={cn("w-full flex items-center gap-4 p-3 rounded-2xl transition-all group border", activeSceneId === scene.id ? 'bg-primary/20 text-primary border-primary/40' : 'hover:bg-white/10 text-white/70 hover:text-white border-transparent')}>
                           <div className="relative w-20 md:w-24 h-14 md:h-16 rounded-xl overflow-hidden flex-shrink-0"><img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />{activeSceneId === scene.id && <div className="absolute inset-0 bg-primary/40 flex items-center justify-center"><Check className="w-6 h-6 text-white" /></div>}</div>
                           <span className="text-xs md:text-sm font-semibold truncate flex-1 text-left">{scene.name}</span>
                         </button>
@@ -230,7 +267,7 @@ export default function PublicTourViewer() {
                    <>
                      <img src={currentFloor.imageUrl} alt={currentFloor.name} className="w-full h-full object-contain" />
                      {orderedScenes?.filter((s: any) => s.floorId === activeFloorId).map((s: any) => s.floorPlanX !== undefined && (
-                       <button key={s.id} onClick={() => { setActiveSceneId(s.id); setShowFloorPlan(false); }} className={cn("absolute w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-xl -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-150 flex items-center justify-center", s.id === activeSceneId ? 'bg-primary z-20 ring-4 ring-primary/30 scale-125' : 'bg-muted-foreground/80 z-10 hover:bg-primary')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} title={s.name}><MapPin className={cn("w-3 h-3 md:w-3.5 md:h-3.5 text-white", s.id === activeSceneId ? 'block' : 'hidden')} /></button>
+                       <button key={s.id} onClick={() => { setActiveSceneId(s.id); setShowFloorPlan(false); setSelectedAnnotationId(null); }} className={cn("absolute w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-xl -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-150 flex items-center justify-center", s.id === activeSceneId ? 'bg-primary z-20 ring-4 ring-primary/30 scale-125' : 'bg-muted-foreground/80 z-10 hover:bg-primary')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} title={s.name}><MapPin className={cn("w-3 h-3 md:w-3.5 md:h-3.5 text-white", s.id === activeSceneId ? 'block' : 'hidden')} /></button>
                      ))}
                    </>
                  ) : (

@@ -1,3 +1,4 @@
+
 export interface Tour {
   id: string;
   name: string;
@@ -31,6 +32,7 @@ export interface Scene {
   imageUrl: string;
   floorId?: string; // ID of the floor this scene belongs to
   hotspots: Hotspot[];
+  annotations?: Annotation[];
   floorPlanX?: number;
   floorPlanY?: number;
 }
@@ -40,6 +42,15 @@ export interface Hotspot {
   sceneId: string;
   targetSceneId: string;
   label: string;
+  yaw: number;
+  pitch: number;
+}
+
+export interface Annotation {
+  id: string;
+  sceneId: string;
+  title: string;
+  content: string;
   yaw: number;
   pitch: number;
 }

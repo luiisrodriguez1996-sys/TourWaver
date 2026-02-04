@@ -2,16 +2,18 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Hotspot } from '@/lib/types';
+import { Hotspot, Annotation } from '@/lib/types';
 import { Button } from './ui/button';
-import { ChevronRight, Loader2, Settings2 } from 'lucide-react';
+import { ChevronRight, Loader2, Settings2, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as THREE_REAL from 'three';
 
 interface ThreeSixtyViewerProps {
   imageUrl: string;
   hotspots?: Hotspot[];
+  annotations?: Annotation[];
   onHotspotClick?: (targetSceneId: string, hotspotId: string) => void;
+  onAnnotationClick?: (annotationId: string) => void;
   onSceneClick?: (yaw: number, pitch: number) => void;
   isEditing?: boolean;
 }
@@ -19,7 +21,9 @@ interface ThreeSixtyViewerProps {
 export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   imageUrl,
   hotspots = [],
+  annotations = [],
   onHotspotClick,
+  onAnnotationClick,
   onSceneClick,
   isEditing = false
 }) => {
@@ -34,7 +38,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   
   const [internalImageUrl, setInternalImageUrl] = useState(imageUrl);
   const [isLoadingTexture, setIsLoadingTexture] = useState(true);
-  const isLoadingRef = useRef(true); // Ref para el bucle de animación
+  const isLoadingRef = useRef(true); 
   const [isFading, setIsFading] = useState(false);
   const [isUserInteracting, setIsUserInteracting] = useState(false);
   
@@ -46,14 +50,19 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   const pointerDownTime = useRef(0);
 
   const [visibleHotspots, setVisibleHotspots] = useState<{h: Hotspot, x: number, y: number}[]>([]);
+  const [visibleAnnotations, setVisibleAnnotations] = useState<{a: Annotation, x: number, y: number}[]>([]);
+  
   const hotspotsRef = useRef(hotspots);
+  const annotationsRef = useRef(annotations);
 
-  // Mantener hotspots actualizados en una ref para el bucle de animación
   useEffect(() => {
     hotspotsRef.current = hotspots;
   }, [hotspots]);
 
-  // Transición de imagen
+  useEffect(() => {
+    annotationsRef.current = annotations;
+  }, [annotations]);
+
   useEffect(() => {
     if (imageUrl !== internalImageUrl) {
       setIsFading(true);
@@ -128,17 +137,16 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
 
     window.addEventListener('resize', handleResize);
 
-    const updateHotspotPositions = () => {
-      // Usamos la ref para saltar la clausura del efecto
+    const updateUIElements = () => {
       if (isLoadingRef.current || !cameraRef.current || !canvasHolderRef.current) return;
       
       const width = canvasHolderRef.current.clientWidth;
       const height = canvasHolderRef.current.clientHeight;
       if (width === 0 || height === 0) return;
 
-      const projected = hotspotsRef.current.map(h => {
-        const phi = THREE_REAL.MathUtils.degToRad(h.pitch);
-        const theta = THREE_REAL.MathUtils.degToRad(h.yaw);
+      const project = (yaw: number, pitch: number) => {
+        const phi = THREE_REAL.MathUtils.degToRad(pitch);
+        const theta = THREE_REAL.MathUtils.degToRad(yaw);
         
         const vector = new THREE_REAL.Vector3();
         vector.x = -Math.sin(theta) * Math.cos(phi);
@@ -152,16 +160,26 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
         
         if (dot < 0) return null;
         
-        // Sincronizamos matrices antes de proyectar
         cameraRef.current!.updateMatrixWorld();
         const screenVector = vector.clone().project(cameraRef.current!);
         
         const x = (screenVector.x * 0.5 + 0.5) * width;
         const y = (-(screenVector.y * 0.5) + 0.5) * height;
-        return { h, x, y };
+        return { x, y };
+      };
+
+      const projectedHotspots = hotspotsRef.current.map(h => {
+        const coords = project(h.yaw, h.pitch);
+        return coords ? { h, ...coords } : null;
       }).filter(p => p !== null) as {h: Hotspot, x: number, y: number}[];
+
+      const projectedAnnotations = annotationsRef.current.map(a => {
+        const coords = project(a.yaw, a.pitch);
+        return coords ? { a, ...coords } : null;
+      }).filter(p => p !== null) as {a: Annotation, x: number, y: number}[];
       
-      setVisibleHotspots(projected);
+      setVisibleHotspots(projectedHotspots);
+      setVisibleAnnotations(projectedAnnotations);
     };
 
     const update = () => {
@@ -181,7 +199,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       cameraRef.current.lookAt(target);
       rendererRef.current.render(sceneRef.current, cameraRef.current);
       
-      updateHotspotPositions();
+      updateUIElements();
     };
 
     const animate = () => {
@@ -266,7 +284,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     >
       <div ref={canvasHolderRef} className="absolute inset-0" />
 
-      {/* Transition overlay */}
       <div className={cn(
         "absolute inset-0 bg-black pointer-events-none z-40 transition-opacity duration-700 ease-in-out",
         (isFading || isLoadingTexture) ? "opacity-100" : "opacity-0"
@@ -281,6 +298,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
 
       {!isFading && !isLoadingTexture && (
         <div className="absolute inset-0 pointer-events-none">
+          {/* Render Hotspots */}
           {visibleHotspots.map(({h, x, y}) => (
             <div 
               key={h.id}
@@ -303,8 +321,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
                   e.stopPropagation();
                   onHotspotClick?.(h.targetSceneId, h.id);
                 }}
-                onPointerDown={(e) => e.stopPropagation()}
-                onPointerUp={(e) => e.stopPropagation()}
               >
                 {isEditing && <Settings2 className="w-4 h-4 text-white" />}
                 <span className={cn(
@@ -317,12 +333,41 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
               </Button>
             </div>
           ))}
+
+          {/* Render Annotations */}
+          {visibleAnnotations.map(({a, x, y}) => (
+            <div 
+              key={a.id}
+              className="absolute pointer-events-auto transition-transform hover:scale-110 active:scale-95 animate-in fade-in zoom-in duration-300"
+              style={{ left: x, top: y, transform: 'translate(-50%, -50%)' }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onPointerUp={(e) => e.stopPropagation()}
+            >
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                className={cn(
+                  "rounded-full border-2 shadow-lg w-10 h-10 p-0 flex items-center justify-center transition-colors",
+                  isEditing 
+                    ? "bg-blue-500/90 border-blue-200/20 hover:bg-blue-500" 
+                    : "bg-white/90 border-blue-500/20 text-blue-500 hover:bg-white"
+                )}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAnnotationClick?.(a.id);
+                }}
+              >
+                <Info className="w-5 h-5" />
+              </Button>
+            </div>
+          ))}
         </div>
       )}
 
       <div className="absolute bottom-4 left-4 z-30">
         <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-[10px] uppercase tracking-widest text-white/80 border border-white/10">
-          {isEditing ? 'Tejiendo Enlaces' : 'Inmersión 360°'}
+          {isEditing ? 'Configurando Espacio' : 'Inmersión 360°'}
         </div>
       </div>
     </div>
