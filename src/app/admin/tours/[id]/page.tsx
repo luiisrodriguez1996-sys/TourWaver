@@ -32,7 +32,8 @@ import {
   ChevronDown,
   Info,
   Layers,
-  ImageOff
+  ImageOff,
+  AlignLeft
 } from 'lucide-react';
 import {
   Select,
@@ -394,9 +395,27 @@ export default function TourEditor() {
             <TabsList className="w-full grid grid-cols-2"><TabsTrigger value="details">Estancia</TabsTrigger><TabsTrigger value="links">Enlaces</TabsTrigger></TabsList>
             
             <TabsContent value="details" className="pt-4 space-y-4">
-              <div className="space-y-3">
-                <div className="space-y-1.5"><Label className="text-xs">Nombre</Label><Input value={activeScene?.name || ''} onChange={e => updateLocalScene({ name: e.target.value })} /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Planta / Piso</Label>
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Nombre de la Estancia</Label>
+                  <Input value={activeScene?.name || ''} onChange={e => updateLocalScene({ name: e.target.value })} />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold flex items-center gap-2">
+                    <AlignLeft className="w-3.5 h-3.5" /> Descripción (Opcional)
+                  </Label>
+                  <Textarea 
+                    value={activeScene?.description || ''} 
+                    onChange={e => updateLocalScene({ description: e.target.value })} 
+                    placeholder="Describe los detalles destacados de esta habitación..." 
+                    className="text-xs min-h-[120px] resize-none"
+                  />
+                  <p className="text-[9px] text-muted-foreground italic">Esta descripción aparecerá en el visor público sobre la estancia.</p>
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold">Planta / Piso</Label>
                   <Select value={activeScene?.floorId || 'none'} onValueChange={val => updateLocalScene({ floorId: val === 'none' ? undefined : val })}>
                     <SelectTrigger><SelectValue placeholder="Seleccionar planta..." /></SelectTrigger>
                     <SelectContent>
@@ -407,8 +426,8 @@ export default function TourEditor() {
                 </div>
                 
                 {activeFloor && (
-                  <div className="space-y-2">
-                    <Label className="text-xs flex items-center gap-2"><Crosshair className="w-3 h-3" /> Ubicación en {activeFloor.name}</Label>
+                  <div className="space-y-2 pt-2">
+                    <Label className="text-xs font-bold flex items-center gap-2"><Crosshair className="w-3.5 h-3.5" /> Ubicación en {activeFloor.name}</Label>
                     {activeFloor.imageUrl ? (
                       <div className="relative aspect-video bg-muted rounded-xl border-2 border-primary/20 cursor-crosshair overflow-hidden" onClick={handleFloorPlanClick}>
                         <img src={activeFloor.imageUrl} className="w-full h-full object-contain pointer-events-none" alt="Plano" />
@@ -419,13 +438,13 @@ export default function TourEditor() {
                     ) : (
                       <div className="aspect-video bg-muted/40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-4 text-center">
                         <ImageOff className="w-6 h-6 text-muted-foreground mb-2" />
-                        <p className="text-[10px] text-muted-foreground">Esta planta no tiene plano cargado. Sube uno en "Gestión de Plantas" para ubicar estancias.</p>
+                        <p className="text-[10px] text-muted-foreground">Sube un plano en la configuración inferior para ubicar la estancia.</p>
                       </div>
                     )}
                   </div>
                 )}
               </div>
-              <Button variant="outline" className="w-full text-destructive border-destructive/20 mt-4" onClick={() => { if(activeSceneId) { setDeletedSceneIds(prev => [...prev, activeSceneId]); setLocalScenes(prev => prev.filter(s => s.id !== activeSceneId)); setActiveSceneId(localScenes[0]?.id || null); } }}>Eliminar Estancia</Button>
+              <Button variant="outline" className="w-full text-destructive border-destructive/20 mt-6" onClick={() => { if(activeSceneId) { setDeletedSceneIds(prev => [...prev, activeSceneId]); setLocalScenes(prev => prev.filter(s => s.id !== activeSceneId)); setActiveSceneId(localScenes[0]?.id || null); } }}>Eliminar Estancia</Button>
             </TabsContent>
 
             <TabsContent value="links" className="pt-4 space-y-3">
@@ -434,7 +453,7 @@ export default function TourEditor() {
                   <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-primary">Enlace</span><Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeHotspot(h.id)}><Trash2 className="w-3 h-3" /></Button></div>
                   <div className="grid grid-cols-2 gap-2 mb-3">
                     <div className="space-y-1">
-                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Yaw (H)</Label>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Yaw (Horizontal)</Label>
                       <Input 
                         type="number" 
                         step="1" 
@@ -444,7 +463,7 @@ export default function TourEditor() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Pitch (V)</Label>
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Pitch (Vertical)</Label>
                       <Input 
                         type="number" 
                         step="1" 
@@ -479,7 +498,7 @@ export default function TourEditor() {
           <CardContent className="pt-6 space-y-4">
             <div className="space-y-1.5"><Label className="text-xs font-bold">Cliente</Label><Input value={localTourInfo.clientName} onChange={e => { setLocalTourInfo({...localTourInfo, clientName: e.target.value}); setHasUnsavedChanges(true); }} /></div>
             <div className="space-y-1.5"><Label className="text-xs font-bold">Nombre del Tour</Label><Input value={localTourInfo.name} onChange={e => { setLocalTourInfo({...localTourInfo, name: e.target.value}); setHasUnsavedChanges(true); }} /></div>
-            <div className="space-y-1.5"><Label className="text-xs font-bold">Descripción</Label><Textarea value={localTourInfo.description} onChange={e => { setLocalTourInfo({...localTourInfo, description: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+            <div className="space-y-1.5"><Label className="text-xs font-bold">Descripción General</Label><Textarea value={localTourInfo.description} onChange={e => { setLocalTourInfo({...localTourInfo, description: e.target.value}); setHasUnsavedChanges(true); }} /></div>
           </CardContent>
         </Card>
 
