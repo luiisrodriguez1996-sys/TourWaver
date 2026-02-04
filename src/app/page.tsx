@@ -5,7 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Camera, Map, Zap, ShieldCheck, Globe, Building2, UserCheck, Layout, Languages, ChevronDown, MessageCircle, ExternalLink, ArrowRight } from 'lucide-react';
+import { Camera, Map, Zap, ShieldCheck, Globe, Building2, UserCheck, Layout, Languages, ChevronDown, MessageCircle, ExternalLink, ArrowRight, Loader2 as LoaderIcon } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,6 +16,7 @@ import { VersionIndicator } from '@/components/VersionIndicator';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const translations = {
   es: {
@@ -284,7 +285,7 @@ export default function Home() {
 
             {isPortfolioLoading ? (
               <div className="flex justify-center py-20">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <LoaderIcon className="w-10 h-10 animate-spin text-primary" />
               </div>
             ) : portfolioTours && portfolioTours.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
