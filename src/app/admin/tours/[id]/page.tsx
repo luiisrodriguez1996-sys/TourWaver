@@ -365,7 +365,7 @@ export default function TourEditor() {
 
         {/* Center: Viewer */}
         <div className="lg:col-span-6 flex flex-col gap-4">
-          <div className="rounded-3xl overflow-hidden shadow-xl border relative bg-black aspect-video w-full">
+          <div className="rounded-3xl overflow-hidden shadow-xl border relative bg-black aspect-[4/5] w-full">
             {activeScene && (
               <ThreeSixtyViewer 
                 imageUrl={activeScene.imageUrl} 
