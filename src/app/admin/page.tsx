@@ -57,13 +57,14 @@ export default function AdminDashboard() {
     if (savedView) setViewMode(savedView);
   }, []);
 
-  // Fail-safe para asegurar que pointer-events se restaure siempre al cerrar el modal
-  // y evitar el error de aria-hidden bloqueado
+  // Fail-safe para asegurar que pointer-events y overflow se restauren siempre al cerrar el modal
+  // y evitar el error de aria-hidden bloqueado o interfaz congelada
   useEffect(() => {
     if (tourToDeleteId === null) {
       const timer = setTimeout(() => {
         document.body.style.pointerEvents = 'auto';
-      }, 0);
+        document.body.style.overflow = 'auto';
+      }, 100);
       return () => clearTimeout(timer);
     }
   }, [tourToDeleteId]);
@@ -175,11 +176,12 @@ export default function AdminDashboard() {
               <DropdownMenuItem 
                 className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive" 
                 onSelect={(e) => {
+                  // Prevenir que el menú maneje el evento y abrir el diálogo con un delay
+                  // para evitar conflictos de aria-hidden y foco.
                   e.preventDefault();
-                  // Usamos setTimeout para permitir que el dropdown se cierre y evitar conflictos de foco/aria-hidden
                   setTimeout(() => {
                     setTourToDeleteId(tour.id);
-                  }, 100);
+                  }, 200);
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> {isSpanish ? 'Eliminar Propiedad' : 'Delete Property'}
@@ -313,9 +315,12 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      <AlertDialog open={tourToDeleteId !== null} onOpenChange={(open) => {
-        if (!open) setTourToDeleteId(null);
-      }}>
+      <AlertDialog 
+        open={tourToDeleteId !== null} 
+        onOpenChange={(open) => {
+          if (!open) setTourToDeleteId(null);
+        }}
+      >
         <AlertDialogContent className="rounded-[2rem]">
           <AlertDialogHeader>
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-2">
