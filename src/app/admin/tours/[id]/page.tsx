@@ -48,6 +48,29 @@ import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase
 import { doc, collection, writeBatch } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
+/**
+ * Sanitiza un objeto para Firestore, eliminando campos undefined y 
+ * reemplazándolos con null si es necesario para merge: true.
+ */
+function sanitizeForFirestore(data: any): any {
+  if (data === null || typeof data !== 'object') return data;
+  
+  if (Array.isArray(data)) {
+    return data.map(sanitizeForFirestore);
+  }
+
+  const sanitized: any = {};
+  Object.keys(data).forEach(key => {
+    const value = data[key];
+    if (value === undefined) {
+      sanitized[key] = null;
+    } else {
+      sanitized[key] = sanitizeForFirestore(value);
+    }
+  });
+  return sanitized;
+}
+
 export default function TourEditor() {
   const { id } = useParams();
   const router = useRouter();
@@ -215,7 +238,8 @@ export default function TourEditor() {
       ...prev,
       floors: prev.floors.filter(f => f.id !== floorId)
     }));
-    setLocalScenes(prev => prev.map(s => s.floorId === floorId ? { ...s, floorId: undefined, floorPlanX: undefined, floorPlanY: undefined } : s));
+    // Al eliminar una planta, limpiamos la referencia en las escenas usando null para Firestore
+    setLocalScenes(prev => prev.map(s => s.floorId === floorId ? { ...s, floorId: null as any, floorPlanX: null as any, floorPlanY: null as any } : s));
     setHasUnsavedChanges(true);
   };
 
@@ -243,7 +267,14 @@ export default function TourEditor() {
 
   const updateLocalScene = (updates: Partial<Scene>) => {
     if (!activeSceneId) return;
-    setLocalScenes(prev => prev.map(s => s.id === activeSceneId ? { ...s, ...updates } : s));
+    // Sanitizar actualizaciones para evitar undefined
+    const sanitizedUpdates = { ...updates };
+    Object.keys(sanitizedUpdates).forEach(key => {
+      if ((sanitizedUpdates as any)[key] === undefined) {
+        (sanitizedUpdates as any)[key] = null;
+      }
+    });
+    setLocalScenes(prev => prev.map(s => s.id === activeSceneId ? { ...s, ...sanitizedUpdates } : s));
     setHasUnsavedChanges(true);
   };
 
@@ -257,7 +288,7 @@ export default function TourEditor() {
 
   const clearSceneLocation = () => {
     if (!activeSceneId) return;
-    updateLocalScene({ floorPlanX: undefined, floorPlanY: undefined });
+    updateLocalScene({ floorPlanX: null as any, floorPlanY: null as any });
     toast({ title: "Ubicación eliminada" });
   };
 
@@ -293,28 +324,37 @@ export default function TourEditor() {
     setIsSaving(true);
     try {
       const batch = writeBatch(firestore);
+      
+      // Sanitizar escenas antes de guardar
       for (const scene of localScenes) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', scene.id);
-        batch.set(sceneDocRef, scene, { merge: true });
+        batch.set(sceneDocRef, sanitizeForFirestore(scene), { merge: true });
       }
+      
       for (const sceneIdToDelete of deletedSceneIds) {
         const sceneDocRef = doc(firestore, 'tours', id as string, 'scenes', sceneIdToDelete);
         batch.delete(sceneDocRef);
       }
+      
       if (tourRef) {
-        batch.set(tourRef, { 
+        // Sanitizar información del tour
+        const sanitizedTourInfo = sanitizeForFirestore({ 
           ...localTourInfo,
           thumbnailUrl: localScenes[0]?.imageUrl || '',
           sceneIds: localScenes.map(s => s.id),
           updatedAt: Date.now() 
-        }, { merge: true });
+        });
+        
+        batch.set(tourRef, sanitizedTourInfo, { merge: true });
       }
+      
       await batch.commit();
       setDeletedSceneIds([]);
       setHasUnsavedChanges(false);
       setIsSaving(false);
       toast({ title: "Guardado con éxito" });
     } catch (error) {
+      console.error("Error al guardar:", error);
       setIsSaving(false);
       toast({ variant: "destructive", title: "Error al guardar" });
     }
@@ -368,7 +408,7 @@ export default function TourEditor() {
                       </span>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         {scene.floorId && <Layers className="w-2.5 h-2.5" />}
-                        {scene.floorPlanX !== undefined && <MapPin className="w-2.5 h-2.5 text-primary" />}
+                        {scene.floorPlanX !== undefined && scene.floorPlanX !== null && <MapPin className="w-2.5 h-2.5 text-primary" />}
                       </div>
                     </div>
                   </div>
@@ -442,7 +482,7 @@ export default function TourEditor() {
                       <Label className="text-xs font-bold flex items-center gap-2">
                         <Crosshair className="w-3.5 h-3.5" /> Ubicación en {activeFloor.name}
                       </Label>
-                      {activeScene?.floorPlanX !== undefined && (
+                      {activeScene?.floorPlanX !== undefined && activeScene?.floorPlanX !== null && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -456,7 +496,7 @@ export default function TourEditor() {
                     {activeFloor.imageUrl ? (
                       <div className="relative aspect-video bg-muted rounded-xl border-2 border-primary/20 cursor-crosshair overflow-hidden" onClick={handleFloorPlanClick}>
                         <img src={activeFloor.imageUrl} className="w-full h-full object-contain pointer-events-none" alt="Plano" />
-                        {localScenes.filter(s => s.floorId === activeScene?.floorId).map(s => s.floorPlanX !== undefined && (
+                        {localScenes.filter(s => s.floorId === activeScene?.floorId).map(s => s.floorPlanX !== undefined && s.floorPlanX !== null && (
                           <div key={s.id} className={cn("absolute w-3 h-3 rounded-full border-2 border-white -translate-x-1/2 -translate-y-1/2", s.id === activeSceneId ? 'bg-primary scale-150 z-20' : 'bg-muted-foreground/50 z-10')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} />
                         ))}
                       </div>
