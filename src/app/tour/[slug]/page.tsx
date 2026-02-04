@@ -220,12 +220,12 @@ export default function PublicTourViewer() {
       </div>
 
       <div className="absolute bottom-16 md:bottom-20 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center">
-        <div className="bg-black/40 backdrop-blur-md px-2 md:px-6 py-1 rounded-full border border-white/10 flex items-center gap-1 md:gap-2 text-white shadow-2xl pointer-events-auto max-w-full">
+        <div className="bg-black/40 backdrop-blur-md px-2 md:px-6 py-1 rounded-full border border-white/10 flex items-center gap-1 md:gap-2 text-white shadow-2xl pointer-events-auto max-w-full overflow-x-auto custom-scrollbar scrollbar-hide">
            <Dialog>
              <DialogTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-10 px-3 md:px-4">
+                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-10 px-3 md:px-4 flex-shrink-0">
                   <ChevronUp className="w-4 h-4" />
-                  <span className="text-xs md:text-sm font-medium">Estancias ({scenes?.length || 0})</span>
+                  <span className="text-xs md:text-sm font-medium whitespace-nowrap">Estancias ({scenes?.length || 0})</span>
                 </Button>
              </DialogTrigger>
              <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[425px] bg-black/80 backdrop-blur-xl border-white/10 text-white p-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
@@ -264,14 +264,14 @@ export default function PublicTourViewer() {
 
            {tour.showFloorPlan && (
              <>
-               <div className="h-4 w-px bg-white/20 mx-1 md:mx-2" />
+               <div className="h-4 w-px bg-white/20 mx-1 md:mx-2 flex-shrink-0" />
                <Button 
                  variant="ghost" 
                  onClick={() => setShowFloorPlan(!showFloorPlan)}
-                 className={`flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-10 px-3 md:px-4 ${showFloorPlan ? 'text-primary bg-primary/10' : ''}`}
+                 className={`flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-10 px-3 md:px-4 flex-shrink-0 ${showFloorPlan ? 'text-primary bg-primary/10' : ''}`}
                >
                   <Map className="w-4 h-4" />
-                  <span className="text-xs md:text-sm font-medium">Plano</span>
+                  <span className="text-xs md:text-sm font-medium whitespace-nowrap">Plano</span>
                </Button>
              </>
            )}
@@ -280,7 +280,7 @@ export default function PublicTourViewer() {
 
       {(showFloorPlan && tour.showFloorPlan) && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-           <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 max-w-full md:max-w-3xl w-full relative shadow-2xl overflow-hidden">
+           <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 max-w-[calc(100vw-2rem)] md:max-w-3xl w-full relative shadow-2xl overflow-hidden">
               <Button 
                 variant="ghost" 
                 size="icon" 
