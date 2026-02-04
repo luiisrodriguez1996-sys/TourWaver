@@ -215,12 +215,12 @@ export default function AdminDashboard() {
           <Tabs value={viewMode} onValueChange={handleViewChange} className="bg-white p-1 rounded-xl shadow-sm border">
             <TabsList className="bg-transparent border-none">
               <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-                <LayoutGrid className="w-4 h-4 mr-2" />
-                {isSpanish ? 'Todos' : 'All'}
+                <LayoutGrid className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{isSpanish ? 'Todos' : 'All'}</span>
               </TabsTrigger>
               <TabsTrigger value="clients" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
-                <Folder className="w-4 h-4 mr-2" />
-                {isSpanish ? 'Por Clientes' : 'By Clients'}
+                <Folder className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">{isSpanish ? 'Por Clientes' : 'By Clients'}</span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
