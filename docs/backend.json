@@ -66,6 +66,18 @@
           "type": "string",
           "description": "Manual link to Google Maps for the property location.",
           "format": "uri"
+        },
+        "contactPhone": {
+          "type": "string",
+          "description": "Contact phone number for the property."
+        },
+        "contactEmail": {
+          "type": "string",
+          "description": "Contact email address for the property."
+        },
+        "contactWhatsApp": {
+          "type": "string",
+          "description": "WhatsApp number (international format) for the property."
         }
       },
       "required": [

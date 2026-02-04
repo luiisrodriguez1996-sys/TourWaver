@@ -13,6 +13,9 @@ export interface Tour {
   googleMapsUrl?: string;
   latitude?: number;
   longitude?: number;
+  contactPhone?: string;
+  contactEmail?: string;
+  contactWhatsApp?: string;
   createdAt: number;
   updatedAt: number;
   sceneIds?: string[];

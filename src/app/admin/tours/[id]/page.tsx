@@ -36,7 +36,10 @@ import {
   AlignLeft,
   XCircle,
   Link as LinkIcon,
-  StickyNote
+  StickyNote,
+  Phone,
+  Mail,
+  MessageSquare
 } from 'lucide-react';
 import {
   Select,
@@ -97,7 +100,10 @@ export default function TourEditor() {
     floors: [] as Floor[],
     showFloorPlan: false,
     address: '',
-    googleMapsUrl: ''
+    googleMapsUrl: '',
+    contactPhone: '',
+    contactEmail: '',
+    contactWhatsApp: ''
   });
 
   const [localScenes, setLocalScenes] = useState<Scene[]>([]);
@@ -120,7 +126,10 @@ export default function TourEditor() {
         floors: tour.floors || [],
         showFloorPlan: !!tour.showFloorPlan,
         address: tour.address || '',
-        googleMapsUrl: tour.googleMapsUrl || ''
+        googleMapsUrl: tour.googleMapsUrl || '',
+        contactPhone: tour.contactPhone || '',
+        contactEmail: tour.contactEmail || '',
+        contactWhatsApp: tour.contactWhatsApp || ''
       });
     }
   }, [tour]);
@@ -645,16 +654,38 @@ export default function TourEditor() {
 
       {/* Bottom: General Configuration */}
       <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="rounded-3xl border shadow-md">
-          <CardHeader className="bg-primary/5 pb-4"><CardTitle className="text-sm">Detalles de Propiedad</CardTitle></CardHeader>
-          <CardContent className="pt-6 space-y-4">
-            <div className="space-y-1.5"><Label className="text-xs font-bold">Cliente</Label><Input value={localTourInfo.clientName} onChange={e => { setLocalTourInfo({...localTourInfo, clientName: e.target.value}); setHasUnsavedChanges(true); }} /></div>
-            <div className="space-y-1.5"><Label className="text-xs font-bold">Nombre del Tour</Label><Input value={localTourInfo.name} onChange={e => { setLocalTourInfo({...localTourInfo, name: e.target.value}); setHasUnsavedChanges(true); }} /></div>
-            <div className="space-y-1.5"><Label className="text-xs font-bold">Descripción General</Label><Textarea value={localTourInfo.description} onChange={e => { setLocalTourInfo({...localTourInfo, description: e.target.value}); setHasUnsavedChanges(true); }} /></div>
-          </CardContent>
-        </Card>
+        <div className="space-y-6">
+          <Card className="rounded-3xl border shadow-md">
+            <CardHeader className="bg-primary/5 pb-4"><CardTitle className="text-sm">Detalles de Propiedad</CardTitle></CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-1.5"><Label className="text-xs font-bold">Cliente</Label><Input value={localTourInfo.clientName} onChange={e => { setLocalTourInfo({...localTourInfo, clientName: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-bold">Nombre del Tour</Label><Input value={localTourInfo.name} onChange={e => { setLocalTourInfo({...localTourInfo, name: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-bold">Descripción General</Label><Textarea value={localTourInfo.description} onChange={e => { setLocalTourInfo({...localTourInfo, description: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-bold">Dirección Física</Label><Input value={localTourInfo.address} onChange={e => { setLocalTourInfo({...localTourInfo, address: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-bold">URL Google Maps</Label><Input value={localTourInfo.googleMapsUrl} onChange={e => { setLocalTourInfo({...localTourInfo, googleMapsUrl: e.target.value}); setHasUnsavedChanges(true); }} /></div>
+            </CardContent>
+          </Card>
 
-        <Card className="lg:col-span-2 rounded-3xl border shadow-md">
+          <Card className="rounded-3xl border shadow-md">
+            <CardHeader className="bg-accent/5 pb-4"><CardTitle className="text-sm">Medios de Contacto</CardTitle></CardHeader>
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold flex items-center gap-2"><MessageSquare className="w-3.5 h-3.5" /> WhatsApp (Solo número, ej: 34600000000)</Label>
+                <Input value={localTourInfo.contactWhatsApp} placeholder="ej: 34600123456" onChange={e => { setLocalTourInfo({...localTourInfo, contactWhatsApp: e.target.value}); setHasUnsavedChanges(true); }} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> Teléfono de Contacto</Label>
+                <Input value={localTourInfo.contactPhone} placeholder="ej: +34 600 123 456" onChange={e => { setLocalTourInfo({...localTourInfo, contactPhone: e.target.value}); setHasUnsavedChanges(true); }} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> Correo Electrónico</Label>
+                <Input type="email" value={localTourInfo.contactEmail} placeholder="ej: comercial@ejemplo.com" onChange={e => { setLocalTourInfo({...localTourInfo, contactEmail: e.target.value}); setHasUnsavedChanges(true); }} />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="lg:col-span-2 rounded-3xl border shadow-md h-fit">
           <CardHeader className="bg-primary/5 pb-4 flex flex-row items-center justify-between"><CardTitle className="text-sm">Gestión de Plantas y Planos</CardTitle><Button size="sm" onClick={addFloor} className="h-8 gap-1"><Plus className="w-3 h-3" /> Añadir Planta</Button></CardHeader>
           <CardContent className="pt-6">
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

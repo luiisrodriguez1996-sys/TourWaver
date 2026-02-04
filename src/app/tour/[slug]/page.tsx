@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@
 import { collection, query, where, limit, doc } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock } from 'lucide-react';
+import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -113,6 +114,12 @@ export default function PublicTourViewer() {
     return null;
   };
 
+  const getWhatsAppLink = () => {
+    if (!tour?.contactWhatsApp) return null;
+    const message = encodeURIComponent(`Hola, estoy viendo el tour virtual de "${tour.name}" y me gustaría recibir más información.`);
+    return `https://wa.me/${tour.contactWhatsApp.replace(/\D/g, '')}?text=${message}`;
+  };
+
   const canView = tour ? (tour.published || isAdmin) : false;
 
   if (isTourLoading || (tours === null && !tourError) || (tour && isScenesLoading && !scenesError)) {
@@ -177,12 +184,49 @@ export default function PublicTourViewer() {
                     <p className="text-[11px] text-white/80 leading-relaxed">{activeScene.description}</p>
                   </div>
                 )}
+                
+                {/* Contact section in info panel */}
+                <div className="space-y-2 pt-2 border-t border-white/10">
+                  <p className="text-[9px] font-black text-white/40 uppercase tracking-wider">Contacto Directo</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {tour.contactWhatsApp && (
+                      <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-[10px] h-8 rounded-lg gap-2">
+                          <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                        </Button>
+                      </a>
+                    )}
+                    <div className="flex gap-2">
+                      {tour.contactPhone && (
+                        <a href={`tel:${tour.contactPhone}`} className="flex-1">
+                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-lg gap-2">
+                            <Phone className="w-3.5 h-3.5" /> Llamar
+                          </Button>
+                        </a>
+                      )}
+                      {tour.contactEmail && (
+                        <a href={`mailto:${tour.contactEmail}`} className="flex-1">
+                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-lg gap-2">
+                            <Mail className="w-3.5 h-3.5" /> Email
+                          </Button>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
         
         <div className="flex gap-2 pointer-events-auto w-full md:w-auto justify-end">
+          {tour.contactWhatsApp && (
+            <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" className="md:hidden">
+              <Button variant="secondary" size="icon" className="rounded-full bg-[#25D366] text-white hover:bg-[#20ba59] h-10 w-10 border-none shadow-xl">
+                <MessageCircle className="w-5 h-5" />
+              </Button>
+            </a>
+          )}
           {(tour.address || tour.googleMapsUrl) && (
             <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-10 w-10 md:h-11 md:w-11" onClick={() => { const url = getMapsUrl(); if (url) window.open(url, '_blank'); }}>
               <MapPin className="w-4 h-4" />
@@ -297,6 +341,18 @@ export default function PublicTourViewer() {
               </div>
               <p className="text-xs md:text-sm text-muted-foreground text-center font-medium">Selecciona un nivel y toca los puntos para navegar.</p>
            </div>
+        </div>
+      )}
+
+      {/* Floating contact button for desktop */}
+      {tour.contactWhatsApp && (
+        <div className="absolute bottom-4 left-4 z-40 hidden md:block">
+          <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer">
+            <Button className="bg-[#25D366] hover:bg-[#20ba59] text-white rounded-full px-6 py-6 shadow-2xl gap-3 animate-bounce hover:animate-none">
+              <MessageCircle className="w-6 h-6" />
+              <span className="font-bold">Contactar por WhatsApp</span>
+            </Button>
+          </a>
         </div>
       )}
 
