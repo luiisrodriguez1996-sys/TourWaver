@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -6,17 +7,17 @@ import { doc } from 'firebase/firestore';
 import { Shield } from 'lucide-react';
 
 /**
- * Indicador de versión del sitio.
- * Solo visible para usuarios con rol de administrador.
+ * Site version indicator.
+ * Only visible to users with administrator role.
  */
 export function VersionIndicator() {
   const { user, isUserLoading } = useUser();
-  const firestore = useFirestore();
+  const documentDb = useFirestore();
 
   const adminRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'roles_admin', user.uid);
-  }, [firestore, user]);
+    if (!documentDb || !user) return null;
+    return doc(documentDb, 'roles_admin', user.uid);
+  }, [documentDb, user]);
 
   const { data: adminData } = useDoc(adminRef);
 

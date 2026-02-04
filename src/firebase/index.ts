@@ -1,3 +1,4 @@
+
 'use client';
 
 import { firebaseConfig } from '@/firebase/config';
@@ -9,6 +10,7 @@ import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-ch
 /**
  * Initializes Firebase services and App Check.
  * App Check is configured with reCAPTCHA Enterprise for production-grade security.
+ * This is the primary defense against automated bot attacks and API abuse.
  */
 export function initializeFirebase() {
   if (!getApps().length) {
@@ -21,17 +23,19 @@ export function initializeFirebase() {
       if (appCheckSiteKey) {
         try {
           // Initialize App Check with reCAPTCHA Enterprise provider
+          // This ensures that only requests from the genuine app can access Firebase services.
           initializeAppCheck(firebaseApp, {
             provider: new ReCaptchaEnterpriseProvider(appCheckSiteKey),
             isTokenAutoRefreshEnabled: true,
           });
-          console.log('Firebase App Check initialized successfully with reCAPTCHA Enterprise.');
+          console.log('Firebase App Check: Security shield active (reCAPTCHA Enterprise).');
         } catch (err) {
           // Prevent App Check initialization errors from blocking the entire app
+          // but log them for developer visibility.
           console.error('Firebase App Check failed to initialize:', err);
         }
       } else {
-        console.warn('App Check Site Key is missing. Set NEXT_PUBLIC_FIREBASE_APP_CHECK_SITE_KEY for production security.');
+        console.warn('App Check Site Key is missing. Bots might be able to abuse the APIs.');
       }
     }
 
