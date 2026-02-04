@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from '@
 import { collection, query, where, limit, doc } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers } from 'lucide-react';
+import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -226,13 +227,18 @@ export default function PublicTourViewer() {
               </div>
               <div className="aspect-video bg-muted rounded-2xl md:rounded-3xl overflow-hidden relative border shadow-inner">
                  {currentFloor?.imageUrl ? (
-                   <img src={currentFloor.imageUrl} alt={currentFloor.name} className="w-full h-full object-contain" />
+                   <>
+                     <img src={currentFloor.imageUrl} alt={currentFloor.name} className="w-full h-full object-contain" />
+                     {orderedScenes?.filter((s: any) => s.floorId === activeFloorId).map((s: any) => s.floorPlanX !== undefined && (
+                       <button key={s.id} onClick={() => { setActiveSceneId(s.id); setShowFloorPlan(false); }} className={cn("absolute w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-xl -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-150 flex items-center justify-center", s.id === activeSceneId ? 'bg-primary z-20 ring-4 ring-primary/30 scale-125' : 'bg-muted-foreground/80 z-10 hover:bg-primary')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} title={s.name}><MapPin className={cn("w-3 h-3 md:w-3.5 md:h-3.5 text-white", s.id === activeSceneId ? 'block' : 'hidden')} /></button>
+                     ))}
+                   </>
                  ) : (
-                   <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">Plano no disponible para esta planta</div>
+                   <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-3">
+                     <ImageOff className="w-10 h-10 opacity-20" />
+                     <p className="text-xs md:text-sm font-medium">Plano no disponible para esta planta</p>
+                   </div>
                  )}
-                 {orderedScenes?.filter((s: any) => s.floorId === activeFloorId).map((s: any) => s.floorPlanX !== undefined && (
-                   <button key={s.id} onClick={() => { setActiveSceneId(s.id); setShowFloorPlan(false); }} className={cn("absolute w-5 h-5 md:w-6 md:h-6 rounded-full border-2 border-white shadow-xl -translate-x-1/2 -translate-y-1/2 transition-all hover:scale-150 flex items-center justify-center", s.id === activeSceneId ? 'bg-primary z-20 ring-4 ring-primary/30 scale-125' : 'bg-muted-foreground/80 z-10 hover:bg-primary')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} title={s.name}><MapPin className={cn("w-3 h-3 md:w-3.5 md:h-3.5 text-white", s.id === activeSceneId ? 'block' : 'hidden')} /></button>
-                 ))}
               </div>
               <p className="text-xs md:text-sm text-muted-foreground text-center font-medium">Selecciona un nivel y toca los puntos para navegar.</p>
            </div>

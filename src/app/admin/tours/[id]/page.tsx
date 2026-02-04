@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -30,7 +31,8 @@ import {
   ChevronUp,
   ChevronDown,
   Info,
-  Layers
+  Layers,
+  ImageOff
 } from 'lucide-react';
 import {
   Select,
@@ -51,7 +53,6 @@ export default function TourEditor() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const sceneFileInputRef = useRef<HTMLInputElement>(null);
-  const floorPlanFileInputRef = useRef<HTMLInputElement>(null);
   
   const tourRef = useMemoFirebase(() => {
     if (!firestore || !id) return null;
@@ -126,10 +127,6 @@ export default function TourEditor() {
       }
     }
   }, [serverScenes, tour]);
-
-  const existingClients = allTours 
-    ? Array.from(new Set(allTours.map((t: any) => t.clientName).filter(Boolean)))
-    : [];
 
   const activeScene = localScenes.find((s) => s.id === activeSceneId);
   const activeFloor = localTourInfo.floors.find(f => f.id === activeScene?.floorId);
@@ -256,7 +253,7 @@ export default function TourEditor() {
   };
 
   const handleFloorPlanClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!activeSceneId || !activeFloor) return;
+    if (!activeSceneId || !activeFloor || !activeFloor.imageUrl) return;
     const rect = e.currentTarget.getBoundingClientRect();
     const x = ((e.clientX - rect.left) / rect.width) * 100;
     const y = ((e.clientY - rect.top) / rect.height) * 100;
@@ -405,15 +402,22 @@ export default function TourEditor() {
                   </Select>
                 </div>
                 
-                {activeFloor?.imageUrl && (
+                {activeFloor && (
                   <div className="space-y-2">
                     <Label className="text-xs flex items-center gap-2"><Crosshair className="w-3 h-3" /> Ubicación en {activeFloor.name}</Label>
-                    <div className="relative aspect-video bg-muted rounded-xl border-2 border-primary/20 cursor-crosshair overflow-hidden" onClick={handleFloorPlanClick}>
-                      <img src={activeFloor.imageUrl} className="w-full h-full object-contain pointer-events-none" alt="Plano" />
-                      {localScenes.filter(s => s.floorId === activeScene?.floorId).map(s => s.floorPlanX !== undefined && (
-                        <div key={s.id} className={cn("absolute w-3 h-3 rounded-full border-2 border-white -translate-x-1/2 -translate-y-1/2", s.id === activeSceneId ? 'bg-primary scale-150 z-20' : 'bg-muted-foreground/50 z-10')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} />
-                      ))}
-                    </div>
+                    {activeFloor.imageUrl ? (
+                      <div className="relative aspect-video bg-muted rounded-xl border-2 border-primary/20 cursor-crosshair overflow-hidden" onClick={handleFloorPlanClick}>
+                        <img src={activeFloor.imageUrl} className="w-full h-full object-contain pointer-events-none" alt="Plano" />
+                        {localScenes.filter(s => s.floorId === activeScene?.floorId).map(s => s.floorPlanX !== undefined && (
+                          <div key={s.id} className={cn("absolute w-3 h-3 rounded-full border-2 border-white -translate-x-1/2 -translate-y-1/2", s.id === activeSceneId ? 'bg-primary scale-150 z-20' : 'bg-muted-foreground/50 z-10')} style={{ left: `${s.floorPlanX}%`, top: `${s.floorPlanY}%` }} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="aspect-video bg-muted/40 rounded-xl border-2 border-dashed flex flex-col items-center justify-center p-4 text-center">
+                        <ImageOff className="w-6 h-6 text-muted-foreground mb-2" />
+                        <p className="text-[10px] text-muted-foreground">Esta planta no tiene plano cargado. Sube uno en "Gestión de Plantas" para ubicar estancias.</p>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -424,6 +428,28 @@ export default function TourEditor() {
               {activeScene?.hotspots.map(h => (
                 <Card key={h.id} className={cn("p-3 border-2", highlightedHotspotId === h.id ? 'border-primary' : 'border-muted')}>
                   <div className="flex justify-between items-center mb-2"><span className="text-[10px] font-bold uppercase text-primary">Enlace</span><Button size="icon" variant="ghost" className="h-6 w-6 text-destructive" onClick={() => removeHotspot(h.id)}><Trash2 className="w-3 h-3" /></Button></div>
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="space-y-1">
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Yaw (H)</Label>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        value={h.yaw.toFixed(2)} 
+                        className="h-7 text-[10px]" 
+                        onChange={e => updateHotspot(h.id, { yaw: parseFloat(e.target.value) || 0 })} 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[9px] uppercase font-bold text-muted-foreground">Pitch (V)</Label>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        value={h.pitch.toFixed(2)} 
+                        className="h-7 text-[10px]" 
+                        onChange={e => updateHotspot(h.id, { pitch: parseFloat(e.target.value) || 0 })} 
+                      />
+                    </div>
+                  </div>
                   <Input value={h.label} className="h-7 text-xs mb-2" onChange={e => updateHotspot(h.id, { label: e.target.value })} />
                   <Select value={h.targetSceneId} onValueChange={val => updateHotspot(h.id, { targetSceneId: val })}>
                     <SelectTrigger className="h-7 text-xs"><SelectValue /></SelectTrigger>
@@ -431,6 +457,12 @@ export default function TourEditor() {
                   </Select>
                 </Card>
               ))}
+              {(!activeScene?.hotspots || activeScene.hotspots.length === 0) && (
+                <div className="text-center py-10 text-muted-foreground">
+                  <PlusCircle className="w-8 h-8 mx-auto mb-2 opacity-20" />
+                  <p className="text-[10px]">No hay enlaces en esta estancia.</p>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </div>
@@ -462,13 +494,18 @@ export default function TourEditor() {
                       ) : (
                         <div className="text-center p-4">
                           <Upload className="w-6 h-6 text-muted-foreground mx-auto mb-2" />
-                          <span className="text-[10px] text-muted-foreground">Subir plano</span>
+                          <span className="text-[10px] text-muted-foreground">Subir plano (Opcional)</span>
                         </div>
                       )}
                       <input id={`floor-input-${floor.id}`} type="file" className="hidden" accept="image/*" onChange={e => handleFloorImageUpload(floor.id, e)} />
                     </div>
                   </Card>
                 ))}
+                {localTourInfo.floors.length === 0 && (
+                  <div className="col-span-full py-10 text-center border-2 border-dashed rounded-2xl bg-muted/20">
+                    <p className="text-xs text-muted-foreground">Añade plantas para organizar tus estancias y cargar planos opcionales.</p>
+                  </div>
+                )}
              </div>
              {localTourInfo.floors.length > 0 && (
                 <div className="mt-6 flex items-center justify-between p-3 bg-muted/40 rounded-2xl border">
