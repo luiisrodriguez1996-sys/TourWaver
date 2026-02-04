@@ -1,6 +1,19 @@
 
 {
   "entities": {
+    "SiteConfiguration": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "SiteConfiguration",
+      "type": "object",
+      "description": "Stores site-wide configurations.",
+      "properties": {
+        "id": { "type": "string" },
+        "defaultLanguage": { "type": "string" },
+        "contactWhatsApp": { "type": "string" },
+        "contactPhone": { "type": "string" },
+        "contactEmail": { "type": "string" }
+      }
+    },
     "Tour": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Tour",
@@ -30,6 +43,10 @@
         "published": {
           "type": "boolean",
           "description": "Indicates whether the tour is published and publicly accessible."
+        },
+        "showInPortfolio": {
+          "type": "boolean",
+          "description": "Indicates whether the tour should be shown in the home portfolio."
         },
         "floors": {
           "type": "array",

@@ -6,6 +6,7 @@ export interface Tour {
   slug: string;
   description: string;
   published: boolean;
+  showInPortfolio?: boolean;
   floors?: Floor[];
   showFloorPlan?: boolean;
   thumbnailUrl?: string;
@@ -19,6 +20,14 @@ export interface Tour {
   createdAt: number;
   updatedAt: number;
   sceneIds?: string[];
+}
+
+export interface SiteConfiguration {
+  id: string;
+  defaultLanguage: string;
+  contactWhatsApp?: string;
+  contactPhone?: string;
+  contactEmail?: string;
 }
 
 export interface Floor {

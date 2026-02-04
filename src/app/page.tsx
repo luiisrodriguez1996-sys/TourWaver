@@ -4,8 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Camera, Map, Zap, ShieldCheck, Globe, Building2, UserCheck, Layout, Languages, ChevronDown } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Camera, Map, Zap, ShieldCheck, Globe, Building2, UserCheck, Layout, Languages, ChevronDown, MessageCircle, ExternalLink, ArrowRight } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { VersionIndicator } from '@/components/VersionIndicator';
+import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { Badge } from '@/components/ui/badge';
 
 const translations = {
   es: {
@@ -43,7 +46,8 @@ const translations = {
     ctaQuality: "Calidad Profesional",
     footerCopy: "© 2026 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
     footerTerms: "Condiciones de Uso",
-    footerPrivacy: "Privacidad"
+    footerPrivacy: "Privacidad",
+    viewTour: "Ver Tour Virtual"
   },
   en: {
     heroBadge: "Professional Real Estate Service",
@@ -73,7 +77,8 @@ const translations = {
     ctaQuality: "Professional Quality",
     footerCopy: "© 2026 Tour Weaver - 360° Visualization Services. All rights reserved.",
     footerTerms: "Terms of Use",
-    footerPrivacy: "Privacy"
+    footerPrivacy: "Privacy",
+    viewTour: "View Virtual Tour"
   },
   pt: {
     heroBadge: "Serviço Profissional para Real Estate",
@@ -103,7 +108,8 @@ const translations = {
     ctaQuality: "Qualidade Profissional",
     footerCopy: "© 2026 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
     footerTerms: "Termos de Uso",
-    footerPrivacy: "Privacidade"
+    footerPrivacy: "Privacidade",
+    viewTour: "Ver Tour Virtual"
   }
 };
 
@@ -111,6 +117,25 @@ type Language = 'es' | 'en' | 'pt';
 
 export default function Home() {
   const [lang, setLang] = useState<Language>('es');
+  const firestore = useFirestore();
+
+  // Configuración global para contacto
+  const siteConfigRef = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return doc(firestore, 'siteConfigurations', 'default');
+  }, [firestore]);
+  const { data: siteConfig } = useDoc(siteConfigRef);
+
+  // Tours para el portafolio
+  const portfolioQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, 'tours'),
+      where('published', '==', true),
+      where('showInPortfolio', '==', true)
+    );
+  }, [firestore]);
+  const { data: portfolioTours, isLoading: isPortfolioLoading } = useCollection(portfolioQuery);
 
   useEffect(() => {
     const savedLang = localStorage.getItem('tour-weaver-lang') as Language;
@@ -131,6 +156,14 @@ export default function Home() {
 
   const t = translations[lang];
 
+  const hasContactInfo = !!(siteConfig?.contactWhatsApp || siteConfig?.contactPhone || siteConfig?.contactEmail);
+
+  const getWhatsAppLink = () => {
+    if (!siteConfig?.contactWhatsApp) return null;
+    const message = encodeURIComponent("Hola, me gustaría solicitar un presupuesto para un tour virtual 360°.");
+    return `https://wa.me/${siteConfig.contactWhatsApp.replace(/\D/g, '')}?text=${message}`;
+  };
+
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden">
       <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
@@ -144,7 +177,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
             <Link href="#servicios" className="hover:text-primary transition-colors">{t.servicios}</Link>
             <Link href="#portafolio" className="hover:text-primary transition-colors">{t.portafolio}</Link>
-            <Link href="#contacto" className="hover:text-primary transition-colors">{t.contacto}</Link>
+            {hasContactInfo && <Link href="#contacto" className="hover:text-primary transition-colors">{t.contacto}</Link>}
           </nav>
           <div className="flex items-center gap-4">
             <DropdownMenu>
@@ -161,9 +194,11 @@ export default function Home() {
                 <DropdownMenuItem onClick={() => changeLang('pt')}>Português</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Link href="#contacto" className="hidden sm:flex">
-              <Button size="sm">{t.btnPresupuesto}</Button>
-            </Link>
+            {hasContactInfo && (
+              <Link href={getWhatsAppLink() || '#contacto'} target={getWhatsAppLink() ? "_blank" : "_self"}>
+                <Button size="sm" className="hidden sm:flex">{t.btnPresupuesto}</Button>
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -172,9 +207,9 @@ export default function Home() {
         <section className="relative py-16 lg:py-32 overflow-hidden bg-gradient-to-b from-white to-background">
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl">
-              <Badge variant="secondary" className="mb-4 py-1 px-4 text-primary bg-primary/10 border-primary/20">
+              <span className="inline-flex items-center rounded-full px-4 py-1 text-xs font-semibold mb-4 text-primary bg-primary/10 border border-primary/20">
                 {t.heroBadge}
-              </Badge>
+              </span>
               <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold font-headline leading-tight mb-6">
                 {t.heroTitle} <span className="text-primary">{t.heroTitleHighlight}</span> {t.heroTitleEnd}
               </h1>
@@ -182,9 +217,11 @@ export default function Home() {
                 {t.heroDesc}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link href="#contacto">
-                  <Button size="lg" className="px-8 text-lg bg-accent hover:bg-accent/90 w-full sm:w-auto">{t.btnContratar}</Button>
-                </Link>
+                {hasContactInfo && (
+                  <Link href={getWhatsAppLink() || '#contacto'} target={getWhatsAppLink() ? "_blank" : "_self"}>
+                    <Button size="lg" className="px-8 text-lg bg-accent hover:bg-accent/90 w-full sm:w-auto">{t.btnContratar}</Button>
+                  </Link>
+                )}
                 <Link href="#portafolio">
                   <Button size="lg" variant="outline" className="px-8 text-lg border-primary text-primary hover:bg-primary/5 w-full sm:w-auto">{t.btnPortafolio}</Button>
                 </Link>
@@ -237,26 +274,86 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="contacto" className="py-20 md:py-24">
+        {/* Portfolio Section */}
+        <section id="portafolio" className="py-20 md:py-24 bg-background">
           <div className="container mx-auto px-4">
-            <div className="bg-primary rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 lg:p-20 text-white flex flex-col lg:flex-row items-center gap-12 overflow-hidden">
-              <div className="flex-1 text-center lg:text-left">
-                <h2 className="text-2xl md:text-4xl font-bold mb-6">{t.ctaTitle}</h2>
-                <p className="text-lg md:text-xl text-white/80 mb-8">{t.ctaDesc}</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-                  <Button size="lg" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto">{t.ctaWa}</Button>
-                </div>
-              </div>
-              <div className="flex-1 relative aspect-square w-full max-w-[260px] sm:max-w-sm bg-white/10 rounded-full flex items-center justify-center border border-white/20">
-                 <div className="text-center p-4">
-                    <UserCheck className="w-12 h-12 md:w-20 md:h-20 mx-auto mb-4 text-white" />
-                    <p className="text-xl md:text-2xl font-bold">{t.ctaGuarantee}</p>
-                    <p className="text-xs md:text-base text-white/60">{t.ctaQuality}</p>
-                 </div>
-              </div>
+            <div className="text-center max-w-2xl mx-auto mb-16">
+              <h2 className="text-2xl md:text-3xl font-bold font-headline mb-4">{t.portafolio}</h2>
+              <p className="text-sm md:text-base text-muted-foreground">Explora algunos de nuestros últimos proyectos realizados para brokers exclusivos.</p>
             </div>
+
+            {isPortfolioLoading ? (
+              <div className="flex justify-center py-20">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              </div>
+            ) : portfolioTours && portfolioTours.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {portfolioTours.map((tour: any) => (
+                  <Card key={tour.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-none shadow-md rounded-2xl">
+                    <div className="relative aspect-video bg-muted overflow-hidden">
+                      <img 
+                        src={tour.thumbnailUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
+                        alt={tour.name} 
+                        className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-500"
+                      />
+                    </div>
+                    <CardHeader className="pb-2">
+                      <div className="text-primary text-[10px] font-bold uppercase mb-1">{tour.clientName}</div>
+                      <CardTitle className="text-xl line-clamp-1">{tour.name}</CardTitle>
+                    </CardHeader>
+                    <CardFooter className="pt-4 pb-6">
+                      <Link href={`/tour/${tour.slug}`} className="w-full">
+                        <Button className="w-full gap-2 rounded-xl h-11">
+                          {t.viewTour} <ArrowRight className="w-4 h-4" />
+                        </Button>
+                      </Link>
+                    </CardFooter>
+                  </Card>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 text-muted-foreground italic border-2 border-dashed rounded-3xl">
+                Próximamente más proyectos destacados.
+              </div>
+            )}
           </div>
         </section>
+
+        {hasContactInfo && (
+          <section id="contacto" className="py-20 md:py-24">
+            <div className="container mx-auto px-4">
+              <div className="bg-primary rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 lg:p-20 text-white flex flex-col lg:flex-row items-center gap-12 overflow-hidden shadow-2xl">
+                <div className="flex-1 text-center lg:text-left">
+                  <h2 className="text-2xl md:text-4xl font-bold mb-6">{t.ctaTitle}</h2>
+                  <p className="text-lg md:text-xl text-white/80 mb-8">{t.ctaDesc}</p>
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                    {siteConfig?.contactWhatsApp && (
+                      <Link href={getWhatsAppLink() || '#'} target="_blank">
+                        <Button size="lg" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto h-14 rounded-2xl gap-3">
+                          <MessageCircle className="w-6 h-6" /> {t.ctaWa}
+                        </Button>
+                      </Link>
+                    )}
+                    {siteConfig?.contactEmail && (
+                      <Link href={`mailto:${siteConfig.contactEmail}`}>
+                        <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto h-14 rounded-2xl">
+                          {t.contacto} por Email
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </div>
+                <div className="flex-1 relative aspect-square w-full max-w-[260px] sm:max-w-sm bg-white/10 rounded-full flex items-center justify-center border border-white/20">
+                   <div className="text-center p-4">
+                      <UserCheck className="w-12 h-12 md:w-20 md:h-20 mx-auto mb-4 text-white" />
+                      <p className="text-xl md:text-2xl font-bold">{t.ctaGuarantee}</p>
+                      <p className="text-xs md:text-base text-white/60">{t.ctaQuality}</p>
+                   </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
       </main>
 
       <footer className="bg-background border-t py-12">
@@ -271,7 +368,7 @@ export default function Home() {
             <nav className="flex flex-wrap justify-center gap-6">
               <Link href="#servicios" className="text-sm text-muted-foreground hover:text-primary">{t.servicios}</Link>
               <Link href="#portafolio" className="text-sm text-muted-foreground hover:text-primary">{t.portafolio}</Link>
-              <Link href="#contacto" className="text-sm text-muted-foreground hover:text-primary">{t.contacto}</Link>
+              {hasContactInfo && <Link href="#contacto" className="text-sm text-muted-foreground hover:text-primary">{t.contacto}</Link>}
               <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary">{t.footerTerms}</Link>
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary">{t.footerPrivacy}</Link>
             </nav>
@@ -286,10 +383,10 @@ export default function Home() {
   );
 }
 
-function Badge({ children, variant, className }: { children: React.ReactNode, variant?: string, className?: string }) {
+function Loader2({ className }: { className?: string }) {
   return (
-    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${className}`}>
-      {children}
-    </span>
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={cn("animate-spin", className)}>
+      <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+    </svg>
   );
 }

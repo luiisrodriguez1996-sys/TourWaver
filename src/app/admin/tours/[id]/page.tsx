@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -38,7 +39,8 @@ import {
   Phone,
   Mail,
   MessageSquare,
-  LayoutGrid
+  LayoutGrid,
+  Briefcase
 } from 'lucide-react';
 import {
   Select,
@@ -98,6 +100,7 @@ export default function TourEditor() {
     description: '',
     floors: [] as Floor[],
     showFloorPlan: false,
+    showInPortfolio: false,
     address: '',
     googleMapsUrl: '',
     contactPhone: '',
@@ -125,6 +128,7 @@ export default function TourEditor() {
         description: tour.description || '',
         floors: tour.floors || [],
         showFloorPlan: !!tour.showFloorPlan,
+        showInPortfolio: !!tour.showInPortfolio,
         address: tour.address || '',
         googleMapsUrl: tour.googleMapsUrl || '',
         contactPhone: tour.contactPhone || '',
@@ -753,6 +757,19 @@ export default function TourEditor() {
               <div className="space-y-2">
                 <Label className="text-sm font-bold flex items-center gap-2"><AlignLeft className="w-4 h-4 text-primary" /> Descripción General</Label>
                 <Textarea value={localTourInfo.description} placeholder="Proporciona una descripción atractiva para los visitantes..." rows={4} onChange={e => { setLocalTourInfo({...localTourInfo, description: e.target.value}); setHasUnsavedChanges(true); }} className="rounded-xl resize-none" />
+              </div>
+
+              <Separator className="my-4" />
+
+              <div className="space-y-4">
+                <h3 className="font-bold flex items-center gap-2"><Briefcase className="w-5 h-5 text-primary" /> Opciones de Portafolio</h3>
+                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+                  <div>
+                    <p className="text-sm font-bold">Mostrar en Portafolio</p>
+                    <p className="text-[10px] text-muted-foreground">Hace que esta propiedad aparezca destacada en la página de inicio pública.</p>
+                  </div>
+                  <Switch checked={localTourInfo.showInPortfolio} onCheckedChange={checked => { setLocalTourInfo({...localTourInfo, showInPortfolio: checked}); setHasUnsavedChanges(true); }} />
+                </div>
               </div>
 
               <Separator className="my-4" />

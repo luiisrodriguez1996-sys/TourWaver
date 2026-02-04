@@ -5,10 +5,11 @@ import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Languages, CheckCircle2 } from 'lucide-react';
+import { Languages, CheckCircle2, Phone, Mail, MessageSquare } from 'lucide-react';
 import { useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
 
 export default function SettingsPage() {
   const firestore = useFirestore();
@@ -21,21 +22,25 @@ export default function SettingsPage() {
 
   const { data: siteConfig, isLoading } = useDoc(siteConfigRef);
 
-  const handleLanguageChange = (value: string) => {
+  const updateConfig = (updates: any) => {
     if (!siteConfigRef) return;
     
     setDocumentNonBlocking(siteConfigRef, {
       id: 'default',
-      defaultLanguage: value
+      ...updates
     }, { merge: true });
 
     toast({
-      title: "Settings Saved",
-      description: `Default language set to ${value === 'es' ? 'Spanish' : value === 'en' ? 'English' : 'Portuguese'}.`,
+      title: "Configuración Guardada",
+      description: "Los cambios se han aplicado correctamente.",
     });
   };
 
-  if (isLoading) return <div className="p-8">Loading settings...</div>;
+  const handleLanguageChange = (value: string) => {
+    updateConfig({ defaultLanguage: value });
+  };
+
+  if (isLoading) return <div className="p-8">Cargando configuración...</div>;
 
   const currentLang = siteConfig?.defaultLanguage || 'es';
 
@@ -43,10 +48,11 @@ export default function SettingsPage() {
     <div className="max-w-4xl space-y-8">
       <div>
         <h1 className="text-3xl font-bold font-headline">Configuración del Sitio</h1>
-        <p className="text-muted-foreground">Administra las preferencias globales de Tour Weaver como negocio innovador</p>
+        <p className="text-muted-foreground">Administra las preferencias globales y datos de contacto de Tour Weaver</p>
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-8">
+        {/* Idioma */}
         <Card className="border-none shadow-md overflow-hidden">
           <CardHeader className="bg-primary/5">
             <div className="flex items-center gap-4">
@@ -75,7 +81,6 @@ export default function SettingsPage() {
                     <span className="text-2xl">🇪🇸</span>
                     <span className="font-bold text-lg">Español</span>
                   </div>
-                  <p className="text-[10px] text-center text-muted-foreground">Idioma por defecto para todas las interfaces públicas.</p>
                   {currentLang === 'es' && <CheckCircle2 className="w-5 h-5 text-primary mt-4" />}
                 </Label>
               </div>
@@ -90,7 +95,6 @@ export default function SettingsPage() {
                     <span className="text-2xl">🇺🇸</span>
                     <span className="font-bold text-lg">English</span>
                   </div>
-                  <p className="text-[10px] text-center text-muted-foreground">Default language for all public interfaces.</p>
                   {currentLang === 'en' && <CheckCircle2 className="w-5 h-5 text-primary mt-4" />}
                 </Label>
               </div>
@@ -105,14 +109,60 @@ export default function SettingsPage() {
                     <span className="text-2xl">🇧🇷</span>
                     <span className="font-bold text-lg">Português</span>
                   </div>
-                  <p className="text-[10px] text-center text-muted-foreground">Idioma padrão para todas as interfaces públicas.</p>
                   {currentLang === 'pt' && <CheckCircle2 className="w-5 h-5 text-primary mt-4" />}
                 </Label>
               </div>
             </RadioGroup>
           </CardContent>
-          <CardFooter className="bg-gray-50/50 text-sm text-muted-foreground border-t">
-            Nota: Esto afectará la visualización de todas las propiedades publicadas.
+        </Card>
+
+        {/* Contacto Global */}
+        <Card className="border-none shadow-md overflow-hidden">
+          <CardHeader className="bg-primary/5">
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Phone className="text-primary w-5 h-5" />
+              </div>
+              <div>
+                <CardTitle>Contacto del Negocio (Home)</CardTitle>
+                <CardDescription>Estos datos se usarán en la página de inicio. Si están vacíos, no aparecerán botones de contacto.</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="pt-8 space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><MessageSquare className="w-4 h-4 text-green-500" /> WhatsApp para Home</Label>
+                <Input 
+                  placeholder="ej: 34600000000 (sin +)" 
+                  defaultValue={siteConfig?.contactWhatsApp || ''}
+                  onBlur={(e) => updateConfig({ contactWhatsApp: e.target.value })}
+                  className="rounded-xl"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="flex items-center gap-2"><Phone className="w-4 h-4 text-primary" /> Teléfono Público</Label>
+                <Input 
+                  placeholder="ej: +34 900 000 000" 
+                  defaultValue={siteConfig?.contactPhone || ''}
+                  onBlur={(e) => updateConfig({ contactPhone: e.target.value })}
+                  className="rounded-xl"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2"><Mail className="w-4 h-4 text-primary" /> Email de Contacto</Label>
+              <Input 
+                type="email"
+                placeholder="ej: hola@tourweaver.com" 
+                defaultValue={siteConfig?.contactEmail || ''}
+                onBlur={(e) => updateConfig({ contactEmail: e.target.value })}
+                className="rounded-xl"
+              />
+            </div>
+          </CardContent>
+          <CardFooter className="bg-gray-50/50 text-[10px] text-muted-foreground border-t">
+            Nota: Los datos de contacto individuales de cada tour se configuran dentro de cada propiedad.
           </CardFooter>
         </Card>
       </div>
