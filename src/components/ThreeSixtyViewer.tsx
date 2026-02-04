@@ -4,14 +4,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Hotspot } from '@/lib/types';
 import { Button } from './ui/button';
-import { ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronRight, Loader2, Settings2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import * as THREE_REAL from 'three';
 
 interface ThreeSixtyViewerProps {
   imageUrl: string;
   hotspots?: Hotspot[];
-  onHotspotClick?: (targetSceneId: string) => void;
+  onHotspotClick?: (targetSceneId: string, hotspotId: string) => void;
   onSceneClick?: (yaw: number, pitch: number) => void;
   isEditing?: boolean;
 }
@@ -273,16 +273,25 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
               <Button
                 variant="default"
                 size="sm"
-                className="rounded-full bg-primary/90 border-2 border-white/20 shadow-lg px-4 py-2 flex items-center gap-2 group whitespace-nowrap"
+                className={cn(
+                  "rounded-full border-2 shadow-lg px-4 py-2 flex items-center gap-2 group whitespace-nowrap transition-colors",
+                  isEditing 
+                    ? "bg-accent/90 border-accent-foreground/20 hover:bg-accent" 
+                    : "bg-primary/90 border-white/20 hover:bg-primary"
+                )}
                 onClick={(e) => {
                   e.stopPropagation();
-                  onHotspotClick?.(h.targetSceneId);
+                  onHotspotClick?.(h.targetSceneId, h.id);
                 }}
               >
-                <span className="max-w-0 overflow-hidden group-hover:max-w-[200px] transition-all duration-300 font-medium">
+                {isEditing && <Settings2 className="w-4 h-4 text-white" />}
+                <span className={cn(
+                  "overflow-hidden transition-all duration-300 font-medium",
+                  isEditing ? "max-w-[200px]" : "max-w-0 group-hover:max-w-[200px]"
+                )}>
                   {h.label}
                 </span>
-                <ChevronRight className="w-5 h-5 text-white" />
+                {!isEditing && <ChevronRight className="w-5 h-5 text-white" />}
               </Button>
             </div>
           ))}

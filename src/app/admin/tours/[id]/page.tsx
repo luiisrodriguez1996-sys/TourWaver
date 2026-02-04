@@ -28,7 +28,8 @@ import {
   AlertCircle,
   Upload,
   Link as LinkIcon,
-  Search
+  Search,
+  CheckCircle2
 } from 'lucide-react';
 import {
   Select,
@@ -41,6 +42,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
 import { doc, collection, writeBatch } from 'firebase/firestore';
+import { cn } from '@/lib/utils';
 
 export default function TourEditor() {
   const { id } = useParams();
@@ -82,6 +84,9 @@ export default function TourEditor() {
   const [localScenes, setLocalScenes] = useState<Scene[]>([]);
   const [deletedSceneIds, setDeletedSceneIds] = useState<string[]>([]);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('details');
+  const [highlightedHotspotId, setHighlightedHotspotId] = useState<string | null>(null);
+  
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
@@ -234,11 +239,30 @@ export default function TourEditor() {
     };
     const updatedHotspots = [...(activeScene?.hotspots || []), newHotspot];
     updateLocalScene({ hotspots: updatedHotspots });
+    
+    // Enfocar automáticamente el nuevo enlace
+    setActiveTab('links');
+    setHighlightedHotspotId(newHotspot.id);
   };
 
   const removeHotspot = (hotspotId: string) => {
     const updatedHotspots = activeScene?.hotspots.filter((h: any) => h.id !== hotspotId) || [];
     updateLocalScene({ hotspots: updatedHotspots });
+    if (highlightedHotspotId === hotspotId) setHighlightedHotspotId(null);
+  };
+
+  const handleHotspotViewerClick = (_targetSceneId: string, hotspotId: string) => {
+    // En el editor, no navegamos al destino. En su lugar, enfocamos la configuración.
+    setActiveTab('links');
+    setHighlightedHotspotId(hotspotId);
+    
+    // Temporizador para quitar el resaltado visual después de un momento
+    setTimeout(() => {
+      const element = document.getElementById(`hotspot-card-${hotspotId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 100);
   };
 
   const handleSaveAll = async () => {
@@ -377,7 +401,10 @@ export default function TourEditor() {
                 <Card 
                   key={scene.id} 
                   className={`cursor-pointer transition-all border-2 relative ${activeSceneId === scene.id ? 'border-primary bg-primary/5' : 'border-transparent hover:bg-muted'}`}
-                  onClick={() => setActiveSceneId(scene.id)}
+                  onClick={() => {
+                    setActiveSceneId(scene.id);
+                    setHighlightedHotspotId(null);
+                  }}
                 >
                   <div className="p-2 flex items-center gap-3">
                     <div className="w-14 h-10 rounded bg-muted overflow-hidden flex-shrink-0">
@@ -542,7 +569,7 @@ export default function TourEditor() {
                 hotspots={activeScene.hotspots || []}
                 isEditing={true}
                 onSceneClick={addHotspot}
-                onHotspotClick={(targetId) => setActiveSceneId(targetId)}
+                onHotspotClick={handleHotspotViewerClick}
               />
             ) : (
               <div className="w-full h-full bg-muted flex items-center justify-center">
@@ -561,7 +588,7 @@ export default function TourEditor() {
         </div>
 
         <div className="lg:col-span-3 space-y-4 overflow-y-auto pl-2 custom-scrollbar">
-          <Tabs defaultValue="details">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full grid grid-cols-2">
               <TabsTrigger value="details">Estancia</TabsTrigger>
               <TabsTrigger value="links">Enlaces</TabsTrigger>
@@ -633,10 +660,20 @@ export default function TourEditor() {
               ) : (
                 <div className="space-y-3">
                   {activeScene?.hotspots.map((h) => (
-                    <Card key={h.id} className="p-3 bg-white border-2 border-muted shadow-sm">
+                    <Card 
+                      key={h.id} 
+                      id={`hotspot-card-${h.id}`}
+                      className={cn(
+                        "p-3 bg-white border-2 shadow-sm transition-all duration-300",
+                        highlightedHotspotId === h.id ? "border-accent ring-1 ring-accent/30" : "border-muted"
+                      )}
+                    >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
-                          <p className="text-[9px] font-black uppercase text-primary">Navegación</p>
+                          <div className="flex items-center gap-1.5">
+                            <p className="text-[9px] font-black uppercase text-primary">Navegación</p>
+                            {highlightedHotspotId === h.id && <CheckCircle2 className="w-3 h-3 text-accent animate-in fade-in zoom-in" />}
+                          </div>
                           <Button 
                             size="icon" 
                             variant="ghost" 
