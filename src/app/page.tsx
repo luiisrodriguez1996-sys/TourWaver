@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -79,14 +80,14 @@ const translations = {
     heroTitle: "Mostre Propriedades com",
     heroTitleHighlight: "Tours 360°",
     heroTitleEnd: "de Alta Gama",
-    heroDesc: "Ajudamos corretores e imobiliárias a destacar suas propiedades como um negocio innovador. Criamos experiências imersivas que permitem aos seus clientes visitar seu futuro lar de qualquer lugar do mundo.",
+    heroDesc: "Ajudamos corretores e imobiliárias a destacar suas propiedades como um negocio innovador. Criamos experiências imersivas que permiten aos seus clientes visitar seu futuro lar de qualquer lugar do mundo.",
     btnPresupuesto: "Solicitar Orçamento",
     btnContratar: "Contratar Serviço",
     btnPortafolio: "Ver Portfólio",
     servicios: "Serviços",
     portafolio: "Portfólio",
     contacto: "Contato",
-    servTitle: "Soluções de Visualização Imobiliária",
+    servTitle: "Soluções de Visualización Imobiliária",
     servDesc: "Oferecemos um servicio integral de captura e criação de tours virtuais otimizados para as suas listagens de imóveis.",
     serv1Title: "Captura de Alta Fidelidade",
     serv1Desc: "Fotografia panorâmica profesional com pós-processamento para que cada ambiente pareça impecável e luminoso.",
@@ -131,7 +132,7 @@ export default function Home() {
   const t = translations[lang];
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden">
       <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -166,24 +167,24 @@ export default function Home() {
       </header>
 
       <main className="flex-grow">
-        <section className="relative py-20 lg:py-32 overflow-hidden bg-gradient-to-b from-white to-background">
+        <section className="relative py-16 lg:py-32 overflow-hidden bg-gradient-to-b from-white to-background">
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl">
               <Badge variant="secondary" className="mb-4 py-1 px-4 text-primary bg-primary/10 border-primary/20">
                 {t.heroBadge}
               </Badge>
-              <h1 className="text-5xl lg:text-7xl font-bold font-headline leading-tight mb-6">
+              <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold font-headline leading-tight mb-6">
                 {t.heroTitle} <span className="text-primary">{t.heroTitleHighlight}</span> {t.heroTitleEnd}
               </h1>
-              <p className="text-xl text-muted-foreground mb-10 leading-relaxed">
+              <p className="text-lg md:text-xl text-muted-foreground mb-10 leading-relaxed">
                 {t.heroDesc}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
                 <Link href="#contacto">
-                  <Button size="lg" className="px-8 text-lg bg-accent hover:bg-accent/90">{t.btnContratar}</Button>
+                  <Button size="lg" className="px-8 text-lg bg-accent hover:bg-accent/90 w-full sm:w-auto">{t.btnContratar}</Button>
                 </Link>
                 <Link href="#portafolio">
-                  <Button size="lg" variant="outline" className="px-8 text-lg border-primary text-primary hover:bg-primary/5">{t.btnPortafolio}</Button>
+                  <Button size="lg" variant="outline" className="px-8 text-lg border-primary text-primary hover:bg-primary/5 w-full sm:w-auto">{t.btnPortafolio}</Button>
                 </Link>
               </div>
             </div>
@@ -193,11 +194,11 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="servicios" className="py-24 bg-white">
+        <section id="servicios" className="py-20 md:py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center max-w-2xl mx-auto mb-16">
-              <h2 className="text-3xl font-bold font-headline mb-4">{t.servTitle}</h2>
-              <p className="text-muted-foreground">{t.servDesc}</p>
+              <h2 className="text-2xl md:text-3xl font-bold font-headline mb-4">{t.servTitle}</h2>
+              <p className="text-sm md:text-base text-muted-foreground">{t.servDesc}</p>
             </div>
             
             <div className="grid md:grid-cols-3 gap-8">
@@ -206,8 +207,8 @@ export default function Home() {
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                     <Camera className="text-primary w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{t.serv1Title}</h3>
-                  <p className="text-muted-foreground">{t.serv1Desc}</p>
+                  <h3 className="text-lg md:text-xl font-bold mb-3">{t.serv1Title}</h3>
+                  <p className="text-sm text-muted-foreground">{t.serv1Desc}</p>
                 </CardContent>
               </Card>
               
@@ -216,8 +217,8 @@ export default function Home() {
                   <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center mb-6">
                     <Layout className="text-accent w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{t.serv2Title}</h3>
-                  <p className="text-muted-foreground">{t.serv2Desc}</p>
+                  <h3 className="text-lg md:text-xl font-bold mb-3">{t.serv2Title}</h3>
+                  <p className="text-sm text-muted-foreground">{t.serv2Desc}</p>
                 </CardContent>
               </Card>
 
@@ -226,30 +227,30 @@ export default function Home() {
                   <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-6">
                     <Building2 className="text-primary w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-bold mb-3">{t.serv3Title}</h3>
-                  <p className="text-muted-foreground">{t.serv3Desc}</p>
+                  <h3 className="text-lg md:text-xl font-bold mb-3">{t.serv3Title}</h3>
+                  <p className="text-sm text-muted-foreground">{t.serv3Desc}</p>
                 </CardContent>
               </Card>
             </div>
           </div>
         </section>
 
-        <section id="contacto" className="py-24">
+        <section id="contacto" className="py-20 md:py-24">
           <div className="container mx-auto px-4">
-            <div className="bg-primary rounded-3xl p-12 lg:p-20 text-white flex flex-col lg:flex-row items-center gap-12">
-              <div className="flex-1">
-                <h2 className="text-4xl font-bold mb-6">{t.ctaTitle}</h2>
-                <p className="text-xl text-white/80 mb-8">{t.ctaDesc}</p>
-                <div className="flex gap-4">
-                  <Button size="lg" className="bg-white text-primary hover:bg-white/90">{t.ctaWa}</Button>
-                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10">{t.ctaRates}</Button>
+            <div className="bg-primary rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 lg:p-20 text-white flex flex-col lg:flex-row items-center gap-12 overflow-hidden">
+              <div className="flex-1 text-center lg:text-left">
+                <h2 className="text-2xl md:text-4xl font-bold mb-6">{t.ctaTitle}</h2>
+                <p className="text-lg md:text-xl text-white/80 mb-8">{t.ctaDesc}</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <Button size="lg" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto">{t.ctaWa}</Button>
+                  <Button size="lg" variant="outline" className="border-white text-white hover:bg-white/10 w-full sm:w-auto">{t.ctaRates}</Button>
                 </div>
               </div>
-              <div className="flex-1 relative aspect-square w-full max-w-sm bg-white/10 rounded-full flex items-center justify-center border border-white/20">
-                 <div className="text-center">
-                    <UserCheck className="w-20 h-20 mx-auto mb-4 text-white" />
-                    <p className="text-2xl font-bold">{t.ctaGuarantee}</p>
-                    <p className="text-white/60">{t.ctaQuality}</p>
+              <div className="flex-1 relative aspect-square w-full max-w-[260px] sm:max-w-sm bg-white/10 rounded-full flex items-center justify-center border border-white/20">
+                 <div className="text-center p-4">
+                    <UserCheck className="w-12 h-12 md:w-20 md:h-20 mx-auto mb-4 text-white" />
+                    <p className="text-xl md:text-2xl font-bold">{t.ctaGuarantee}</p>
+                    <p className="text-xs md:text-base text-white/60">{t.ctaQuality}</p>
                  </div>
               </div>
             </div>
