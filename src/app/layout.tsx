@@ -9,6 +9,10 @@ import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import Script from 'next/script';
 
+/**
+ * Component to dynamically inject Google Analytics tracking scripts
+ * based on the configuration stored in Firestore.
+ */
 function GoogleAnalyticsTracking() {
   const firestore = useFirestore();
   const siteConfigRef = useMemoFirebase(() => {
@@ -32,7 +36,9 @@ function GoogleAnalyticsTracking() {
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${gaId}');
+          gtag('config', '${gaId}', {
+            page_path: window.location.pathname,
+          });
         `}
       </Script>
     </>

@@ -41,12 +41,12 @@ export default function SettingsPage() {
     updateConfig({ defaultLanguage: value });
   };
 
-  if (isLoading) return <div className="p-8">Cargando configuración...</div>;
+  if (isLoading) return <div className="p-8 text-center text-muted-foreground">Cargando configuración...</div>;
 
   const currentLang = siteConfig?.defaultLanguage || 'es';
 
   return (
-    <div className="max-w-4xl space-y-8">
+    <div className="max-w-4xl space-y-8 animate-in fade-in duration-500">
       <div>
         <h1 className="text-3xl font-bold font-headline">Configuración del Sitio</h1>
         <p className="text-muted-foreground">Administra las preferencias globales y datos de contacto de Tour Weaver</p>
@@ -176,7 +176,7 @@ export default function SettingsPage() {
               </div>
               <div>
                 <CardTitle>Google Analytics</CardTitle>
-                <CardDescription>Víncula tu propiedad de Google Analytics 4 para rastrear visitas a tus tours.</CardDescription>
+                <CardDescription>Vincula tu propiedad de Google Analytics 4 para rastrear visitas a tus tours.</CardDescription>
               </div>
             </div>
           </CardHeader>
@@ -193,7 +193,7 @@ export default function SettingsPage() {
                 className="rounded-xl h-11"
               />
               <p className="text-[10px] text-muted-foreground italic flex items-center gap-1">
-                <ShieldCheck className="w-3 h-3" /> Una vez configurado, aparecerá una nueva pestaña de "Analytics" en tu panel lateral.
+                <ShieldCheck className="w-3 h-3" /> Una vez configurado y guardado, el rastreo se activará automáticamente.
               </p>
             </div>
           </CardContent>
