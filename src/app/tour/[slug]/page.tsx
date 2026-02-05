@@ -27,7 +27,7 @@ export default function PublicTourViewer() {
   const { slug } = useParams();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
@@ -65,9 +65,11 @@ export default function PublicTourViewer() {
 
   // LOG DE VISITA Y SEGUIMIENTO DE DURACIÓN
   useEffect(() => {
-    // Solo registramos si tenemos el tour cargado, no estamos cargando el rol de admin
-    // y confirmamos que el usuario NO es el administrador (para no ensuciar las métricas)
-    if (tour && firestore && !isAdminLoading && !isAdmin && !visitIdRef.current) {
+    // CRÍTICO: Esperar a que el estado de carga del usuario y de admin esté resuelto
+    if (isUserLoading || isAdminLoading) return;
+
+    // Solo registramos si tenemos el tour cargado, y confirmamos que el usuario NO es el administrador
+    if (tour && firestore && !isAdmin && !visitIdRef.current) {
       const visitsRef = collection(firestore, 'tourVisits');
       
       // Crear el registro de visita inicial
@@ -104,7 +106,7 @@ export default function PublicTourViewer() {
         updateDuration();
       };
     }
-  }, [tour, firestore, isAdmin, isAdminLoading]);
+  }, [tour, firestore, isAdmin, isAdminLoading, isUserLoading]);
 
   const scenesRef = useMemoFirebase(() => {
     if (!firestore || !tour) return null;
