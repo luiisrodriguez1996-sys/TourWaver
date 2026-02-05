@@ -3,8 +3,8 @@
 
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useDoc, useFirestore, useMemoFirebase, useCollection } from '@/firebase';
-import { doc, collection } from 'firebase/firestore';
+import { useFirestore, useMemoFirebase, useCollection } from '@/firebase';
+import { collection } from 'firebase/firestore';
 import { 
   BarChart3, 
   Users, 
@@ -28,13 +28,6 @@ import {
 export default function AnalyticsDashboard() {
   const firestore = useFirestore();
   
-  const siteConfigRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'siteConfigurations', 'default');
-  }, [firestore]);
-
-  const { data: siteConfig, isLoading: isConfigLoading } = useDoc(siteConfigRef);
-
   const toursRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return collection(firestore, 'tours');
@@ -98,12 +91,14 @@ export default function AnalyticsDashboard() {
     };
   }, [visits, tours]);
 
-  const isLoading = isConfigLoading || isToursLoading || isVisitsLoading;
+  const isLoading = isToursLoading || isVisitsLoading;
 
   if (isLoading) {
     return (
       <div className="space-y-8 p-4">
-        <Skeleton className="h-10 w-64" />
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-64" />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 w-full rounded-3xl" />)}
         </div>
@@ -112,8 +107,6 @@ export default function AnalyticsDashboard() {
     );
   }
 
-  const gaId = siteConfig?.googleAnalyticsId;
-
   return (
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -121,15 +114,13 @@ export default function AnalyticsDashboard() {
           <h1 className="text-3xl font-bold font-headline flex items-center gap-3">
             <BarChart3 className="text-primary w-8 h-8" /> Estadísticas de Rendimiento
           </h1>
-          <p className="text-muted-foreground">Datos basados en actividad directa en tus tours y propiedades.</p>
+          <p className="text-muted-foreground">Datos basados exclusivamente en la actividad interna de tus tours.</p>
         </div>
         <div className="flex items-center gap-2">
-          {gaId && (
-            <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200">
-              GA4 Activo: {gaId}
-            </Badge>
-          )}
           <Badge className="bg-primary/10 text-primary border-primary/20">
+            Datos Propios (Firestore)
+          </Badge>
+          <Badge className="bg-green-500/10 text-green-600 border-green-200">
             Actualizado en Vivo
           </Badge>
         </div>
@@ -143,7 +134,7 @@ export default function AnalyticsDashboard() {
               <TrendingUp className="text-green-500 w-4 h-4" />
             </div>
             <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas de Tours</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
           </CardContent>
         </Card>
 
@@ -227,7 +218,7 @@ export default function AnalyticsDashboard() {
         <Card className="rounded-[2.5rem] border-none shadow-xl bg-white">
           <CardHeader>
             <CardTitle className="text-lg">Propiedades Populares</CardTitle>
-            <CardDescription>Basado en visitas reales registradas.</CardDescription>
+            <CardDescription>Basado en visitas reales registradas en el sistema.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {stats?.topTours && stats.topTours.length > 0 ? stats.topTours.map((tour, idx) => (
@@ -255,17 +246,12 @@ export default function AnalyticsDashboard() {
 
       <div className="flex items-center gap-4 p-6 bg-accent/5 rounded-[2rem] border border-accent/10">
         <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center shrink-0">
-          <Globe className="text-accent w-6 h-6" />
+          <BarChart3 className="text-accent w-6 h-6" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold">Métricas Híbridas</p>
-          <p className="text-xs text-muted-foreground">Este panel muestra datos internos capturados directamente. Para datos avanzados de audiencia (países, dispositivos, procedencia), utiliza tu ID de Google Analytics vinculado en la pestaña de configuración.</p>
+          <p className="text-sm font-bold">Panel de Estadísticas Propias</p>
+          <p className="text-xs text-muted-foreground">Este panel muestra datos de telemetría interna capturados por Tour Weaver. No se mezclan con los datos de tu cuenta de Google Analytics para mantener la precisión de ambos sistemas.</p>
         </div>
-        {gaId && (
-          <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">
-            <Badge className="bg-accent hover:bg-accent/90 cursor-pointer">Ir a Google Analytics</Badge>
-          </a>
-        )}
       </div>
     </div>
   );

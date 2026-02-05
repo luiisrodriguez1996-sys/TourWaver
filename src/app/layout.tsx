@@ -12,6 +12,7 @@ import Script from 'next/script';
 /**
  * Component to dynamically inject Google Analytics tracking scripts
  * based on the configuration stored in Firestore.
+ * Implements the official gtag.js loading pattern.
  */
 function GoogleAnalyticsTracking() {
   const firestore = useFirestore();
@@ -23,10 +24,11 @@ function GoogleAnalyticsTracking() {
   const { data: siteConfig } = useDoc(siteConfigRef);
   const gaId = siteConfig?.googleAnalyticsId;
 
-  if (!gaId) return null;
+  if (!gaId || gaId.trim() === '') return null;
 
   return (
     <>
+      {/* <!-- Google tag (gtag.js) --> */}
       <Script
         src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
         strategy="afterInteractive"
@@ -36,9 +38,7 @@ function GoogleAnalyticsTracking() {
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}
           gtag('js', new Date());
-          gtag('config', '${gaId}', {
-            page_path: window.location.pathname,
-          });
+          gtag('config', '${gaId}');
         `}
       </Script>
     </>
