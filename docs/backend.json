@@ -201,7 +201,9 @@
         "tourId": { "type": "string" },
         "timestamp": { "type": "number" },
         "userAgent": { "type": "string" },
-        "duration": { "type": "number", "description": "Time spent in seconds." }
+        "duration": { "type": "number", "description": "Time spent in seconds." },
+        "contacted": { "type": "boolean", "description": "Whether the user clicked a contact button." },
+        "contactMethods": { "type": "array", "items": { "type": "string" }, "description": "List of contact methods clicked (whatsapp, phone, email)." }
       }
     }
   },

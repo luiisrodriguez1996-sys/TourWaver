@@ -39,14 +39,15 @@ service cloud.firestore {
     match /tourVisits/{visitId} {
       // Validación estricta para la creación de registros de visita (Telemetría interna)
       allow create: if request.resource.data.keys().hasAll(['tourId', 'timestamp', 'userAgent'])
-                    && (request.resource.data.size() == 3 || (request.resource.data.size() == 4 && request.resource.data.duration is number))
                     && request.resource.data.tourId is string
                     && request.resource.data.timestamp is number
                     && request.resource.data.userAgent is string;
       
-      // Permitimos actualizar la duración al cerrar la visita
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['duration'])
-                    && request.resource.data.duration is number;
+      // Permitimos actualizar la duración y conversiones al interactuar
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['duration', 'contacted', 'contactMethods'])
+                    && (request.resource.data.duration is number || !request.resource.data.keys().contains('duration'))
+                    && (request.resource.data.contacted is bool || !request.resource.data.keys().contains('contacted'))
+                    && (request.resource.data.contactMethods is list || !request.resource.data.keys().contains('contactMethods'));
 
       // Solo el administrador autorizado puede consultar las estadísticas
       allow get, list: if isAdmin();

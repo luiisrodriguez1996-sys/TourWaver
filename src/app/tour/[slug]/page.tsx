@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
-import { collection, query, where, limit, doc } from 'firebase/firestore';
+import { collection, query, where, limit, doc, arrayUnion } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
 import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail } from 'lucide-react';
@@ -33,9 +33,10 @@ export default function PublicTourViewer() {
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 
-  // Referencias para el seguimiento de duración
+  // Referencias para el seguimiento de duración y conversión
   const visitIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
+  const contactedMethodsRef = useRef<Set<string>>(new Set());
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -65,25 +66,23 @@ export default function PublicTourViewer() {
 
   // LOG DE VISITA Y SEGUIMIENTO DE DURACIÓN
   useEffect(() => {
-    // CRÍTICO: Esperar a que el estado de carga del usuario y de admin esté resuelto
     if (isUserLoading || isAdminLoading) return;
 
-    // Solo registramos si tenemos el tour cargado, y confirmamos que el usuario NO es el administrador
     if (tour && firestore && !isAdmin && !visitIdRef.current) {
       const visitsRef = collection(firestore, 'tourVisits');
       
-      // Crear el registro de visita inicial
       addDocumentNonBlocking(visitsRef, {
         tourId: tour.id,
         timestamp: Date.now(),
-        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
+        contacted: false,
+        contactMethods: []
       }).then(docRef => {
         if (docRef) {
           visitIdRef.current = docRef.id;
         }
       });
 
-      // Función para actualizar la duración final
       const updateDuration = () => {
         if (visitIdRef.current && firestore) {
           const endTime = Date.now();
@@ -96,17 +95,29 @@ export default function PublicTourViewer() {
         }
       };
 
-      // Manejar cierre de pestaña/navegación
-      const handleUnload = () => updateDuration();
-      window.addEventListener('beforeunload', handleUnload);
-      
-      // Cleanup al desmontar el componente (navegación interna de Next.js)
+      window.addEventListener('beforeunload', updateDuration);
       return () => {
-        window.removeEventListener('beforeunload', handleUnload);
+        window.removeEventListener('beforeunload', updateDuration);
         updateDuration();
       };
     }
   }, [tour, firestore, isAdmin, isAdminLoading, isUserLoading]);
+
+  // FUNCIÓN PARA RASTREAR CONVERSIONES
+  const trackConversion = (method: 'whatsapp' | 'phone' | 'email') => {
+    if (visitIdRef.current && firestore && !isAdmin) {
+      const docRef = doc(firestore, 'tourVisits', visitIdRef.current);
+      
+      // Solo actualizamos si este método no ha sido registrado aún en esta sesión
+      if (!contactedMethodsRef.current.has(method)) {
+        contactedMethodsRef.current.add(method);
+        updateDocumentNonBlocking(docRef, { 
+          contacted: true,
+          contactMethods: arrayUnion(method)
+        });
+      }
+    }
+  };
 
   const scenesRef = useMemoFirebase(() => {
     if (!firestore || !tour) return null;
@@ -237,7 +248,7 @@ export default function PublicTourViewer() {
                   <p className="text-[9px] font-black text-white/40 uppercase tracking-wider">Contacto Directo</p>
                   <div className="grid grid-cols-1 gap-2">
                     {tour.contactWhatsApp && (
-                      <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer">
+                      <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackConversion('whatsapp')}>
                         <Button size="sm" className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-[10px] h-8 rounded-lg gap-2">
                           <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                         </Button>
@@ -245,14 +256,14 @@ export default function PublicTourViewer() {
                     )}
                     <div className="flex gap-2">
                       {tour.contactPhone && (
-                        <a href={`tel:${tour.contactPhone}`} className="flex-1">
+                        <a href={`tel:${tour.contactPhone}`} className="flex-1" onClick={() => trackConversion('phone')}>
                           <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-lg gap-2">
                             <Phone className="w-3.5 h-3.5" /> Llamar
                           </Button>
                         </a>
                       )}
                       {tour.contactEmail && (
-                        <a href={`mailto:${tour.contactEmail}`} className="flex-1">
+                        <a href={`mailto:${tour.contactEmail}`} className="flex-1" onClick={() => trackConversion('email')}>
                           <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-lg gap-2">
                             <Mail className="w-3.5 h-3.5" /> Email
                           </Button>
@@ -268,7 +279,7 @@ export default function PublicTourViewer() {
         
         <div className="flex gap-2 pointer-events-auto w-full md:w-auto justify-end">
           {tour.contactWhatsApp && (
-            <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" className="md:hidden">
+            <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" className="md:hidden" onClick={() => trackConversion('whatsapp')}>
               <Button variant="secondary" size="icon" className="rounded-full bg-[#25D366] text-white hover:bg-[#20ba59] h-10 w-10 border-none shadow-xl">
                 <MessageCircle className="w-5 h-5" />
               </Button>
@@ -393,7 +404,7 @@ export default function PublicTourViewer() {
 
       {tour.contactWhatsApp && (
         <div className="absolute bottom-4 left-4 z-40 hidden md:block">
-          <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer">
+          <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackConversion('whatsapp')}>
             <Button className="bg-[#25D366] hover:bg-[#20ba59] text-white rounded-full px-6 py-6 shadow-2xl gap-3 animate-bounce hover:animate-none">
               <MessageCircle className="w-6 h-6" />
               <span className="font-bold">Contactar por WhatsApp</span>

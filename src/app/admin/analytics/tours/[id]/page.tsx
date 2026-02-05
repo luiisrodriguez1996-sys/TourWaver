@@ -17,7 +17,11 @@ import {
   Calendar,
   Smartphone,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  MessageCircle,
+  Phone,
+  Mail,
+  Zap
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -59,6 +63,9 @@ export default function TourAnalytics() {
       ? Math.round(visitsWithDuration.reduce((acc, v) => acc + (v.duration || 0), 0) / visitsWithDuration.length)
       : 0;
 
+    const contactedVisits = visits.filter(v => v.contacted === true).length;
+    const conversionRate = totalVisits > 0 ? Math.round((contactedVisits / totalVisits) * 100) : 0;
+
     const formatDuration = (sec: number) => {
       if (!sec) return '---';
       if (sec < 60) return `${sec}s`;
@@ -73,6 +80,8 @@ export default function TourAnalytics() {
     return {
       totalVisits,
       avgDuration: formatDuration(avgDuration),
+      contactedVisits,
+      conversionRate,
       sortedVisits,
       formatDuration
     };
@@ -82,8 +91,8 @@ export default function TourAnalytics() {
     return (
       <div className="space-y-8 p-4">
         <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-32 w-full rounded-3xl" />)}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 w-full rounded-3xl" />)}
         </div>
         <Skeleton className="h-[400px] w-full rounded-3xl" />
       </div>
@@ -135,7 +144,7 @@ export default function TourAnalytics() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
@@ -159,6 +168,19 @@ export default function TourAnalytics() {
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
+              <Zap className="text-yellow-500 w-5 h-5" />
+            </div>
+            <div className="flex items-baseline gap-1">
+              <p className="text-3xl font-bold">{stats?.conversionRate}%</p>
+              <p className="text-xs text-muted-foreground font-bold">({stats?.contactedVisits})</p>
+            </div>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tasa de Conversión</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
               <Calendar className="text-blue-500 w-5 h-5" />
             </div>
             <p className="text-lg font-bold">
@@ -172,7 +194,7 @@ export default function TourAnalytics() {
       <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
         <CardHeader className="bg-primary/5">
           <CardTitle className="text-lg">Historial de Visitas</CardTitle>
-          <CardDescription>Registro individualizado de cada acceso detectado para esta propiedad.</CardDescription>
+          <CardDescription>Registro individualizado de cada acceso y contacto detectado.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -181,6 +203,7 @@ export default function TourAnalytics() {
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="pl-8">Fecha y Hora</TableHead>
                   <TableHead>Dispositivo / Navegador</TableHead>
+                  <TableHead className="text-center">Interacción</TableHead>
                   <TableHead className="text-right pr-8">Duración</TableHead>
                 </TableRow>
               </TableHeader>
@@ -191,9 +214,22 @@ export default function TourAnalytics() {
                       {format(new Date(visit.timestamp), "d MMM yyyy, HH:mm", { locale: es })}
                     </TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground max-w-xs truncate" title={visit.userAgent}>
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground max-w-xs truncate" title={visit.userAgent}>
                         <Smartphone className="w-3 h-3 flex-shrink-0" />
                         {visit.userAgent}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1.5">
+                        {visit.contacted ? (
+                          <>
+                            {visit.contactMethods?.includes('whatsapp') && <MessageCircle className="w-4 h-4 text-green-500" title="WhatsApp" />}
+                            {visit.contactMethods?.includes('phone') && <Phone className="w-4 h-4 text-primary" title="Llamada" />}
+                            {visit.contactMethods?.includes('email') && <Mail className="w-4 h-4 text-accent" title="Email" />}
+                          </>
+                        ) : (
+                          <span className="text-[10px] text-muted-foreground/40 italic">Ninguna</span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-8">
@@ -202,13 +238,13 @@ export default function TourAnalytics() {
                           {stats.formatDuration(visit.duration)}
                         </Badge>
                       ) : (
-                        <span className="text-xs text-muted-foreground italic">Visita activa/breve</span>
+                        <span className="text-[10px] text-muted-foreground italic">Visita activa/breve</span>
                       )}
                     </TableCell>
                   </TableRow>
                 )) : (
                   <TableRow>
-                    <TableCell colSpan={3} className="h-32 text-center text-muted-foreground italic">
+                    <TableCell colSpan={4} className="h-32 text-center text-muted-foreground italic">
                       Aún no se han registrado visitas para esta propiedad.
                     </TableCell>
                   </TableRow>
