@@ -12,7 +12,8 @@ import Script from 'next/script';
 /**
  * Component to dynamically inject Google Analytics tracking scripts
  * based on the configuration stored in Firestore.
- * Implements the official gtag.js loading pattern.
+ * NextJS Script component with strategy="afterInteractive" will handle
+ * the correct placement of the script in the document.
  */
 function GoogleAnalyticsTracking() {
   const firestore = useFirestore();
