@@ -9,12 +9,8 @@ import {
   BarChart3, 
   Users, 
   MousePointer2, 
-  Clock, 
   Globe, 
-  ExternalLink, 
-  ArrowUpRight,
   TrendingUp,
-  Layout,
   LayoutDashboard
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -51,19 +47,16 @@ export default function AnalyticsDashboard() {
   }, [firestore]);
   const { data: visits, isLoading: isVisitsLoading } = useCollection(visitsRef);
 
-  // Procesar datos reales de las visitas
   const stats = useMemo(() => {
     if (!visits || !tours) return null;
 
     const totalVisits = visits.length;
     
-    // Agrupar visitas por tour
     const visitsByTour: Record<string, number> = {};
     visits.forEach(v => {
       visitsByTour[v.tourId] = (visitsByTour[v.tourId] || 0) + 1;
     });
 
-    // Mapear tours con sus visitas reales
     const topTours = tours
       .map(t => ({
         name: t.name,
@@ -73,7 +66,6 @@ export default function AnalyticsDashboard() {
       .sort((a, b) => b.views - a.views)
       .slice(0, 5);
 
-    // Agrupar visitas por los últimos 7 días
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
       d.setDate(d.getDate() - (6 - i));
@@ -127,18 +119,18 @@ export default function AnalyticsDashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline flex items-center gap-3">
-            <BarChart3 className="text-primary w-8 h-8" /> Panel de Rendimiento Real
+            <BarChart3 className="text-primary w-8 h-8" /> Estadísticas de Rendimiento
           </h1>
-          <p className="text-muted-foreground">Estadísticas basadas en actividad directa en tus tours.</p>
+          <p className="text-muted-foreground">Datos basados en actividad directa en tus tours y propiedades.</p>
         </div>
         <div className="flex items-center gap-2">
           {gaId && (
             <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-200">
-              GA4: {gaId} Activo
+              GA4 Activo: {gaId}
             </Badge>
           )}
           <Badge className="bg-primary/10 text-primary border-primary/20">
-            Datos en Vivo
+            Actualizado en Vivo
           </Badge>
         </div>
       </div>
@@ -266,12 +258,12 @@ export default function AnalyticsDashboard() {
           <Globe className="text-accent w-6 h-6" />
         </div>
         <div className="flex-1">
-          <p className="text-sm font-bold">Analíticas Híbridas</p>
-          <p className="text-xs text-muted-foreground">Este panel muestra datos internos capturados directamente. Para datos avanzados de audiencia (países, dispositivos, procedencia), utiliza tu ID de Google Analytics {gaId} vinculado en la pestaña de configuración.</p>
+          <p className="text-sm font-bold">Métricas Híbridas</p>
+          <p className="text-xs text-muted-foreground">Este panel muestra datos internos capturados directamente. Para datos avanzados de audiencia (países, dispositivos, procedencia), utiliza tu ID de Google Analytics vinculado en la pestaña de configuración.</p>
         </div>
         {gaId && (
           <a href="https://analytics.google.com/" target="_blank" rel="noopener noreferrer">
-            <Badge className="bg-accent hover:bg-accent/90 cursor-pointer">Consola GA4</Badge>
+            <Badge className="bg-accent hover:bg-accent/90 cursor-pointer">Ir a Google Analytics</Badge>
           </a>
         )}
       </div>

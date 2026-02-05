@@ -46,10 +46,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const currentLang = siteConfig?.defaultLanguage || 'es';
 
   const menuText = {
-    es: { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Analytics', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios', back: 'Volver' },
-    en: { properties: 'Properties', new: 'New Property', settings: 'Settings', analytics: 'Analytics', logout: 'Logout', owner: 'OWNER', viewSite: 'View Public Site', management: 'Service Management', back: 'Back' },
-    pt: { properties: 'Propriedades', new: 'Nova Propriedade', settings: 'Configurações', analytics: 'Analytics', logout: 'Sair', owner: 'PROPRIETÁRIO', viewSite: 'Ver Site Público', management: 'Gestão de Servicios', back: 'Voltar' }
-  }[currentLang as 'es' | 'en' | 'pt'] || { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Analytics', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestão de Servicios', back: 'Volver' };
+    es: { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Estadísticas', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios', back: 'Volver' },
+    en: { properties: 'Properties', new: 'New Property', settings: 'Settings', analytics: 'Statistics', logout: 'Logout', owner: 'OWNER', viewSite: 'View Public Site', management: 'Service Management', back: 'Back' },
+    pt: { properties: 'Propriedades', new: 'Nova Propriedade', settings: 'Configurações', analytics: 'Estatísticas', logout: 'Sair', owner: 'PROPRIETÁRIO', viewSite: 'Ver Site Público', management: 'Gestão de Servicios', back: 'Voltar' }
+  }[currentLang as 'es' | 'en' | 'pt'] || { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Estadísticas', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios', back: 'Volver' };
 
   const handleLogout = async () => {
     try {
@@ -136,7 +136,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Button>
         </Link>
         
-        {/* Analytics visible siempre, ya que rastreamos visitas internas */}
         <Link href="/admin/analytics">
           <Button variant="ghost" className={`w-full justify-start gap-3 rounded-xl ${pathname === '/admin/analytics' ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:text-primary'}`}>
             <BarChart3 className="w-4 h-4" />
