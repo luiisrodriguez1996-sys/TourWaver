@@ -1,19 +1,17 @@
-
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import Script from 'next/script';
 
 /**
- * Component to dynamically inject Google Analytics tracking scripts
- * based on the configuration stored in Firestore.
- * NextJS Script component with strategy="afterInteractive" will handle
- * the correct placement of the script in the document.
+ * Componente para inyectar manualmente los scripts de seguimiento de Google Analytics en el <head>.
+ * Este enfoque se utiliza para seguir estrictamente la recomendación de Google de colocar el script
+ * en la cabecera, permitiendo al mismo tiempo acceder a la configuración dinámica de Firestore
+ * mediante el hook useFirestore (que requiere estar dentro del FirebaseClientProvider).
  */
 function GoogleAnalyticsTracking() {
   const firestore = useFirestore();
@@ -25,25 +23,39 @@ function GoogleAnalyticsTracking() {
   const { data: siteConfig } = useDoc(siteConfigRef);
   const gaId = siteConfig?.googleAnalyticsId;
 
-  if (!gaId || gaId.trim() === '') return null;
+  useEffect(() => {
+    if (!gaId || gaId.trim() === '') return;
 
-  return (
-    <>
-      {/* <!-- Google tag (gtag.js) --> */}
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-        strategy="afterInteractive"
-      />
-      <Script id="google-analytics" strategy="afterInteractive">
-        {`
-          window.dataLayer = window.dataLayer || [];
-          function gtag(){dataLayer.push(arguments);}
-          gtag('js', new Date());
-          gtag('config', '${gaId}');
-        `}
-      </Script>
-    </>
-  );
+    // Evitar duplicados si el ID cambia o el componente se vuelve a renderizar
+    const existingScript = document.getElementById('google-analytics-base');
+    if (existingScript) return;
+
+    // 1. Crear el script base (gtag.js)
+    const script1 = document.createElement('script');
+    script1.id = 'google-analytics-base';
+    script1.async = true;
+    script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
+
+    // 2. Crear el script de configuración inline
+    const script2 = document.createElement('script');
+    script2.id = 'google-analytics-config';
+    script2.innerHTML = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${gaId}');
+    `;
+
+    // Insertar en el head del documento como indica Google
+    document.head.appendChild(script1);
+    document.head.appendChild(script2);
+
+    return () => {
+      // Limpieza opcional (GA suele persistir durante la sesión)
+    };
+  }, [gaId]);
+
+  return null;
 }
 
 export default function RootLayout({
