@@ -1,9 +1,9 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'next/navigation';
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking } from '@/firebase';
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocumentNonBlocking, updateDocumentNonBlocking } from '@/firebase';
 import { collection, query, where, limit, doc } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
@@ -33,6 +33,10 @@ export default function PublicTourViewer() {
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 
+  // Referencias para el seguimiento de duración
+  const visitIdRef = useRef<string | null>(null);
+  const startTimeRef = useRef<number>(Date.now());
+
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return doc(firestore, 'roles_admin', user.uid);
@@ -59,18 +63,42 @@ export default function PublicTourViewer() {
   const { data: tours, isLoading: isTourLoading, error: tourError } = useCollection(tourQuery);
   const tour = tours?.[0];
 
-  // LOG DE VISITA REAL
+  // LOG DE VISITA Y SEGUIMIENTO DE DURACIÓN
   useEffect(() => {
-    if (tour && firestore) {
-      // No registrar visitas de administradores para no ensuciar los datos
-      if (isAdmin) return;
-
+    if (tour && firestore && !isAdmin) {
       const visitsRef = collection(firestore, 'tourVisits');
+      
+      // Crear el registro de visita inicial
       addDocumentNonBlocking(visitsRef, {
         tourId: tour.id,
         timestamp: Date.now(),
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown'
+      }).then(docRef => {
+        if (docRef) visitIdRef.current = docRef.id;
       });
+
+      // Función para actualizar la duración final
+      const updateDuration = () => {
+        if (visitIdRef.current && firestore) {
+          const endTime = Date.now();
+          const durationSeconds = Math.floor((endTime - startTimeRef.current) / 1000);
+          
+          if (durationSeconds > 0) {
+            const docRef = doc(firestore, 'tourVisits', visitIdRef.current);
+            updateDocumentNonBlocking(docRef, { duration: durationSeconds });
+          }
+        }
+      };
+
+      // Manejar cierre de pestaña/navegación
+      const handleUnload = () => updateDuration();
+      window.addEventListener('beforeunload', handleUnload);
+      
+      // Cleanup al desmontar el componente (navegación interna de Next.js)
+      return () => {
+        window.removeEventListener('beforeunload', handleUnload);
+        updateDuration();
+      };
     }
   }, [tour, firestore, isAdmin]);
 

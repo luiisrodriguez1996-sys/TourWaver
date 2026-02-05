@@ -200,7 +200,8 @@
         "id": { "type": "string" },
         "tourId": { "type": "string" },
         "timestamp": { "type": "number" },
-        "userAgent": { "type": "string" }
+        "userAgent": { "type": "string" },
+        "duration": { "type": "number", "description": "Time spent in seconds." }
       }
     }
   },

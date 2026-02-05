@@ -11,7 +11,8 @@ import {
   MousePointer2, 
   Globe, 
   TrendingUp,
-  LayoutDashboard
+  LayoutDashboard,
+  Clock
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,19 @@ export default function AnalyticsDashboard() {
 
     const totalVisits = visits.length;
     
+    // Calcular duración media (solo registros que tengan duración registrada)
+    const visitsWithDuration = visits.filter(v => v.duration && v.duration > 0);
+    const avgDuration = visitsWithDuration.length > 0 
+      ? Math.round(visitsWithDuration.reduce((acc, v) => acc + (v.duration || 0), 0) / visitsWithDuration.length)
+      : 0;
+
+    const formatDuration = (sec: number) => {
+      if (sec < 60) return `${sec}s`;
+      const mins = Math.floor(sec / 60);
+      const remainingSecs = sec % 60;
+      return `${mins}m ${remainingSecs}s`;
+    };
+
     const visitsByTour: Record<string, number> = {};
     visits.forEach(v => {
       visitsByTour[v.tourId] = (visitsByTour[v.tourId] || 0) + 1;
@@ -84,6 +98,7 @@ export default function AnalyticsDashboard() {
 
     return {
       totalVisits,
+      avgDuration: formatDuration(avgDuration),
       topTours,
       chartData,
       totalTours: tours.length,
@@ -114,15 +129,7 @@ export default function AnalyticsDashboard() {
           <h1 className="text-3xl font-bold font-headline flex items-center gap-3">
             <BarChart3 className="text-primary w-8 h-8" /> Estadísticas de Rendimiento
           </h1>
-          <p className="text-muted-foreground">Datos basados exclusivamente en la actividad interna de tus tours.</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <Badge className="bg-primary/10 text-primary border-primary/20">
-            Datos Propios (Firestore)
-          </Badge>
-          <Badge className="bg-green-500/10 text-green-600 border-green-200">
-            Actualizado en Vivo
-          </Badge>
+          <p className="text-muted-foreground">Monitorea el tráfico y el compromiso de tus clientes en tiempo real.</p>
         </div>
       </div>
 
@@ -141,10 +148,10 @@ export default function AnalyticsDashboard() {
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between mb-2">
-              <LayoutDashboard className="text-accent w-5 h-5" />
+              <Clock className="text-accent w-5 h-5" />
             </div>
-            <p className="text-3xl font-bold">{stats?.totalTours || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Registrados</p>
+            <p className="text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
           </CardContent>
         </Card>
 
@@ -154,7 +161,7 @@ export default function AnalyticsDashboard() {
               <Globe className="text-blue-500 w-5 h-5" />
             </div>
             <p className="text-3xl font-bold">{stats?.publishedTours || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Públicos</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Activos</p>
           </CardContent>
         </Card>
 
@@ -164,7 +171,7 @@ export default function AnalyticsDashboard() {
               <MousePointer2 className="text-orange-500 w-5 h-5" />
             </div>
             <p className="text-3xl font-bold">{stats?.totalVisits ? Math.round((stats.totalVisits / (stats.totalTours || 1)) * 10) / 10 : 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Visitas / Propiedad</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Interacciones / Tour</p>
           </CardContent>
         </Card>
       </div>
@@ -173,7 +180,7 @@ export default function AnalyticsDashboard() {
         <Card className="lg:col-span-2 rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
           <CardHeader className="bg-primary/5">
             <CardTitle className="text-lg">Tráfico de los Últimos 7 Días</CardTitle>
-            <CardDescription>Visualización de visitas únicas capturadas en Firestore.</CardDescription>
+            <CardDescription>Visualización de la actividad semanal capturada por el sistema.</CardDescription>
           </CardHeader>
           <CardContent className="pt-10">
             <div className="h-[300px] w-full">
@@ -218,7 +225,7 @@ export default function AnalyticsDashboard() {
         <Card className="rounded-[2.5rem] border-none shadow-xl bg-white">
           <CardHeader>
             <CardTitle className="text-lg">Propiedades Populares</CardTitle>
-            <CardDescription>Basado en visitas reales registradas en el sistema.</CardDescription>
+            <CardDescription>Clasificación basada en el número total de aperturas.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {stats?.topTours && stats.topTours.length > 0 ? stats.topTours.map((tour, idx) => (
@@ -228,7 +235,7 @@ export default function AnalyticsDashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold truncate">{tour.name}</p>
-                  <p className="text-[10px] text-muted-foreground">{tour.views} visitas totales</p>
+                  <p className="text-[10px] text-muted-foreground">{tour.views} aperturas totales</p>
                 </div>
                 <div className="text-right shrink-0">
                   <div className="text-xs font-bold text-green-500">{tour.rate}%</div>
@@ -242,16 +249,6 @@ export default function AnalyticsDashboard() {
             )}
           </CardContent>
         </Card>
-      </div>
-
-      <div className="flex items-center gap-4 p-6 bg-accent/5 rounded-[2rem] border border-accent/10">
-        <div className="w-12 h-12 bg-accent/10 rounded-2xl flex items-center justify-center shrink-0">
-          <BarChart3 className="text-accent w-6 h-6" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-bold">Panel de Estadísticas Propias</p>
-          <p className="text-xs text-muted-foreground">Este panel muestra datos de telemetría interna capturados por Tour Weaver. No se mezclan con los datos de tu cuenta de Google Analytics para mantener la precisión de ambos sistemas.</p>
-        </div>
       </div>
     </div>
   );

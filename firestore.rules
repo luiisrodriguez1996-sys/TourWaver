@@ -38,18 +38,21 @@ service cloud.firestore {
 
     match /tourVisits/{visitId} {
       // Validación estricta para la creación de registros de visita (Telemetría interna)
-      // Solo permitimos los campos exactos, tipos correctos y protegemos contra datos basura.
       allow create: if request.resource.data.keys().hasAll(['tourId', 'timestamp', 'userAgent'])
-                    && request.resource.data.size() == 3
+                    && (request.resource.data.size() == 3 || (request.resource.data.size() == 4 && request.resource.data.duration is number))
                     && request.resource.data.tourId is string
                     && request.resource.data.timestamp is int
                     && request.resource.data.userAgent is string;
       
+      // Permitimos actualizar la duración al cerrar la visita
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['duration'])
+                    && request.resource.data.duration is number;
+
       // Solo el administrador autorizado puede consultar las estadísticas
       allow get, list: if isAdmin();
       
-      // Bloqueamos cualquier intento de modificar o borrar el historial de visitas
-      allow update, delete: if false;
+      // Bloqueamos cualquier intento de borrar el historial de visitas
+      allow delete: if false;
     }
 
     match /tours/{tourId} {
