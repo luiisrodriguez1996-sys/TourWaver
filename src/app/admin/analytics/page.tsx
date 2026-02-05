@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useMemoFirebase, useCollection } from '@/firebase';
 import { collection } from 'firebase/firestore';
@@ -14,7 +14,7 @@ import {
   Clock,
   ArrowRight,
   History,
-  Eye
+  Loader2
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -27,10 +27,12 @@ import {
   Tooltip, 
   ResponsiveContainer
 } from 'recharts';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function AnalyticsDashboard() {
   const firestore = useFirestore();
+  const router = useRouter();
+  const [isNavigating, setIsNavigating] = useState<string | null>(null);
   
   const toursRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -43,6 +45,11 @@ export default function AnalyticsDashboard() {
     return collection(firestore, 'tourVisits');
   }, [firestore]);
   const { data: visits, isLoading: isVisitsLoading } = useCollection(visitsRef);
+
+  const handleNavigate = (path: string, id: string) => {
+    setIsNavigating(id);
+    router.push(path);
+  };
 
   const stats = useMemo(() => {
     if (!visits || !tours) return null;
@@ -185,11 +192,16 @@ export default function AnalyticsDashboard() {
               <CardTitle className="text-lg">Tráfico de los Últimos 7 Días</CardTitle>
               <CardDescription>Actividad reciente detectada en la plataforma.</CardDescription>
             </div>
-            <Link href="/admin/analytics/traffic">
-              <Button variant="outline" size="sm" className="rounded-xl gap-2 h-9">
-                <History className="w-4 h-4" /> Historial Completo
-              </Button>
-            </Link>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="rounded-xl gap-2 h-9"
+              onClick={() => handleNavigate('/admin/analytics/traffic', 'traffic-history')}
+              disabled={isNavigating === 'traffic-history'}
+            >
+              {isNavigating === 'traffic-history' ? <Loader2 className="w-4 h-4 animate-spin" /> : <History className="w-4 h-4" />}
+              Historial Completo
+            </Button>
           </CardHeader>
           <CardContent className="pt-10">
             <div className="h-[300px] w-full">
@@ -246,11 +258,15 @@ export default function AnalyticsDashboard() {
                   <p className="text-sm font-bold truncate">{tour.name}</p>
                   <p className="text-[10px] text-muted-foreground">{tour.views} aperturas totales</p>
                 </div>
-                <Link href={`/admin/analytics/tours/${tour.id}`}>
-                  <Button variant="ghost" size="icon" className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ArrowRight className="w-4 h-4" />
-                  </Button>
-                </Link>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => handleNavigate(`/admin/analytics/tours/${tour.id}`, `popular-${tour.id}`)}
+                  disabled={isNavigating === `popular-${tour.id}`}
+                >
+                  {isNavigating === `popular-${tour.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                </Button>
               </div>
             )) : (
               <p className="text-sm text-muted-foreground text-center py-10 italic">Aún no hay visitas registradas.</p>
@@ -265,23 +281,29 @@ export default function AnalyticsDashboard() {
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {tours?.map(tour => (
-            <Link key={tour.id} href={`/admin/analytics/tours/${tour.id}`}>
-              <Card className="hover:border-primary transition-all cursor-pointer group bg-gray-50/50">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div className="min-w-0">
-                    <p className="text-sm font-bold truncate">{tour.name}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">{tour.clientName || 'Sin Cliente'}</p>
+            <Card 
+              key={tour.id} 
+              className="hover:border-primary transition-all cursor-pointer group bg-gray-50/50"
+              onClick={() => handleNavigate(`/admin/analytics/tours/${tour.id}`, `list-${tour.id}`)}
+            >
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold truncate">{tour.name}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase">{tour.clientName || 'Sin Cliente'}</p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <p className="text-sm font-bold">{visits?.filter(v => v.tourId === tour.id).length || 0}</p>
+                    <p className="text-[8px] text-muted-foreground uppercase">Visitas</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="text-right">
-                      <p className="text-sm font-bold">{visits?.filter(v => v.tourId === tour.id).length || 0}</p>
-                      <p className="text-[8px] text-muted-foreground uppercase">Visitas</p>
-                    </div>
+                  {isNavigating === `list-${tour.id}` ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                  ) : (
                     <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           ))}
         </div>
       </div>

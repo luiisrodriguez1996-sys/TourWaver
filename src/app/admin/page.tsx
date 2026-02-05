@@ -18,9 +18,11 @@ import {
   Folder, 
   LayoutGrid, 
   ArrowLeft,
-  ChevronRight
+  ChevronRight,
+  Loader2
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,10 +48,13 @@ import { cn } from '@/lib/utils';
 
 export default function AdminDashboard() {
   const firestore = useFirestore();
+  const router = useRouter();
   const { toast } = useToast();
   const [tourToDeleteId, setTourToDeleteId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'all' | 'clients'>('all');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
+  const [isNavigating, setIsNavigating] = useState<string | null>(null);
   
   // Persistir la preferencia de vista
   useEffect(() => {
@@ -58,23 +63,17 @@ export default function AdminDashboard() {
   }, []);
 
   // SOLUCIÓN DEFINITIVA PARA POINTER-EVENTS Y ARIA-HIDDEN
-  // Este efecto se asegura de que el body siempre recupere su estado normal al cerrar el diálogo
   useEffect(() => {
     if (tourToDeleteId === null) {
       const cleanup = () => {
-        // Restaurar interactividad y scroll
         document.body.style.pointerEvents = 'auto';
         document.body.style.overflow = 'auto';
-        
-        // Limpiar atributos aria-hidden que Radix/Shadcn puedan haber dejado bloqueados
         const hiddenElements = document.querySelectorAll('[data-aria-hidden="true"], [aria-hidden="true"]');
         hiddenElements.forEach(el => {
           el.removeAttribute('data-aria-hidden');
           el.removeAttribute('aria-hidden');
         });
       };
-      
-      // Ejecutar inmediatamente y con un pequeño delay para asegurar que las animaciones de Radix terminaron
       cleanup();
       const timer = setTimeout(cleanup, 300);
       return () => clearTimeout(timer);
@@ -104,27 +103,40 @@ export default function AdminDashboard() {
 
   const togglePublish = (id: string, currentStatus: boolean) => {
     if (!firestore) return;
+    setLoadingActions(prev => ({ ...prev, [id]: true }));
     const tourRef = doc(firestore, 'tours', id);
     updateDocumentNonBlocking(tourRef, { published: !currentStatus });
-    toast({
-      title: currentStatus ? (isSpanish ? "Propiedad Privada" : "Private Property") : (isSpanish ? "Propiedad Publicada" : "Property Published"),
-      description: currentStatus ? (isSpanish ? "El tour ya no es visible para el público." : "The tour is no longer visible to the public.") : (isSpanish ? "El tour ahora es accesible mediante su enlace." : "The tour is now accessible via its link."),
-    });
+    
+    setTimeout(() => {
+      setLoadingActions(prev => ({ ...prev, [id]: false }));
+      toast({
+        title: currentStatus ? (isSpanish ? "Propiedad Privada" : "Private Property") : (isSpanish ? "Propiedad Publicada" : "Property Published"),
+        description: currentStatus ? (isSpanish ? "El tour ya no es visible para el público." : "The tour is no longer visible to the public.") : (isSpanish ? "El tour ahora es accesible mediante su enlace." : "The tour is now accessible via its link."),
+      });
+    }, 500);
   };
 
   const handleDeleteConfirm = () => {
     if (!firestore || !tourToDeleteId) return;
     
+    setLoadingActions(prev => ({ ...prev, [`delete-${tourToDeleteId}`]: true }));
     const tourRef = doc(firestore, 'tours', tourToDeleteId);
     deleteDocumentNonBlocking(tourRef);
     
-    toast({
-      variant: "destructive",
-      title: isSpanish ? "Propiedad Eliminada" : "Property Deleted",
-      description: isSpanish ? "El tour ha sido borrado permanentemente." : "The tour has been permanently deleted.",
-    });
-    
-    setTourToDeleteId(null);
+    setTimeout(() => {
+      setLoadingActions(prev => ({ ...prev, [`delete-${tourToDeleteId}`]: false }));
+      toast({
+        variant: "destructive",
+        title: isSpanish ? "Propiedad Eliminada" : "Property Deleted",
+        description: isSpanish ? "El tour ha sido borrado permanentemente." : "The tour has been permanently deleted.",
+      });
+      setTourToDeleteId(null);
+    }, 500);
+  };
+
+  const handleManageClick = (tourId: string) => {
+    setIsNavigating(tourId);
+    router.push(`/admin/tours/${tourId}`);
   };
 
   // Lógica de agrupación por clientes
@@ -154,9 +166,13 @@ export default function AdminDashboard() {
           data-ai-hint="virtual tour"
         />
         <div className="absolute top-2 right-2 flex gap-2">
-          <Badge className={tour.published ? 'bg-green-500' : 'bg-gray-400'}>
-            {tour.published ? (isSpanish ? 'Activo' : 'Active') : (isSpanish ? 'Privado' : 'Private')}
-          </Badge>
+          {loadingActions[tour.id] ? (
+            <Badge className="bg-primary/20 text-primary border-primary/20"><Loader2 className="w-3 h-3 animate-spin mr-1" /> Actualizando</Badge>
+          ) : (
+            <Badge className={tour.published ? 'bg-green-500' : 'bg-gray-400'}>
+              {tour.published ? (isSpanish ? 'Activo' : 'Active') : (isSpanish ? 'Privado' : 'Private')}
+            </Badge>
+          )}
         </div>
       </div>
       <CardHeader className="pb-2">
@@ -169,15 +185,13 @@ export default function AdminDashboard() {
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button type="button" variant="ghost" size="icon" className="h-8 w-8">
-                <MoreVertical className="h-4 w-4" />
+              <Button type="button" variant="ghost" size="icon" className="h-8 w-8" disabled={loadingActions[tour.id]}>
+                {loadingActions[tour.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               align="end"
               onCloseAutoFocus={(e) => {
-                // Si vamos a abrir el diálogo de borrar, prevenimos que el menú intente 
-                // recuperar el foco, lo cual causa el error de aria-hidden en consola.
                 if (tourToDeleteId !== null) {
                   e.preventDefault();
                 }
@@ -197,9 +211,7 @@ export default function AdminDashboard() {
               <DropdownMenuItem 
                 className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive" 
                 onSelect={(e) => {
-                  // Prevenir comportamiento por defecto de Radix para evitar conflictos de foco inmediato
                   e.preventDefault();
-                  // Abrir el diálogo con un retardo para permitir que el menú se cierre limpiamente
                   setTimeout(() => {
                     setTourToDeleteId(tour.id);
                   }, 150);
@@ -217,11 +229,16 @@ export default function AdminDashboard() {
         </p>
       </CardContent>
       <CardFooter className="gap-2 border-t pt-4 bg-gray-50/50">
-        <Link href={`/admin/tours/${tour.id}`} className="flex-1">
-          <Button type="button" variant="outline" className="w-full gap-2 text-primary border-primary hover:bg-primary hover:text-white">
-            <Edit3 className="w-4 h-4" /> {isSpanish ? 'Gestionar' : 'Manage'}
-          </Button>
-        </Link>
+        <Button 
+          type="button" 
+          variant="outline" 
+          className="flex-1 gap-2 text-primary border-primary hover:bg-primary hover:text-white"
+          onClick={() => handleManageClick(tour.id)}
+          disabled={isNavigating === tour.id}
+        >
+          {isNavigating === tour.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />} 
+          {isSpanish ? 'Gestionar' : 'Manage'}
+        </Button>
         <Link href={`/tour/${tour.slug}`} target="_blank" rel="noopener noreferrer">
           <Button type="button" variant="ghost" size="icon" className="text-accent hover:text-accent/80 transition-colors">
             <ExternalLink className="w-4 h-4" />
@@ -255,11 +272,15 @@ export default function AdminDashboard() {
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <Link href="/admin/tours/new" className="flex-shrink-0">
-            <Button type="button" className="bg-primary hover:bg-primary/90 rounded-xl px-4 md:px-6">
-              {isSpanish ? 'Nueva Propiedad' : 'New Property'}
-            </Button>
-          </Link>
+          <Button 
+            type="button" 
+            className="bg-primary hover:bg-primary/90 rounded-xl px-4 md:px-6 flex-shrink-0"
+            onClick={() => { setIsNavigating('new'); router.push('/admin/tours/new'); }}
+            disabled={isNavigating === 'new'}
+          >
+            {isNavigating === 'new' && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {isSpanish ? 'Nueva Propiedad' : 'New Property'}
+          </Button>
         </div>
       </div>
 
@@ -330,9 +351,15 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground mb-6">
             {isSpanish ? 'Comienza a crear tu primer encargo profesional.' : 'Start creating your first professional assignment.'}
           </p>
-          <Link href="/admin/tours/new">
-            <Button type="button" className="rounded-xl px-8">{isSpanish ? 'Registrar Propiedad' : 'Register Property'}</Button>
-          </Link>
+          <Button 
+            type="button" 
+            className="rounded-xl px-8"
+            onClick={() => { setIsNavigating('new-empty'); router.push('/admin/tours/new'); }}
+            disabled={isNavigating === 'new-empty'}
+          >
+            {isNavigating === 'new-empty' && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {isSpanish ? 'Registrar Propiedad' : 'Register Property'}
+          </Button>
         </div>
       )}
 
@@ -365,7 +392,9 @@ export default function AdminDashboard() {
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90 rounded-xl"
+              disabled={loadingActions[`delete-${tourToDeleteId}`]}
             >
+              {loadingActions[`delete-${tourToDeleteId}`] ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
               {isSpanish ? 'Sí, eliminar propiedad' : 'Yes, delete property'}
             </AlertDialogAction>
           </AlertDialogFooter>

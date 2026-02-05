@@ -8,10 +8,11 @@ import { collection } from 'firebase/firestore';
 import { 
   BarChart3, 
   History,
-  Calendar as CalendarIcon,
   ArrowLeft,
-  Download,
-  Filter
+  Loader2,
+  TrendingUp,
+  TrendingDown,
+  Minus
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -25,13 +26,16 @@ import {
   ResponsiveContainer,
   Cell
 } from 'recharts';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { format, subDays, isWithinInterval, startOfDay, endOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 export default function TrafficHistory() {
   const firestore = useFirestore();
+  const router = useRouter();
   const [daysFilter, setDaysFilter] = useState<number>(30);
+  const [isChangingPeriod, setIsChangingPeriod] = useState(false);
+  const [isBacking, setIsBacking] = useState(false);
   
   const visitsRef = useMemoFirebase(() => {
     if (!firestore) return null;
@@ -39,6 +43,13 @@ export default function TrafficHistory() {
   }, [firestore]);
   
   const { data: visits, isLoading } = useCollection(visitsRef);
+
+  const handlePeriodChange = (days: number) => {
+    setIsChangingPeriod(true);
+    setDaysFilter(days);
+    // Simular un pequeño retraso para feedback visual si los datos cargan muy rápido
+    setTimeout(() => setIsChangingPeriod(false), 400);
+  };
 
   const trafficData = useMemo(() => {
     if (!visits) return [];
@@ -74,6 +85,40 @@ export default function TrafficHistory() {
     return Object.values(daysMap).sort((a, b) => a.date.getTime() - b.date.getTime());
   }, [visits, daysFilter]);
 
+  const stats = useMemo(() => {
+    if (!visits) return { total: 0, average: 0, topDay: 'N/A', growth: 0 };
+
+    const now = new Date();
+    const currentStart = startOfDay(subDays(now, daysFilter - 1));
+    const previousStart = startOfDay(subDays(now, (daysFilter * 2) - 1));
+    const previousEnd = endOfDay(subDays(now, daysFilter));
+
+    const currentVisits = visits.filter(v => 
+      isWithinInterval(new Date(v.timestamp), { start: currentStart, end: endOfDay(now) })
+    );
+    const previousVisits = visits.filter(v => 
+      isWithinInterval(new Date(v.timestamp), { start: previousStart, end: previousEnd })
+    );
+
+    const currentTotal = currentVisits.length;
+    const previousTotal = previousVisits.length;
+
+    const average = Math.round((currentTotal / daysFilter) * 10) / 10;
+
+    // Calcular el día más activo basado en los datos del gráfico actual
+    const topDayEntry = [...trafficData].sort((a, b) => b.count - a.count)[0];
+    const topDayLabel = topDayEntry && topDayEntry.count > 0 ? topDayEntry.label : 'N/A';
+
+    let growth = 0;
+    if (previousTotal > 0) {
+      growth = Math.round(((currentTotal - previousTotal) / previousTotal) * 100);
+    } else if (currentTotal > 0) {
+      growth = 100;
+    }
+
+    return { total: currentTotal, average, topDay: topDayLabel, growth };
+  }, [visits, daysFilter, trafficData]);
+
   if (isLoading) {
     return (
       <div className="space-y-8 p-4">
@@ -87,11 +132,15 @@ export default function TrafficHistory() {
     <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Link href="/admin/analytics">
-            <Button variant="ghost" size="icon" className="rounded-full">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full"
+            onClick={() => { setIsBacking(true); router.push('/admin/analytics'); }}
+            disabled={isBacking}
+          >
+            {isBacking ? <Loader2 className="w-5 h-5 animate-spin" /> : <ArrowLeft className="w-5 h-5" />}
+          </Button>
           <div>
             <h1 className="text-3xl font-bold font-headline flex items-center gap-3">
               <History className="text-primary w-8 h-8" /> Historial de Tráfico
@@ -106,10 +155,15 @@ export default function TrafficHistory() {
               key={d}
               variant={daysFilter === d ? "default" : "ghost"}
               size="sm"
-              className="rounded-xl px-4"
-              onClick={() => setDaysFilter(d)}
+              className="rounded-xl px-4 min-w-[80px]"
+              onClick={() => handlePeriodChange(d)}
+              disabled={isChangingPeriod}
             >
-              {d === 7 ? 'Semana' : d === 30 ? 'Mes' : 'Trimestre'}
+              {isChangingPeriod && daysFilter === d ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                d === 7 ? 'Semana' : d === 30 ? 'Mes' : 'Trimestre'
+              )}
             </Button>
           ))}
         </div>
@@ -125,7 +179,12 @@ export default function TrafficHistory() {
           </CardDescription>
         </CardHeader>
         <CardContent className="pt-10">
-          <div className="h-[400px] w-full">
+          <div className="h-[400px] w-full relative">
+            {isChangingPeriod && (
+              <div className="absolute inset-0 z-10 bg-white/50 backdrop-blur-[1px] flex items-center justify-center">
+                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+              </div>
+            )}
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={trafficData}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
@@ -160,7 +219,7 @@ export default function TrafficHistory() {
         <Card className="rounded-3xl border-none shadow-md bg-white">
           <CardContent className="pt-6">
             <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Total del Periodo</p>
-            <p className="text-3xl font-bold">{trafficData.reduce((acc, d) => acc + d.count, 0)}</p>
+            <p className="text-3xl font-bold">{stats.total}</p>
             <p className="text-[10px] text-muted-foreground mt-1">Aperturas en los últimos {daysFilter} días</p>
           </CardContent>
         </Card>
@@ -169,7 +228,7 @@ export default function TrafficHistory() {
           <CardContent className="pt-6">
             <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Promedio Diario</p>
             <p className="text-3xl font-bold">
-              {Math.round((trafficData.reduce((acc, d) => acc + d.count, 0) / daysFilter) * 10) / 10}
+              {stats.average}
             </p>
             <p className="text-[10px] text-muted-foreground mt-1">Visitas por día aproximadamente</p>
           </CardContent>
@@ -179,7 +238,7 @@ export default function TrafficHistory() {
           <CardContent className="pt-6">
             <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Día más activo</p>
             <p className="text-2xl font-bold">
-              {trafficData.sort((a, b) => b.count - a.count)[0]?.label || 'N/A'}
+              {stats.topDay}
             </p>
             <p className="text-[10px] text-muted-foreground mt-1">Pico máximo de tráfico</p>
           </CardContent>
@@ -188,7 +247,12 @@ export default function TrafficHistory() {
         <Card className="rounded-3xl border-none shadow-md bg-white">
           <CardContent className="pt-6">
             <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Crecimiento</p>
-            <p className="text-3xl font-bold text-green-500">+12%</p>
+            <div className="flex items-center gap-2">
+              <p className={`text-3xl font-bold ${stats.growth > 0 ? 'text-green-500' : stats.growth < 0 ? 'text-red-500' : 'text-gray-500'}`}>
+                {stats.growth > 0 ? `+${stats.growth}%` : `${stats.growth}%`}
+              </p>
+              {stats.growth > 0 ? <TrendingUp className="text-green-500 w-5 h-5" /> : stats.growth < 0 ? <TrendingDown className="text-red-500 w-5 h-5" /> : <Minus className="text-gray-500 w-5 h-5" />}
+            </div>
             <p className="text-[10px] text-muted-foreground mt-1">Comparado con periodo anterior</p>
           </CardContent>
         </Card>
