@@ -13,6 +13,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogTrigger,
   DialogClose,
 } from "@/components/ui/dialog";
@@ -193,7 +194,6 @@ export default function PublicTourViewer() {
   const activeScene = orderedScenes?.find((s: any) => s.id === activeSceneId);
   const activeAnnotation = activeScene?.annotations?.find((a: any) => a.id === selectedAnnotationId);
 
-  // Sync map with current scene floor ONLY when room changes
   useEffect(() => {
     if (activeScene?.floorId) {
       setActiveFloorId(activeScene.floorId);
@@ -256,7 +256,7 @@ export default function PublicTourViewer() {
       <div className="absolute top-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="pointer-events-auto w-full md:w-[40%]">
           <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white w-full shadow-2xl overflow-hidden">
-            <div className="p-2 md:p-2 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
+            <div className="p-2 md:p-3 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1 className="text-sm md:text-lg font-bold font-headline truncate">{tour.name}</h1>
@@ -267,7 +267,7 @@ export default function PublicTourViewer() {
               {isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
             </div>
             
-            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-2", isDetailsExpanded ? "max-h-[600px] pb-2 opacity-100" : "max-h-0 opacity-0")}>
+            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-3", isDetailsExpanded ? "max-h-[600px] pb-3 opacity-100" : "max-h-0 opacity-0")}>
               <div className="space-y-2 pt-1">
                 {tour.address && (
                   <a href={getMapsUrl() || '#'} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-2 text-[10px] md:text-xs text-white hover:text-primary transition-colors">
@@ -275,7 +275,7 @@ export default function PublicTourViewer() {
                   </a>
                 )}
                 {activeScene?.description && (
-                  <div className="bg-white/20 rounded-xl p-2 md:p-2.5 border border-white/10">
+                  <div className="bg-white/20 rounded-xl p-2 md:p-3 border border-white/10">
                     <p className="text-[8px] md:text-[9px] font-black text-accent uppercase mb-1 tracking-wider">Sobre esta estancia</p>
                     <p className="text-[10px] md:text-sm text-white/80 font-semibold leading-relaxed">{activeScene.description}</p>
                   </div>
@@ -364,6 +364,9 @@ export default function PublicTourViewer() {
                 <DialogTitle className="text-xl font-bold flex items-center gap-2">
                   <Share2 className="w-5 h-5 text-primary" /> Compartir Tour
                 </DialogTitle>
+                <DialogDescription className="sr-only">
+                  Opciones para compartir el tour mediante enlace directo o código QR descargable.
+                </DialogDescription>
               </DialogHeader>
               <div className="space-y-6 py-4">
                 <div className="space-y-2">
@@ -460,7 +463,12 @@ export default function PublicTourViewer() {
                 </Button>
              </DialogTrigger>
              <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[425px] bg-black/80 backdrop-blur-xl border-white/10 text-white p-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
-                <DialogHeader className="p-6 border-b border-white/10 text-left"><DialogTitle className="font-bold text-lg">Explorar Estancias</DialogTitle></DialogHeader>
+                <DialogHeader className="p-6 border-b border-white/10 text-left">
+                  <DialogTitle className="font-bold text-lg">Explorar Estancias</DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Lista de todas las habitaciones y estancias disponibles en este tour virtual.
+                  </DialogDescription>
+                </DialogHeader>
                 <ScrollArea className="max-h-[60vh] p-4">
                   <div className="grid grid-cols-1 gap-2">
                     {orderedScenes?.map((scene: any) => (
