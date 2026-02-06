@@ -215,14 +215,14 @@ export default function PublicTourViewer() {
     <div className="h-[100dvh] w-full relative overflow-hidden bg-black flex flex-col touch-none">
       <div className="absolute top-0 left-0 right-0 p-4 md:p-6 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="pointer-events-auto w-full md:w-auto">
-          <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white max-w-full md:max-w-sm shadow-2xl overflow-hidden">
+          <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white max-w-full md:max-w-md shadow-2xl overflow-hidden">
             <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1 className="text-base font-bold font-headline truncate">{tour.name}</h1>
                   {!tour.published && isAdmin && <div className="flex-shrink-0 flex items-center gap-1 bg-accent/20 text-accent px-1.5 py-0.5 rounded text-[8px] font-bold border border-accent/20"><Shield className="w-2.5 h-2.5" /> ADMIN</div>}
                 </div>
-                <p className="text-[10px] text-white/60 flex items-center gap-1"><Info className="w-3 h-3" /> {activeScene?.name || 'Cargando...'}</p>
+                <p className="text-[10px] text-white/80 flex items-center gap-1"><Info className="w-3 h-3" /> {activeScene?.name || 'Cargando...'}</p>
               </div>
               {isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
             </div>
@@ -230,19 +230,19 @@ export default function PublicTourViewer() {
             <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-4", isDetailsExpanded ? "max-h-[600px] pb-4 opacity-100" : "max-h-0 opacity-0")}>
               <div className="space-y-4 pt-2">
                 {tour.address && (
-                  <a href={getMapsUrl() || '#'} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-2 text-xs text-white/80 hover:text-primary transition-colors">
+                  <a href={getMapsUrl() || '#'} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-2 text-xs text-white hover:text-primary transition-colors">
                     <MapPin className="w-3.5 h-3.5 mt-0.5 text-primary" /><span className="underline underline-offset-4 decoration-white/20 group-hover:decoration-primary">{tour.address}</span>
                   </a>
                 )}
                 {activeScene?.description && (
                   <div className="bg-primary/10 rounded-xl p-3 border border-primary/20">
                     <p className="text-[9px] font-black text-primary uppercase mb-1 tracking-wider">Sobre esta estancia</p>
-                    <p className="text-[11px] text-white/80 leading-relaxed">{activeScene.description}</p>
+                    <p className="text-[11px] text-white leading-relaxed">{activeScene.description}</p>
                   </div>
                 )}
                 
                 <div className="space-y-2 pt-2 border-t border-white/10">
-                  <p className="text-[9px] font-black text-white/40 uppercase tracking-wider">Contacto Directo</p>
+                  <p className="text-[9px] font-black text-white/60 uppercase tracking-wider">Contacto Directo</p>
                   <div className="grid grid-cols-1 gap-2">
                     {tour.contactWhatsApp && (
                       <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackConversion('whatsapp')}>
@@ -323,7 +323,7 @@ export default function PublicTourViewer() {
                 </Button>
               </CardHeader>
               <CardContent className="pt-4">
-                <p className="text-sm text-white/80 leading-relaxed whitespace-pre-wrap">
+                <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">
                   {activeAnnotation.content}
                 </p>
               </CardContent>
