@@ -122,7 +122,7 @@ function AdminDashboardContent() {
       setLoadingActions(prev => ({ ...prev, [id]: false }));
       toast({
         title: currentStatus ? (isSpanish ? "Propiedad Privada" : "Private Property") : (isSpanish ? "Propiedad Publicada" : "Property Published"),
-        description: currentStatus ? (isSpanish ? "El tour ya no es visible para el público." : "The tour is no longer visible to the public.") : (isSpanish ? "El tour ahora es accesible mediante su enlace." : "The tour is now accessible via its link."),
+        description: currentStatus ? (isSpanish ? "El tour ya no es visible para el público." : "The tour is no longer visible to the public.") : (isSpanish ? "El tour ahora es accesible mediante su enlace." : "The tour ahora es accesible mediante su enlace."),
       });
     }, 500);
   };
@@ -175,7 +175,7 @@ function AdminDashboardContent() {
 
   const renderTourCard = (tour: any) => (
     <Card key={tour.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-none shadow-md flex flex-col h-full">
-      <div className="relative aspect-video bg-muted overflow-hidden">
+      <div className="relative aspect-[21/9] md:aspect-video bg-muted overflow-hidden">
         <img 
           src={tour.thumbnailUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
           alt={tour.name} 
@@ -198,7 +198,7 @@ function AdminDashboardContent() {
             <div className="flex items-center gap-1.5 text-primary text-[10px] font-bold uppercase mb-1">
               <User className="w-3 h-3" /> {tour.clientName || (isSpanish ? 'Sin Cliente' : 'No Client')}
             </div>
-            <CardTitle className="text-lg md:text-xl line-clamp-1">{tour.name}</CardTitle>
+            <CardTitle className="text-lg md:text-xl truncate" title={tour.name}>{tour.name}</CardTitle>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -236,7 +236,7 @@ function AdminDashboardContent() {
           disabled={isNavigating === `manage-${tour.id}`}
         >
           {isNavigating === `manage-${tour.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />} 
-          <span className="truncate hidden sm:inline md:hidden 2xl:inline">
+          <span className="truncate inline sm:inline md:hidden 2xl:inline">
             {isSpanish ? 'Gestionar' : 'Manage'}
           </span>
         </Button>
@@ -244,7 +244,7 @@ function AdminDashboardContent() {
           type="button" 
           variant="ghost" 
           size="icon" 
-          className="text-muted-foreground hover:bg-muted-foreground hover:text-white transition-all shrink-0" 
+          className="text-muted-foreground border border-transparent hover:border-muted-foreground/30 hover:bg-muted-foreground hover:text-white transition-all shrink-0" 
           title={isSpanish ? "Ver Estadísticas" : "View Statistics"}
           onClick={() => handleNavigateTo(`/admin/analytics/tours/${tour.id}`, `stats-${tour.id}`)}
           disabled={isNavigating === `stats-${tour.id}`}
@@ -255,7 +255,7 @@ function AdminDashboardContent() {
           type="button" 
           variant="ghost" 
           size="icon" 
-          className="text-accent hover:bg-accent hover:text-white transition-all shrink-0"
+          className="text-accent border border-transparent hover:border-accent/30 hover:bg-accent hover:text-white transition-all shrink-0"
           title={isSpanish ? "Ver Tour" : "View Tour"}
           onClick={() => window.open(`/tour/${tour.slug}`, '_blank')}
         >
@@ -276,14 +276,14 @@ function AdminDashboardContent() {
             Organiza y publica tus tours virtuales profesionales
           </p>
         </div>
-        <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-1 max-w-full">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
           <Tabs value={viewMode} onValueChange={handleViewChange} className="bg-white p-1 rounded-xl shadow-sm border flex-shrink-0">
-            <TabsList className="bg-transparent border-none">
-              <TabsTrigger value="all" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+            <TabsList className="bg-transparent border-none w-full sm:w-auto">
+              <TabsTrigger value="all" className="flex-1 sm:flex-none rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
                 <LayoutGrid className="w-4 h-4" />
                 <span className="hidden sm:inline ml-2">{isSpanish ? 'Todos' : 'All'}</span>
               </TabsTrigger>
-              <TabsTrigger value="clients" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
+              <TabsTrigger value="clients" className="flex-1 sm:flex-none rounded-lg data-[state=active]:bg-primary data-[state=active]:text-white">
                 <Folder className="w-4 h-4" />
                 <span className="hidden sm:inline ml-2">{isSpanish ? 'Por Clientes' : 'By Clients'}</span>
               </TabsTrigger>
@@ -291,7 +291,7 @@ function AdminDashboardContent() {
           </Tabs>
           <Button 
             type="button" 
-            className="bg-primary hover:bg-primary/90 rounded-xl px-4 md:px-6 flex-shrink-0"
+            className="bg-primary hover:bg-primary/90 rounded-xl px-4 md:px-6 h-11"
             onClick={() => handleNavigateTo('/admin/tours/new', 'new-btn')}
             disabled={isNavigating === 'new-btn'}
           >
