@@ -1,8 +1,8 @@
 
 "use client";
 
-import React, { useState, useEffect, Suspense } from 'react';
-import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Menu, ShieldAlert, ArrowLeft, BarChart3, Loader2, Search } from 'lucide-react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
+import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Menu, ShieldAlert, ArrowLeft, BarChart3, Loader2, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
@@ -20,19 +20,57 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from '@/lib/utils';
 
-function SearchBar({ placeholder, onSearch }: { placeholder: string, onSearch: (val: string) => void }) {
+function SearchBar({ 
+  placeholder, 
+  onSearch, 
+  isMobileActive, 
+  onToggleMobile 
+}: { 
+  placeholder: string, 
+  onSearch: (val: string) => void,
+  isMobileActive: boolean,
+  onToggleMobile: (val: boolean) => void
+}) {
   const searchParams = useSearchParams();
   const defaultValue = searchParams.get('search') || '';
-  
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (isMobileActive && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isMobileActive]);
+
   return (
-    <div className="hidden sm:flex items-center relative w-full max-w-[180px] md:max-w-xs transition-all duration-300 focus-within:max-w-md">
-      <Search className="absolute left-3 w-4 h-4 text-muted-foreground" />
-      <Input 
-        placeholder={placeholder}
-        className="pl-9 bg-gray-100/50 border-none rounded-xl h-9 text-xs focus-visible:ring-primary/20 focus-visible:bg-white transition-colors"
-        defaultValue={defaultValue}
-        onChange={(e) => onSearch(e.target.value)}
-      />
+    <div className={cn(
+      "flex items-center relative transition-all duration-300",
+      isMobileActive ? "w-full" : "ml-auto"
+    )}>
+      {/* Botón toggle para móvil */}
+      <button 
+        onClick={() => onToggleMobile(!isMobileActive)}
+        className="sm:hidden p-2 text-muted-foreground hover:text-primary transition-colors flex-shrink-0"
+      >
+        {isMobileActive ? <X className="w-5 h-5" /> : <Search className="w-5 h-5" />}
+      </button>
+
+      {/* Contenedor del Input */}
+      <div className={cn(
+        "relative transition-all duration-300",
+        isMobileActive ? "flex flex-1" : "hidden sm:flex w-full max-w-[180px] md:max-w-xs lg:focus-within:max-w-md"
+      )}>
+        <Search className="absolute left-3 w-4 h-4 text-muted-foreground top-1/2 -translate-y-1/2" />
+        <Input 
+          ref={inputRef}
+          placeholder={placeholder}
+          className="pl-9 bg-gray-100/50 border-none rounded-xl h-9 text-xs focus-visible:ring-primary/20 focus-visible:bg-white transition-colors w-full"
+          defaultValue={defaultValue}
+          onChange={(e) => onSearch(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape' && isMobileActive) onToggleMobile(false);
+          }}
+        />
+      </div>
     </div>
   );
 }
@@ -45,11 +83,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
 
   const isDashboard = pathname === '/admin';
 
   useEffect(() => {
     setIsNavigating(false);
+    setIsSearchActive(false); // Reset search state on route change
   }, [pathname]);
 
   const handleNavigation = (path: string) => {
@@ -266,38 +306,55 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </aside>
 
       <main className="flex-1 md:ml-64 min-h-screen w-full overflow-x-hidden">
-        <header className="h-16 border-b bg-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 w-full">
-          <div className="flex items-center gap-4 min-w-0 flex-1">
-            <div className="md:hidden flex-shrink-0">
-              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-muted-foreground">
-                    <Menu className="w-6 h-6" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="left" className="p-0 w-64 max-w-[80vw]">
-                  <div className="sr-only">
-                    <SheetHeader>
-                      <SheetTitle>Menú de Administración</SheetTitle>
-                      <SheetDescription>Navegación lateral para la gestión de la plataforma</SheetDescription>
-                    </SheetHeader>
-                  </div>
-                  <SidebarContent />
-                </SheetContent>
-              </Sheet>
+        <header className="h-16 border-b bg-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 w-full transition-all duration-300">
+          <div className="flex items-center gap-2 md:gap-4 min-w-0 flex-1">
+            {/* Contenedor Título y Menú Móvil */}
+            <div className={cn(
+              "flex items-center gap-2 md:gap-4 min-w-0 transition-all duration-300",
+              isSearchActive ? "w-0 opacity-0 overflow-hidden sm:w-auto sm:opacity-100 sm:overflow-visible" : "flex-shrink-0"
+            )}>
+              <div className="md:hidden flex-shrink-0">
+                <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                  <SheetTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground">
+                      <Menu className="w-6 h-6" />
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left" className="p-0 w-64 max-w-[80vw]">
+                    <div className="sr-only">
+                      <SheetHeader>
+                        <SheetTitle>Menú de Administración</SheetTitle>
+                        <SheetDescription>Navegación lateral para la gestión de la plataforma</SheetDescription>
+                      </SheetHeader>
+                    </div>
+                    <SidebarContent />
+                  </SheetContent>
+                </Sheet>
+              </div>
+              <h2 className="text-sm md:text-lg font-semibold text-muted-foreground truncate">
+                {menuText.management}
+              </h2>
             </div>
-            <h2 className="text-base md:text-lg font-semibold text-muted-foreground truncate mr-4">
-              {menuText.management}
-            </h2>
             
+            {/* Buscador alineado a la derecha */}
             {isDashboard && (
-              <Suspense fallback={<div className="w-10 h-10" />}>
-                <SearchBar placeholder={menuText.search} onSearch={handleSearch} />
-              </Suspense>
+              <div className="flex-1 flex justify-end">
+                <Suspense fallback={<div className="w-10 h-10" />}>
+                  <SearchBar 
+                    placeholder={menuText.search} 
+                    onSearch={handleSearch} 
+                    isMobileActive={isSearchActive}
+                    onToggleMobile={(val) => setIsSearchActive(val)}
+                  />
+                </Suspense>
+              </div>
             )}
           </div>
           
-          <div className="flex items-center gap-4 flex-shrink-0">
+          <div className={cn(
+            "flex items-center gap-4 flex-shrink-0 transition-all duration-300",
+            isSearchActive ? "w-0 opacity-0 overflow-hidden sm:w-auto sm:opacity-100 sm:overflow-visible ml-0" : "ml-4"
+          )}>
              {!isDashboard && (
                <Button 
                  variant="ghost" 
