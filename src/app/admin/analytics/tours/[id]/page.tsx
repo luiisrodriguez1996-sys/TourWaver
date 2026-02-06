@@ -70,15 +70,15 @@ export default function TourAnalytics() {
       ? Math.round(visitsWithDuration.reduce((acc, v) => acc + (v.duration || 0), 0) / visitsWithDuration.length)
       : 0;
 
-    // Grupo 1: Conversión Directa (Contactos)
+    // Grupo 1: Conversión Directa (Contactos explicitos solicitados por el usuario)
     const directContactVisits = visits.filter(v => 
-      v.contactMethods?.some((m: string) => ['whatsapp', 'phone', 'email', 'info_request'].includes(m))
+      v.contactMethods?.some((m: string) => ['whatsapp', 'phone', 'email'].includes(m))
     ).length;
     const contactRate = totalVisits > 0 ? Math.round((directContactVisits / totalVisits) * 100) : 0;
 
-    // Grupo 2: Interés Secundario (Engagement)
+    // Grupo 2: Interés Secundario (Engagement e info general)
     const engagementVisits = visits.filter(v => 
-      v.contactMethods?.some((m: string) => ['location', 'share'].includes(m))
+      v.contactMethods?.some((m: string) => ['location', 'share', 'info_request'].includes(m))
     ).length;
     const engagementRate = totalVisits > 0 ? Math.round((engagementVisits / totalVisits) * 100) : 0;
 
@@ -216,7 +216,7 @@ export default function TourAnalytics() {
                       <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-[200px] rounded-xl p-3">
-                      <p className="text-xs">Porcentaje de visitantes que intentaron contactar vía WhatsApp, Teléfono o Email.</p>
+                      <p className="text-xs">Porcentaje de visitantes que utilizaron los métodos de contacto directo: WhatsApp, Llamada o Email.</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -239,7 +239,7 @@ export default function TourAnalytics() {
                       <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
                     </TooltipTrigger>
                     <TooltipContent className="max-w-[200px] rounded-xl p-3">
-                      <p className="text-xs">Porcentaje de visitantes que consultaron la ubicación o compartieron el tour.</p>
+                      <p className="text-xs">Porcentaje de visitantes que interactuaron con el tour: solicitar información general, ver ubicación o compartir.</p>
                     </TooltipContent>
                   </Tooltip>
                 </div>
