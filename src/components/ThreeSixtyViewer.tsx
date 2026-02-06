@@ -41,10 +41,12 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   const [isLoadingTexture, setIsLoadingTexture] = useState(true);
   const isLoadingRef = useRef(true); 
   const [isFading, setIsFading] = useState(false);
-  const [isUserInteracting, setIsUserInteracting] = useState(false);
+  const isUserInteractingRef = useRef(false);
   
   const lonRef = useRef(0);
   const latRef = useRef(0);
+  const lonVelocityRef = useRef(0);
+  const latVelocityRef = useRef(0);
   const onPointerDownMouseX = useRef(0);
   const onPointerDownMouseY = useRef(0);
   const pointerDownPos = useRef({ x: 0, y: 0 });
@@ -186,6 +188,20 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     const update = () => {
       if (!cameraRef.current || !rendererRef.current || !sceneRef.current) return;
       
+      // Aplicar inercia si no hay interacción del usuario
+      if (!isUserInteractingRef.current) {
+        lonRef.current += lonVelocityRef.current;
+        latRef.current += latVelocityRef.current;
+        
+        // Amortiguación (damping)
+        lonVelocityRef.current *= 0.95;
+        latVelocityRef.current *= 0.95;
+        
+        // Detener completamente si es muy lento
+        if (Math.abs(lonVelocityRef.current) < 0.001) lonVelocityRef.current = 0;
+        if (Math.abs(latVelocityRef.current) < 0.001) latVelocityRef.current = 0;
+      }
+
       latRef.current = Math.max(-85, Math.min(85, latRef.current));
       
       const phi = THREE_REAL.MathUtils.degToRad(latRef.current);
@@ -224,27 +240,40 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
 
   const onPointerDown = (event: React.PointerEvent) => {
     if (event.isPrimary === false) return;
-    setIsUserInteracting(true);
+    isUserInteractingRef.current = true;
     onPointerDownMouseX.current = event.clientX;
     onPointerDownMouseY.current = event.clientY;
     pointerDownPos.current = { x: event.clientX, y: event.clientY };
     pointerDownTime.current = Date.now();
     
-    // Auto-close panels on interaction start
+    // Resetear velocidad al iniciar nueva interacción
+    lonVelocityRef.current = 0;
+    latVelocityRef.current = 0;
+    
+    // Auto-cierre de paneles al iniciar interacción
     onInteractionStart?.();
   };
 
   const onPointerMove = (event: React.PointerEvent) => {
-    if (event.isPrimary === false || !isUserInteracting) return;
-    lonRef.current = (onPointerDownMouseX.current - event.clientX) * 0.15 + lonRef.current;
-    latRef.current = (event.clientY - onPointerDownMouseY.current) * 0.15 + latRef.current;
+    if (event.isPrimary === false || !isUserInteractingRef.current) return;
+    
+    const deltaLon = (onPointerDownMouseX.current - event.clientX) * 0.15;
+    const deltaLat = (event.clientY - onPointerDownMouseY.current) * 0.15;
+    
+    lonRef.current += deltaLon;
+    latRef.current += deltaLat;
+    
+    // Guardar velocidad para la inercia
+    lonVelocityRef.current = deltaLon;
+    latVelocityRef.current = deltaLat;
+    
     onPointerDownMouseX.current = event.clientX;
     onPointerDownMouseY.current = event.clientY;
   };
 
   const onPointerUp = (event: React.PointerEvent) => {
     if (event.isPrimary === false) return;
-    setIsUserInteracting(false);
+    isUserInteractingRef.current = false;
 
     const moveX = Math.abs(event.clientX - pointerDownPos.current.x);
     const moveY = Math.abs(event.clientY - pointerDownPos.current.y);
