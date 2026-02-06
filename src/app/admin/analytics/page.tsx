@@ -14,7 +14,8 @@ import {
   Clock,
   ArrowRight,
   History,
-  Loader2
+  Loader2,
+  Info
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,16 @@ import {
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
+  Tooltip as ChartTooltip, 
   ResponsiveContainer
 } from 'recharts';
 import { useRouter } from 'next/navigation';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function AnalyticsDashboard() {
   const firestore = useFirestore();
@@ -142,48 +149,90 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <Users className="text-primary w-5 h-5" />
-              <TrendingUp className="text-green-500 w-4 h-4" />
-            </div>
-            <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
-          </CardContent>
-        </Card>
+      <TooltipProvider>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Users className="text-primary w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Suma total de veces que tus tours han sido abiertos por visitantes únicos o recurrentes.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+                <TrendingUp className="text-green-500 w-4 h-4" />
+              </div>
+              <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
+            </CardContent>
+          </Card>
 
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="text-accent w-5 h-5" />
-            </div>
-            <p className="text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
-          </CardContent>
-        </Card>
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="text-accent w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Tiempo promedio que un usuario permanece interactuando con el tour 360°.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <p className="text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
+            </CardContent>
+          </Card>
 
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <Globe className="text-blue-500 w-5 h-5" />
-            </div>
-            <p className="text-3xl font-bold">{stats?.publishedTours || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Activos</p>
-          </CardContent>
-        </Card>
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Globe className="text-blue-500 w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Propiedades que están actualmente en estado "Publicado" y son accesibles por el público.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <p className="text-3xl font-bold">{stats?.publishedTours || 0}</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Activos</p>
+            </CardContent>
+          </Card>
 
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <MousePointer2 className="text-orange-500 w-5 h-5" />
-            </div>
-            <p className="text-3xl font-bold">{stats?.totalVisits ? Math.round((stats.totalVisits / (stats.totalTours || 1)) * 10) / 10 : 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Interacciones / Tour</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <MousePointer2 className="text-orange-500 w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Promedio de visitas recibidas por cada propiedad registrada en la plataforma.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <p className="text-3xl font-bold">{stats?.totalVisits ? Math.round((stats.totalVisits / (stats.totalTours || 1)) * 10) / 10 : 0}</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Interacciones / Tour</p>
+            </CardContent>
+          </Card>
+        </div>
+      </TooltipProvider>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
@@ -226,7 +275,7 @@ export default function AnalyticsDashboard() {
                     tickLine={false} 
                     tick={{fontSize: 12, fill: '#888'}} 
                   />
-                  <Tooltip 
+                  <ChartTooltip 
                     contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
                   />
                   <Area 
