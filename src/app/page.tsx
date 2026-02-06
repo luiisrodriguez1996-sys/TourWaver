@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ import { VersionIndicator } from '@/components/VersionIndicator';
 import { useCollection, useFirestore, useMemoFirebase, useDoc } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 
 const translations = {
@@ -51,7 +53,7 @@ const translations = {
     servDesc: "Ofrecemos un servicio integral de captura y creación de tours virtuales optimizados para tus listados inmobiliarios.",
     serv1Title: "Captura de Alta Fidelidad",
     serv1Desc: "Fotografía panorámica profesional con post-procesamiento para que cada estancia luzca impecable y luminosa.",
-    serv2Title: "Navegación Fluida",
+    serv2Title: "Navegação Fluida",
     serv2Desc: "Diseñamos una interfaz personalizada e intuitiva para que tus clientes naveguen por la propiedad de forma natural.",
     serv3Title: "Enfoque Comercial",
     serv3Desc: "Tours diseñados específicamente para brokers, incluyendo información relevante y puntos de contacto directos.",
@@ -135,24 +137,26 @@ type Language = 'es' | 'en' | 'pt';
 export default function Home() {
   const [lang, setLang] = useState<Language>('es');
   const firestore = useFirestore();
+  const [cachedConfig, setCachedConfig] = useState<any>(null);
 
   const siteConfigRef = useMemoFirebase(() => {
     if (!firestore) return null;
     return doc(firestore, 'siteConfigurations', 'default');
   }, [firestore]);
-  const { data: siteConfig } = useDoc(siteConfigRef);
-
-  const portfolioQuery = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return query(
-      collection(firestore, 'tours'),
-      where('published', '==', true),
-      where('showInPortfolio', '==', true)
-    );
-  }, [firestore]);
-  const { data: portfolioTours, isLoading: isPortfolioLoading } = useCollection(portfolioQuery);
+  
+  const { data: siteConfig, isLoading: isConfigLoading } = useDoc(siteConfigRef);
 
   useEffect(() => {
+    // Intentar cargar la configuración desde la caché local al montar el componente
+    const saved = localStorage.getItem('site-config-cache');
+    if (saved) {
+      try {
+        setCachedConfig(JSON.parse(saved));
+      } catch (e) {
+        console.error("Error al leer caché de configuración", e);
+      }
+    }
+
     const savedLang = localStorage.getItem('tour-weaver-lang') as Language;
     if (savedLang && translations[savedLang]) {
       setLang(savedLang);
@@ -164,6 +168,24 @@ export default function Home() {
     }
   }, []);
 
+  // Actualizar la caché local cuando los datos de Firebase llegan
+  useEffect(() => {
+    if (siteConfig) {
+      localStorage.setItem('site-config-cache', JSON.stringify(siteConfig));
+      setCachedConfig(siteConfig);
+    }
+  }, [siteConfig]);
+
+  const portfolioQuery = useMemoFirebase(() => {
+    if (!firestore) return null;
+    return query(
+      collection(firestore, 'tours'),
+      where('published', '==', true),
+      where('showInPortfolio', '==', true)
+    );
+  }, [firestore]);
+  const { data: portfolioTours, isLoading: isPortfolioLoading } = useCollection(portfolioQuery);
+
   const changeLang = (newLang: Language) => {
     setLang(newLang);
     localStorage.setItem('tour-weaver-lang', newLang);
@@ -171,12 +193,15 @@ export default function Home() {
 
   const t = translations[lang];
 
-  const hasContactInfo = !!(siteConfig?.contactWhatsApp || siteConfig?.contactPhone || siteConfig?.contactEmail);
+  // Usamos cachedConfig si siteConfig todavía se está cargando para que sea instantáneo
+  const effectiveConfig = siteConfig || cachedConfig;
+  const hasContactInfo = !!(effectiveConfig?.contactWhatsApp || effectiveConfig?.contactPhone || effectiveConfig?.contactEmail);
+  const showSkeletons = isConfigLoading && !cachedConfig;
 
   const getWhatsAppLink = () => {
-    if (!siteConfig?.contactWhatsApp) return null;
+    if (!effectiveConfig?.contactWhatsApp) return null;
     const message = encodeURIComponent("Hola, me gustaría solicitar un presupuesto para un tour virtual 360°.");
-    return `https://wa.me/${siteConfig.contactWhatsApp.replace(/\D/g, '')}?text=${message}`;
+    return `https://wa.me/${effectiveConfig.contactWhatsApp.replace(/\D/g, '')}?text=${message}`;
   };
 
   return (
@@ -192,7 +217,7 @@ export default function Home() {
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
             <Link href="#servicios" className="hover:text-primary transition-colors">{t.servicios}</Link>
             <Link href="#portafolio" className="hover:text-primary transition-colors">{t.portafolio}</Link>
-            {hasContactInfo && <Link href="#contacto" className="hover:text-primary transition-colors">{t.contacto}</Link>}
+            {(hasContactInfo || showSkeletons) && <Link href="#contacto" className="hover:text-primary transition-colors">{t.contacto}</Link>}
           </nav>
           <div className="flex items-center gap-4">
             <DropdownMenu>
@@ -209,11 +234,14 @@ export default function Home() {
                 <DropdownMenuItem onClick={() => changeLang('pt')}>Português</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {hasContactInfo && (
+            
+            {showSkeletons ? (
+              <Skeleton className="h-9 w-32 rounded-md hidden sm:flex" />
+            ) : hasContactInfo ? (
               <Link href={getWhatsAppLink() || '#contacto'} target={getWhatsAppLink() ? "_blank" : "_self"}>
                 <Button size="sm" className="hidden sm:flex">{t.btnPresupuesto}</Button>
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
@@ -232,13 +260,15 @@ export default function Home() {
                 {t.heroDesc}
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                {hasContactInfo && (
+                {showSkeletons ? (
+                  <Skeleton className="h-12 w-48 rounded-xl" />
+                ) : hasContactInfo ? (
                   <Link href="#contacto">
-                    <Button size="lg" className="px-8 text-lg bg-accent hover:bg-accent/90 w-full sm:w-auto">{t.btnContratar}</Button>
+                    <Button size="lg" className="px-8 text-lg bg-accent hover:bg-accent/90 w-full sm:w-auto h-12">{t.btnContratar}</Button>
                   </Link>
-                )}
+                ) : null}
                 <Link href="#portafolio">
-                  <Button size="lg" variant="outline" className="px-8 text-lg border-primary text-primary hover:bg-primary/5 w-full sm:w-auto">{t.btnPortafolio}</Button>
+                  <Button size="lg" variant="outline" className="px-8 text-lg border-primary text-primary hover:bg-primary/5 w-full sm:w-auto h-12">{t.btnPortafolio}</Button>
                 </Link>
               </div>
             </div>
@@ -333,42 +363,52 @@ export default function Home() {
           </div>
         </section>
 
-        {hasContactInfo && (
+        {(hasContactInfo || showSkeletons) && (
           <section id="contacto" className="py-20 md:py-24 bg-white">
             <div className="container mx-auto px-4">
-              <div className="bg-primary rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 lg:p-20 text-white flex flex-col lg:flex-row items-center gap-12 overflow-hidden shadow-2xl">
+              <div className="bg-primary rounded-[2rem] md:rounded-[3rem] p-8 md:p-16 lg:p-20 text-white flex flex-col lg:flex-row items-center gap-12 overflow-hidden shadow-2xl min-h-[400px]">
                 <div className="flex-1 text-center lg:text-left">
-                  <h2 className="text-2xl md:text-4xl font-bold mb-6">{t.ctaTitle}</h2>
-                  <p className="text-lg md:text-xl text-white/80 mb-8">{t.ctaDesc}</p>
-                  
-                  <div className="flex flex-col gap-8">
-                    {siteConfig?.contactWhatsApp && (
-                      <Link href={getWhatsAppLink() || '#'} target="_blank">
-                        <Button size="lg" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto h-14 rounded-2xl gap-3 text-lg font-bold">
-                          <MessageCircle className="w-6 h-6" /> {t.ctaWa}
-                        </Button>
-                      </Link>
-                    )}
-
-                    <div className="flex flex-col gap-4 text-left">
-                      {siteConfig?.contactPhone && (
-                        <div className="flex items-center gap-3 justify-center lg:justify-start">
-                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                            <Phone className="w-5 h-5 text-white" />
-                          </div>
-                          <span className="text-lg font-semibold">{siteConfig.contactPhone}</span>
-                        </div>
-                      )}
-                      {siteConfig?.contactEmail && (
-                        <div className="flex items-center gap-3 justify-center lg:justify-start">
-                          <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                            <Mail className="w-5 h-5 text-white" />
-                          </div>
-                          <span className="text-lg font-semibold">{siteConfig.contactEmail}</span>
-                        </div>
-                      )}
+                  {showSkeletons ? (
+                    <div className="space-y-6">
+                      <Skeleton className="h-10 w-3/4 bg-white/20" />
+                      <Skeleton className="h-6 w-full bg-white/20" />
+                      <Skeleton className="h-14 w-48 rounded-2xl bg-white/20" />
                     </div>
-                  </div>
+                  ) : (
+                    <>
+                      <h2 className="text-2xl md:text-4xl font-bold mb-6">{t.ctaTitle}</h2>
+                      <p className="text-lg md:text-xl text-white/80 mb-8">{t.ctaDesc}</p>
+                      
+                      <div className="flex flex-col gap-8">
+                        {effectiveConfig?.contactWhatsApp && (
+                          <Link href={getWhatsAppLink() || '#'} target="_blank">
+                            <Button size="lg" className="bg-white text-primary hover:bg-white/90 w-full sm:w-auto h-14 rounded-2xl gap-3 text-lg font-bold">
+                              <MessageCircle className="w-6 h-6" /> {t.ctaWa}
+                            </Button>
+                          </Link>
+                        )}
+
+                        <div className="flex flex-col gap-4 text-left">
+                          {effectiveConfig?.contactPhone && (
+                            <div className="flex items-center gap-3 justify-center lg:justify-start">
+                              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                                <Phone className="w-5 h-5 text-white" />
+                              </div>
+                              <span className="text-lg font-semibold">{effectiveConfig.contactPhone}</span>
+                            </div>
+                          )}
+                          {effectiveConfig?.contactEmail && (
+                            <div className="flex items-center gap-3 justify-center lg:justify-start">
+                              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                                <Mail className="w-5 h-5 text-white" />
+                              </div>
+                              <span className="text-lg font-semibold">{effectiveConfig.contactEmail}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
                 <div className="flex-1 relative aspect-square w-full max-w-[260px] sm:max-w-sm bg-white/10 rounded-full flex items-center justify-center border border-white/20">
                    <div className="text-center p-4">
@@ -395,7 +435,7 @@ export default function Home() {
             <nav className="flex flex-wrap justify-center gap-6">
               <Link href="#servicios" className="text-sm text-muted-foreground hover:text-primary">{t.servicios}</Link>
               <Link href="#portafolio" className="text-sm text-muted-foreground hover:text-primary">{t.portafolio}</Link>
-              {hasContactInfo && <Link href="#contacto" className="text-sm text-muted-foreground hover:text-primary">{t.contacto}</Link>}
+              {(hasContactInfo || showSkeletons) && <Link href="#contacto" className="text-sm text-muted-foreground hover:text-primary">{t.contacto}</Link>}
               <Link href="/terms" className="text-sm text-muted-foreground hover:text-primary">{t.footerTerms}</Link>
               <Link href="/privacy" className="text-sm text-muted-foreground hover:text-primary">{t.footerPrivacy}</Link>
             </nav>
