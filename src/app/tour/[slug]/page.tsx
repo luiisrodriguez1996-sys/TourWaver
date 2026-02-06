@@ -520,7 +520,7 @@ export default function PublicTourViewer() {
           onClick={() => setShowFloorPlan(false)}
         >
            <div 
-            className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 max-w-[calc(100vw-2rem)] md:max-w-3xl w-full relative shadow-2xl flex flex-col gap-4 md:gap-6 cursor-auto"
+            className="bg-white rounded-[2.5rem] p-6 md:p-8 max-w-[calc(100vw-2rem)] md:max-w-3xl w-full relative shadow-2xl flex flex-col gap-4 md:gap-6 cursor-auto"
             onClick={(e) => e.stopPropagation()}
            >
               <div className="flex items-center justify-between">
