@@ -1,6 +1,17 @@
 
 {
   "entities": {
+    "AdminUser": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "AdminUser",
+      "type": "object",
+      "description": "Represents a user with administrative privileges.",
+      "properties": {
+        "id": { "type": "string" },
+        "isAdmin": { "type": "boolean", "description": "True if the user has administrator rights." }
+      },
+      "required": ["isAdmin"]
+    },
     "SiteConfiguration": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "SiteConfiguration",
@@ -12,7 +23,8 @@
         "contactWhatsApp": { "type": "string" },
         "contactPhone": { "type": "string" },
         "contactEmail": { "type": "string" },
-        "googleAnalyticsId": { "type": "string", "description": "Google Analytics Measurement ID (G-XXXXX)" }
+        "googleAnalyticsId": { "type": "string", "description": "Google Analytics Measurement ID (G-XXXXX)" },
+        "googleSearchConsoleCode": { "type": "string", "description": "Google Search Console verification code (content attribute of the meta tag)" }
       }
     },
     "Tour": {
