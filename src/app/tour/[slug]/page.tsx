@@ -215,8 +215,8 @@ export default function PublicTourViewer() {
     <div className="h-[100dvh] w-full relative overflow-hidden bg-black flex flex-col touch-none">
       <div className="absolute top-0 left-0 right-0 p-4 md:p-6 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="pointer-events-auto w-full md:w-auto">
-          <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white max-w-full md:max-w-xl shadow-2xl overflow-hidden">
-            <div className="p-4 md:p-6 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
+          <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white max-w-full md:max-w-3xl shadow-2xl overflow-hidden">
+            <div className="p-2 md:p-3 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1 className="text-base md:text-xl font-bold font-headline truncate">{tour.name}</h1>
@@ -227,41 +227,41 @@ export default function PublicTourViewer() {
               {isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
             </div>
             
-            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-4 md:px-6", isDetailsExpanded ? "max-h-[600px] pb-6 opacity-100" : "max-h-0 opacity-0")}>
-              <div className="space-y-5 pt-2">
+            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-3", isDetailsExpanded ? "max-h-[600px] pb-3 opacity-100" : "max-h-0 opacity-0")}>
+              <div className="space-y-3 pt-1">
                 {tour.address && (
                   <a href={getMapsUrl() || '#'} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-2 text-xs md:text-sm text-white hover:text-primary transition-colors">
                     <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 mt-0.5 text-primary" /><span className="underline underline-offset-4 decoration-white/20 group-hover:decoration-primary">{tour.address}</span>
                   </a>
                 )}
                 {activeScene?.description && (
-                  <div className="bg-primary/10 rounded-xl p-4 border border-primary/20">
-                    <p className="text-[9px] md:text-[10px] font-black text-primary uppercase mb-1.5 tracking-wider">Sobre esta estancia</p>
-                    <p className="text-[11px] md:text-sm text-white leading-relaxed">{activeScene.description}</p>
+                  <div className="bg-white/20 rounded-xl p-2 md:p-3 border border-white/10">
+                    <p className="text-[9px] md:text-[10px] font-black text-primary uppercase mb-1 tracking-wider">Sobre esta estancia</p>
+                    <p className="text-[11px] md:text-sm text-neutral-900 font-semibold leading-relaxed">{activeScene.description}</p>
                   </div>
                 )}
                 
-                <div className="space-y-3 pt-2 border-t border-white/10">
+                <div className="space-y-2 pt-2 border-t border-white/10">
                   <p className="text-[9px] md:text-[10px] font-black text-white/60 uppercase tracking-wider">Contacto Directo</p>
-                  <div className="grid grid-cols-1 gap-3">
+                  <div className="grid grid-cols-1 gap-2">
                     {tour.contactWhatsApp && (
                       <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackConversion('whatsapp')}>
-                        <Button size="sm" className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-[10px] md:text-xs h-9 md:h-11 rounded-xl gap-2 font-bold">
+                        <Button size="sm" className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-[10px] md:text-xs h-8 md:h-10 rounded-xl gap-2 font-bold">
                           <MessageCircle className="w-4 h-4" /> WhatsApp
                         </Button>
                       </a>
                     )}
-                    <div className="flex gap-3">
+                    <div className="flex gap-2">
                       {tour.contactPhone && (
                         <a href={`tel:${tour.contactPhone}`} className="flex-1" onClick={() => trackConversion('phone')}>
-                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs h-9 md:h-11 rounded-xl gap-2">
+                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs h-8 md:h-10 rounded-xl gap-2">
                             <Phone className="w-4 h-4" /> Llamar
                           </Button>
                         </a>
                       )}
                       {tour.contactEmail && (
                         <a href={`mailto:${tour.contactEmail}`} className="flex-1" onClick={() => trackConversion('email')}>
-                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs h-9 md:h-11 rounded-xl gap-2">
+                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs h-8 md:h-10 rounded-xl gap-2">
                             <Mail className="w-4 h-4" /> Email
                           </Button>
                         </a>
