@@ -337,7 +337,7 @@ export default function PublicTourViewer() {
           </div>
         </div>
         
-        <div className="flex gap-2 pointer-events-auto w-full md:w-auto justify-end">
+        <div className="flex gap-2 pointer-events-auto w-full md:w-auto justify-end items-center">
           {tour.contactWhatsApp && (
             <Button 
               variant="secondary" 
@@ -474,19 +474,32 @@ export default function PublicTourViewer() {
                 <DialogHeader className="p-6 border-b border-white/10 text-left">
                   <DialogTitle className="font-bold text-lg">Explorar Estancias</DialogTitle>
                   <DialogDescription>
-                    Lista de todas las habitaciones y estancias disponibles en este tour virtual.
+                    Lista de todas las habitaciones y estancias disponibles en este tour virtual con sus respectivas plantas.
                   </DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="max-h-[60vh] p-4">
                   <div className="grid grid-cols-1 gap-2">
-                    {orderedScenes?.map((scene: any) => (
-                      <DialogClose asChild key={scene.id}>
-                        <button onClick={() => { setActiveSceneId(scene.id); closeAllPanels(); }} className={cn("w-full flex items-center gap-4 p-3 rounded-2xl transition-all group border", activeSceneId === scene.id ? 'bg-primary/20 text-primary border-primary/40' : 'hover:bg-white/10 text-white/70 hover:text-white border-transparent')}>
-                          <div className="relative w-20 md:w-24 h-14 md:h-16 rounded-xl overflow-hidden flex-shrink-0"><img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />{activeSceneId === scene.id && <div className="absolute inset-0 bg-primary/40 flex items-center justify-center"><Check className="w-6 h-6 text-white" /></div>}</div>
-                          <span className="text-xs md:text-sm font-semibold truncate flex-1 text-left">{scene.name}</span>
-                        </button>
-                      </DialogClose>
-                    ))}
+                    {orderedScenes?.map((scene: any) => {
+                      const floor = tour.floors?.find((f: any) => f.id === scene.floorId);
+                      return (
+                        <DialogClose asChild key={scene.id}>
+                          <button onClick={() => { setActiveSceneId(scene.id); closeAllPanels(); }} className={cn("w-full flex items-center gap-4 p-3 rounded-2xl transition-all group border", activeSceneId === scene.id ? 'bg-primary/20 text-primary border-primary/40' : 'hover:bg-white/10 text-white/70 hover:text-white border-transparent')}>
+                            <div className="relative w-20 md:w-24 h-14 md:h-16 rounded-xl overflow-hidden flex-shrink-0">
+                              <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
+                              {activeSceneId === scene.id && <div className="absolute inset-0 bg-primary/40 flex items-center justify-center"><Check className="w-6 h-6 text-white" /></div>}
+                            </div>
+                            <div className="flex flex-col flex-1 min-w-0 text-left">
+                              <span className="text-xs md:text-sm font-semibold truncate">{scene.name}</span>
+                              {floor && (
+                                <span className="text-[10px] text-white/40 flex items-center gap-1 mt-0.5">
+                                  <Layers className="w-2.5 h-2.5" /> {floor.name}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        </DialogClose>
+                      );
+                    })}
                   </div>
                 </ScrollArea>
              </DialogContent>
