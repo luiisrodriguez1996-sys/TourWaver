@@ -37,23 +37,21 @@ service cloud.firestore {
     }
 
     match /tourVisits/{visitId} {
-      // Validación estricta para la creación de registros de visita (Telemetría interna)
+      // Registro de visitas (Telemetría interna)
       allow create: if request.resource.data.keys().hasAll(['tourId', 'timestamp', 'userAgent'])
                     && request.resource.data.tourId is string
-                    && request.resource.data.timestamp is number
-                    && request.resource.data.userAgent is string;
+                    && request.resource.data.timestamp is number;
       
-      // Permitimos actualizar la duración y conversiones al interactuar
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['duration', 'contacted', 'contactMethods'])
+      // Permitimos actualizar duración y conversiones. 
+      // Validamos que no se alteren los datos base de la visita.
+      allow update: if request.resource.data.tourId == resource.data.tourId
+                    && request.resource.data.timestamp == resource.data.timestamp
                     && (request.resource.data.duration is number || !request.resource.data.keys().contains('duration'))
                     && (request.resource.data.contacted is bool || !request.resource.data.keys().contains('contacted'))
                     && (request.resource.data.contactMethods is list || !request.resource.data.keys().contains('contactMethods'));
 
-      // Solo el administrador autorizado puede consultar las estadísticas
-      allow get, list: if isAdmin();
-      
-      // Permitir al administrador borrar los registros para reiniciar estadísticas
-      allow delete: if isAdmin();
+      // Solo el administrador autorizado puede consultar o borrar las estadísticas
+      allow get, list, delete: if isAdmin();
     }
 
     match /tours/{tourId} {

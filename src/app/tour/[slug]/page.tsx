@@ -33,7 +33,6 @@ export default function PublicTourViewer() {
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
 
-  // Referencias para el seguimiento de duración y conversión
   const visitIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const contactedMethodsRef = useRef<Set<string>>(new Set());
@@ -64,8 +63,6 @@ export default function PublicTourViewer() {
   const { data: tours, isLoading: isTourLoading, error: tourError } = useCollection(tourQuery);
   const tour = tours?.[0];
 
-  // LOG DE VISITA Y SEGUIMIENTO DE DURACIÓN
-  // Cada carga de página crea un nuevo registro independientemente del dispositivo
   useEffect(() => {
     if (isUserLoading || isAdminLoading) return;
 
@@ -77,14 +74,15 @@ export default function PublicTourViewer() {
         timestamp: Date.now(),
         userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
         contacted: false,
-        contactMethods: []
+        contactMethods: [],
+        duration: 0
       }).then(docRef => {
         if (docRef) {
           visitIdRef.current = docRef.id;
         }
       });
 
-      const updateDuration = () => {
+      const updateFinalDuration = () => {
         if (visitIdRef.current && firestore) {
           const endTime = Date.now();
           const durationSeconds = Math.floor((endTime - startTimeRef.current) / 1000);
@@ -96,20 +94,18 @@ export default function PublicTourViewer() {
         }
       };
 
-      window.addEventListener('beforeunload', updateDuration);
+      window.addEventListener('beforeunload', updateFinalDuration);
       return () => {
-        window.removeEventListener('beforeunload', updateDuration);
-        updateDuration();
+        window.removeEventListener('beforeunload', updateFinalDuration);
+        updateFinalDuration();
       };
     }
   }, [tour, firestore, isAdmin, isAdminLoading, isUserLoading]);
 
-  // FUNCIÓN PARA RASTREAR CONVERSIONES (CLICS EN CONTACTO)
   const trackConversion = (method: 'whatsapp' | 'phone' | 'email') => {
     if (visitIdRef.current && firestore && !isAdmin) {
       const docRef = doc(firestore, 'tourVisits', visitIdRef.current);
       
-      // Registramos el método solo una vez por sesión de visita
       if (!contactedMethodsRef.current.has(method)) {
         contactedMethodsRef.current.add(method);
         updateDocumentNonBlocking(docRef, { 
