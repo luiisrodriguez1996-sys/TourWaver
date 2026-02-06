@@ -278,7 +278,7 @@ export default function TourAnalytics() {
                         {visit.contacted ? (
                           <>
                             {visit.contactMethods?.includes('info_request') && (
-                              <MessageCircle className="w-4 h-4 text-green-500" title="Solicitud Información" />
+                              <Zap className="w-4 h-4 text-primary" title="Solicitud Información" />
                             )}
                             {visit.contactMethods?.includes('whatsapp') && (
                               <MessageCircle className="w-4 h-4 text-green-500 fill-green-500" title="WhatsApp Directo" />
