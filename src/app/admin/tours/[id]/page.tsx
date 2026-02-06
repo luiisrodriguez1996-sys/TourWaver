@@ -407,6 +407,37 @@ export default function TourEditor() {
 
   if (isTourLoading || isScenesLoading) return <div className="p-8 flex justify-center"><Loader2 className="animate-spin text-primary" /></div>;
 
+  const VisibilityToggle = () => (
+    <div 
+      className="h-11 w-24 bg-white border rounded-xl p-1 relative cursor-pointer flex items-center shadow-sm hover:border-primary/30 transition-all group"
+      onClick={() => {
+        setLocalTourInfo(prev => ({ ...prev, published: !prev.published }));
+        setHasUnsavedChanges(true);
+      }}
+      title={localTourInfo.published ? "Actualmente Público" : "Actualmente Privado"}
+    >
+      {/* Sliding Background Indicator */}
+      <div 
+        className={cn(
+          "absolute h-9 w-[44px] rounded-lg transition-all duration-300 ease-in-out shadow-sm",
+          localTourInfo.published 
+            ? "translate-x-[42px] bg-green-500" 
+            : "translate-x-0 bg-amber-500"
+        )}
+      />
+      
+      {/* Icons Container */}
+      <div className="flex w-full h-full relative z-10">
+        <div className="flex-1 flex items-center justify-center">
+          <Lock className={cn("w-4 h-4 transition-colors duration-300", !localTourInfo.published ? "text-white" : "text-muted-foreground/40")} />
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <Eye className={cn("w-4 h-4 transition-colors duration-300", localTourInfo.published ? "text-white" : "text-muted-foreground/40")} />
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-[64px] z-40 bg-background/80 backdrop-blur-sm pb-4">
@@ -417,21 +448,9 @@ export default function TourEditor() {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className={cn(
-              "h-11 w-11 rounded-xl transition-all duration-300 hidden lg:flex", 
-              localTourInfo.published ? "border-green-500 text-green-500 hover:bg-green-50" : "border-amber-500 text-amber-500 hover:bg-amber-50"
-            )}
-            onClick={() => {
-              setLocalTourInfo(prev => ({ ...prev, published: !prev.published }));
-              setHasUnsavedChanges(true);
-            }}
-            title={localTourInfo.published ? "Publicado" : "Privado"}
-          >
-            {localTourInfo.published ? <Eye className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-          </Button>
+          <div className="hidden lg:block">
+            <VisibilityToggle />
+          </div>
 
           <Tabs value={mainEditorTab} onValueChange={setMainEditorTab} className="hidden lg:block">
             <TabsList className="bg-white border rounded-xl p-1 h-11">
@@ -448,20 +467,7 @@ export default function TourEditor() {
 
       {/* Mobile Tabs & Visibility Toggle */}
       <div className="lg:hidden flex items-center gap-2">
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className={cn(
-            "h-11 w-11 rounded-xl flex-shrink-0 transition-all duration-300", 
-            localTourInfo.published ? "border-green-500 text-green-500 hover:bg-green-50" : "border-amber-500 text-amber-500 hover:bg-amber-50"
-          )}
-          onClick={() => {
-            setLocalTourInfo(prev => ({ ...prev, published: !prev.published }));
-            setHasUnsavedChanges(true);
-          }}
-        >
-          {localTourInfo.published ? <Eye className="w-5 h-5" /> : <Lock className="w-5 h-5" />}
-        </Button>
+        <VisibilityToggle />
         <Tabs value={mainEditorTab} onValueChange={setMainEditorTab} className="flex-1">
           <TabsList className="w-full bg-white border rounded-xl p-1 h-11">
             <TabsTrigger value="space" className="flex-1 rounded-lg"><LayoutGrid className="w-4 h-4" /></TabsTrigger>
