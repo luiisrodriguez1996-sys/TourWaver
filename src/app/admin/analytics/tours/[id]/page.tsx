@@ -24,7 +24,8 @@ import {
   ExternalLink,
   Share2,
   MapPin,
-  MousePointer2
+  MousePointer2,
+  X
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -145,8 +146,8 @@ export default function TourAnalytics() {
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 px-2">
+    <div className="space-y-8 animate-in fade-in duration-500 max-w-7xl mx-auto pb-10 px-2 sm:px-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3 md:gap-4">
           <Link href="/admin/analytics">
             <Button variant="ghost" size="icon" className="rounded-full flex-shrink-0">
@@ -180,7 +181,7 @@ export default function TourAnalytics() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 px-2">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
           <CardContent className="pt-6 px-4 md:px-6">
             <div className="flex items-center justify-between mb-2">
@@ -296,7 +297,7 @@ export default function TourAnalytics() {
         </Card>
       </div>
 
-      <Card className="md:rounded-[2.5rem] rounded-3xl border-none shadow-xl overflow-hidden bg-white mx-2">
+      <Card className="md:rounded-[2.5rem] rounded-3xl border-none shadow-xl overflow-hidden bg-white">
         <CardHeader className="bg-primary/5 p-6">
           <CardTitle className="text-lg">Historial de Visitas</CardTitle>
           <CardDescription className="text-xs">Registro individual de cada acceso y contacto detectado.</CardDescription>
@@ -317,7 +318,7 @@ export default function TourAnalytics() {
                   const deviceInfo = getDeviceInfo(visit.userAgent);
                   return (
                     <TableRow key={visit.id} className="group hover:bg-gray-50/50">
-                      <TableCell className="pl-2 md:pl-8 py-4">
+                      <TableCell className="pl-4 md:pl-8 py-4">
                         <div className="flex flex-col">
                           <span className="font-medium text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
                             {format(new Date(visit.timestamp), "d MMM yy", { locale: es })}
@@ -327,7 +328,7 @@ export default function TourAnalytics() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center px-1 md:px-2">
+                      <TableCell className="text-center px-2">
                         <div className="flex items-center justify-center">
                           <Dialog>
                             <DialogTrigger asChild>
@@ -360,7 +361,7 @@ export default function TourAnalytics() {
                           </Dialog>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center px-1 md:px-2">
+                      <TableCell className="text-center px-2">
                         <div className="flex items-center justify-center gap-1 md:gap-2">
                           {visit.contacted ? (
                             <>
@@ -380,7 +381,7 @@ export default function TourAnalytics() {
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right pr-2 md:pr-8">
+                      <TableCell className="text-right pr-4 md:pr-8">
                         {visit.duration ? (
                           <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-[8px] md:text-[9px] px-1 md:px-2 py-0">
                             {stats.formatDuration(visit.duration)}
