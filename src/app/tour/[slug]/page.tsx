@@ -7,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocum
 import { collection, query, where, limit, doc, arrayUnion } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail, Copy, QrCode, Download } from 'lucide-react';
+import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail, Copy, Download } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -461,7 +461,7 @@ export default function PublicTourViewer() {
         )}
       </div>
 
-      <div className="absolute bottom-10 md:bottom-12 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center">
+      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center">
         <div className="bg-black/40 backdrop-blur-md px-2 md:px-6 py-1 rounded-full border border-white/10 flex items-center gap-1 md:gap-2 text-white shadow-2xl pointer-events-auto max-w-full overflow-x-auto scrollbar-hide">
            <Dialog>
              <DialogTrigger asChild>
