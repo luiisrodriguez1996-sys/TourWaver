@@ -342,10 +342,14 @@ export default function PublicTourViewer() {
             <Button 
               variant="secondary" 
               className="rounded-full bg-[#25D366] text-white hover:bg-[#20ba59] h-10 px-4 md:h-11 md:px-6 border-none shadow-xl gap-2 transition-all active:scale-95"
-              onClick={handleSolicitarInfo}
+              onClick={() => {
+                setIsDetailsExpanded(true);
+                setHighlightContact(true);
+                setTimeout(() => setHighlightContact(false), 2000);
+              }}
             >
               <MessageCircle className="w-5 h-5" />
-              <span className="font-black text-[10px] md:text-xs tracking-tight uppercase">Solicitar Información</span>
+              <span className="font-black text-[10px] md:text-xs tracking-tight uppercase whitespace-nowrap">Solicitar Información</span>
             </Button>
           )}
           {(tour.address || tour.googleMapsUrl) && (
@@ -410,7 +414,11 @@ export default function PublicTourViewer() {
             imageUrl={activeScene.imageUrl} 
             hotspots={activeScene.hotspots || []} 
             annotations={activeScene.annotations || []}
-            onInteractionStart={() => setIsDetailsExpanded(false)}
+            onInteractionStart={() => {
+              setIsDetailsExpanded(false);
+              setSelectedAnnotationId(null);
+              setShowFloorPlan(false);
+            }}
             onHotspotClick={(targetId) => {
               setActiveSceneId(targetId);
               setSelectedAnnotationId(null);
@@ -424,8 +432,14 @@ export default function PublicTourViewer() {
         )}
 
         {activeAnnotation && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/20 backdrop-blur-[2px] pointer-events-none">
-            <Card className="w-full max-w-sm pointer-events-auto animate-in zoom-in-95 duration-300 rounded-[2rem] border-white/10 bg-black/60 text-white backdrop-blur-xl shadow-2xl overflow-hidden">
+          <div 
+            className="absolute inset-0 z-50 flex items-center justify-center p-6 bg-black/20 backdrop-blur-[2px] cursor-pointer"
+            onClick={() => setSelectedAnnotationId(null)}
+          >
+            <Card 
+              className="w-full max-w-sm cursor-auto animate-in zoom-in-95 duration-300 rounded-[2rem] border-white/10 bg-black/60 text-white backdrop-blur-xl shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
               <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/10">
                 <CardTitle className="text-lg font-bold flex items-center gap-2">
                   <StickyNote className="w-5 h-5 text-blue-400" />
@@ -481,8 +495,14 @@ export default function PublicTourViewer() {
       </div>
 
       {(showFloorPlan && tour.showFloorPlan && tour.floors?.length > 0) && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300">
-           <div className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 max-w-[calc(100vw-2rem)] md:max-w-3xl w-full relative shadow-2xl flex flex-col gap-4">
+        <div 
+          className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex items-center justify-center p-4 md:p-8 animate-in fade-in duration-300 cursor-pointer"
+          onClick={() => setShowFloorPlan(false)}
+        >
+           <div 
+            className="bg-white rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-8 max-w-[calc(100vw-2rem)] md:max-w-3xl w-full relative shadow-2xl flex flex-col gap-4 cursor-auto"
+            onClick={(e) => e.stopPropagation()}
+           >
               <Button variant="ghost" size="icon" className="absolute top-4 right-4 h-10 w-10 rounded-full hover:bg-muted" onClick={() => setShowFloorPlan(false)}>✕</Button>
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <h2 className="text-xl md:text-2xl font-bold font-headline text-primary flex items-center gap-2"><Map className="w-5 h-5 md:w-6 md:h-6" /> Mapa de Navegación</h2>
@@ -505,7 +525,7 @@ export default function PublicTourViewer() {
                  ) : (
                    <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground gap-3">
                      <ImageOff className="w-10 h-10 opacity-20" />
-                     <p className="text-xs md:text-sm font-medium">Plano no disponible para esta planta</p>
+                     <p className="text-xs md:text-sm font-medium">Esta planta no tiene mapa</p>
                    </div>
                  )}
               </div>
