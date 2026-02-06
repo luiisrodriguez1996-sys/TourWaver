@@ -288,7 +288,6 @@ export default function PublicTourViewer() {
             </Button>
           )}
           <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-10 w-10 md:h-11 md:w-11" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
-          <Link href="/"><Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-10 w-10 md:h-11 md:w-11"><Globe className="w-4 h-4" /></Button></Link>
         </div>
       </div>
 
@@ -411,7 +410,12 @@ export default function PublicTourViewer() {
       )}
 
       <div className="absolute bottom-4 right-4 md:right-8 z-20 pointer-events-none flex flex-col md:flex-row items-end md:items-center gap-2 md:gap-3">
-        <VersionIndicator /><span className="text-neutral-500/40 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">Potenciado por Tour Weaver</span>
+        <VersionIndicator />
+        <Link href="/" className="pointer-events-auto">
+          <span className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors">
+            Potenciado por Tour Weaver
+          </span>
+        </Link>
       </div>
     </div>
   );

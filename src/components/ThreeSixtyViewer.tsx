@@ -92,7 +92,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     const scene = new THREE_REAL.Scene();
     sceneRef.current = scene;
 
-    // Aumentamos el FOV de 75 a 85 para una vista más amplia y espaciosa
     const camera = new THREE_REAL.PerspectiveCamera(85, width / height, 1, 1100);
     cameraRef.current = camera;
 
@@ -367,9 +366,9 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       )}
 
       <div className="absolute bottom-4 left-4 z-30">
-        <div className="bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-[10px] uppercase tracking-widest text-white/80 border border-white/10">
+        <span className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">
           {isEditing ? 'Configurando Espacio' : 'Inmersión 360°'}
-        </div>
+        </span>
       </div>
     </div>
   );
