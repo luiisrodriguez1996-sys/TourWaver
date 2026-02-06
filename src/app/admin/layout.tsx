@@ -1,8 +1,8 @@
 
 "use client";
 
-import React from 'react';
-import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Languages, Menu, ShieldAlert, ArrowLeft, BarChart3 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Languages, Menu, ShieldAlert, ArrowLeft, BarChart3, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
@@ -19,6 +19,7 @@ import {
   SheetDescription,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { cn } from '@/lib/utils';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -26,8 +27,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const firestore = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const isDashboard = pathname === '/admin';
+
+  // Ocultar el loader cuando cambia el pathname
+  useEffect(() => {
+    setIsNavigating(false);
+  }, [pathname]);
+
+  const handleNavigation = (path: string) => {
+    if (path === pathname) return;
+    setIsNavigating(true);
+    router.push(path);
+  };
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -53,9 +66,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     try {
+      setIsNavigating(true);
       await auth.signOut();
       router.push('/');
     } catch (error) {
+      setIsNavigating(false);
       console.error('Error signing out:', error);
     }
   };
@@ -64,8 +79,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F8FAFC]">
         <div className="flex flex-col items-center gap-4">
-          <Skeleton className="w-12 h-12 rounded-full" />
-          <p className="text-muted-foreground animate-pulse">Verificando credenciales...</p>
+          <Loader2 className="w-12 h-12 text-primary animate-spin" />
+          <p className="text-muted-foreground animate-pulse font-medium">Verificando credenciales...</p>
         </div>
       </div>
     );
@@ -85,26 +100,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               : "Esta cuenta no tiene privilegios de administrador para gestionar tours."}
           </p>
           <div className="flex flex-col gap-3">
-            {!user ? (
-              <Link href="/login" className="w-full">
-                <Button className="w-full h-12 text-base font-semibold rounded-2xl">
-                  Ir a Iniciar Sesión
-                </Button>
-              </Link>
-            ) : (
-              <Button 
-                variant="outline" 
-                className="w-full h-12 text-base font-semibold rounded-2xl text-destructive border-destructive/20 hover:bg-destructive/5"
-                onClick={handleLogout}
-              >
-                Cerrar sesión actual
-              </Button>
-            )}
-            <Link href="/" className="w-full">
-              <Button variant="ghost" className="w-full h-12 text-base font-semibold rounded-2xl">
-                Volver al Inicio
-              </Button>
-            </Link>
+            <Button className="w-full h-12 text-base font-semibold rounded-2xl" onClick={() => handleNavigation('/login')}>
+              Ir a Iniciar Sesión
+            </Button>
+            <Button variant="ghost" className="w-full h-12 text-base font-semibold rounded-2xl" onClick={() => handleNavigation('/')}>
+              Volver al Inicio
+            </Button>
           </div>
         </div>
       </div>
@@ -114,42 +115,73 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const SidebarContent = () => (
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="p-6">
-        <Link href="/" className="flex items-center gap-2 group">
+        <button onClick={() => handleNavigation('/')} className="flex items-center gap-2 group">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
             <Globe className="text-white w-5 h-5" />
           </div>
           <span className="text-xl font-bold font-headline tracking-tight text-primary">Tour Weaver</span>
-        </Link>
+        </button>
       </div>
       
       <nav className="flex-1 px-4 py-4 space-y-1">
-        <Link href="/admin">
-          <Button variant="ghost" className={`w-full justify-start gap-3 rounded-xl transition-colors ${pathname === '/admin' ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-primary hover:text-white'}`}>
-            <LayoutDashboard className="w-4 h-4" />
-            {menuText.properties}
-          </Button>
-        </Link>
-        <Link href="/admin/tours/new">
-          <Button variant="ghost" className={`w-full justify-start gap-3 rounded-xl transition-colors ${pathname === '/admin/tours/new' ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-primary hover:text-white'}`}>
-            <PlusCircle className="w-4 h-4" />
-            {menuText.new}
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full justify-start gap-3 rounded-xl transition-all duration-200", 
+            pathname === '/admin' 
+              ? 'bg-primary/10 text-primary font-bold' 
+              : 'text-muted-foreground hover:bg-accent hover:text-white [&_svg]:hover:text-white'
+          )}
+          onClick={() => handleNavigation('/admin')}
+        >
+          <LayoutDashboard className="w-4 h-4" />
+          {menuText.properties}
+        </Button>
+
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full justify-start gap-3 rounded-xl transition-all duration-200", 
+            pathname === '/admin/tours/new' 
+              ? 'bg-primary/10 text-primary font-bold' 
+              : 'text-muted-foreground hover:bg-accent hover:text-white [&_svg]:hover:text-white'
+          )}
+          onClick={() => handleNavigation('/admin/tours/new')}
+        >
+          <PlusCircle className="w-4 h-4" />
+          {menuText.new}
+        </Button>
         
-        <Link href="/admin/analytics">
-          <Button variant="ghost" className={`w-full justify-start gap-3 rounded-xl transition-colors ${pathname === '/admin/analytics' ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-primary hover:text-white'}`}>
-            <BarChart3 className="w-4 h-4" />
-            {menuText.analytics}
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full justify-start gap-3 rounded-xl transition-all duration-200", 
+            pathname?.startsWith('/admin/analytics')
+              ? 'bg-primary/10 text-primary font-bold' 
+              : 'text-muted-foreground hover:bg-accent hover:text-white [&_svg]:hover:text-white'
+          )}
+          onClick={() => handleNavigation('/admin/analytics')}
+        >
+          <BarChart3 className="w-4 h-4" />
+          {menuText.analytics}
+        </Button>
 
         <Separator className="my-4" />
-        <Link href="/admin/settings">
-          <Button variant="ghost" className={`w-full justify-start gap-3 rounded-xl transition-colors ${pathname === '/admin/settings' ? 'bg-primary/10 text-primary font-bold' : 'text-muted-foreground hover:bg-primary hover:text-white'}`}>
-            <Settings className="w-4 h-4" />
-            {menuText.settings}
-          </Button>
-        </Link>
+        
+        <Button 
+          variant="ghost" 
+          className={cn(
+            "w-full justify-start gap-3 rounded-xl transition-all duration-200", 
+            pathname === '/admin/settings' 
+              ? 'bg-primary/10 text-primary font-bold' 
+              : 'text-muted-foreground hover:bg-accent hover:text-white [&_svg]:hover:text-white'
+          )}
+          onClick={() => handleNavigation('/admin/settings')}
+        >
+          <Settings className="w-4 h-4" />
+          {menuText.settings}
+        </Button>
+
         <Button 
           variant="ghost" 
           className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/5 mt-auto"
@@ -178,7 +210,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   );
 
   return (
-    <div className="min-h-screen flex bg-[#F8FAFC] max-w-full overflow-x-hidden">
+    <div className="min-h-screen flex bg-[#F8FAFC] max-w-full overflow-x-hidden relative">
+      {/* Global Navigation Loader */}
+      {isNavigating && (
+        <div className="fixed inset-0 z-[100] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
+          <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 border border-border/50">
+            <div className="relative">
+              <div className="w-16 h-16 rounded-full border-4 border-primary/10 border-t-primary animate-spin" />
+              <Globe className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-primary w-6 h-6" />
+            </div>
+            <p className="text-sm font-bold text-primary tracking-widest uppercase animate-pulse">Cargando...</p>
+          </div>
+        </div>
+      )}
+
       {/* Desktop Sidebar */}
       <aside className="w-64 bg-white border-r hidden md:flex flex-col fixed inset-y-0 z-50">
         <SidebarContent />
@@ -217,7 +262,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                  variant="ghost" 
                  size="sm" 
                  className="gap-2 text-muted-foreground hover:text-primary rounded-xl"
-                 onClick={() => router.push('/admin')}
+                 onClick={() => handleNavigation('/admin')}
                >
                  <ArrowLeft className="w-4 h-4" />
                  <span className="hidden sm:inline font-bold uppercase tracking-wider text-[10px]">{menuText.back}</span>

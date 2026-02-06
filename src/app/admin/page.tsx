@@ -22,7 +22,6 @@ import {
   Loader2,
   BarChart3
 } from 'lucide-react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   DropdownMenu,
@@ -63,7 +62,7 @@ export default function AdminDashboard() {
     if (savedView) setViewMode(savedView);
   }, []);
 
-  // SOLUCIÓN DEFINITIVA PARA POINTER-EVENTS Y ARIA-HIDDEN
+  // Limpieza de eventos
   useEffect(() => {
     if (tourToDeleteId === null) {
       const cleanup = () => {
@@ -135,9 +134,9 @@ export default function AdminDashboard() {
     }, 500);
   };
 
-  const handleManageClick = (tourId: string) => {
-    setIsNavigating(tourId);
-    router.push(`/admin/tours/${tourId}`);
+  const handleNavigateTo = (path: string, id: string) => {
+    setIsNavigating(id);
+    router.push(path);
   };
 
   // Lógica de agrupación por clientes
@@ -152,7 +151,7 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3].map(i => <Skeleton key={`skeleton-${i}`} className="aspect-video w-full rounded-xl" />)}
+        {[1, 2, 3].map(i => <Skeleton key={`skeleton-load-${i}`} className="aspect-video w-full rounded-xl" />)}
       </div>
     );
   }
@@ -201,11 +200,11 @@ export default function AdminDashboard() {
               <DropdownMenuItem className="cursor-pointer" onClick={() => togglePublish(tour.id, tour.published)}>
                 {tour.published ? (
                   <>
-                    <EyeOff className="mr-2 h-4 w-4" /> {isSpanish ? 'Hacer Privada' : 'Hacer Privada'}
+                    <EyeOff className="mr-2 h-4 w-4" /> Hacer Privada
                   </>
                 ) : (
                   <>
-                    <Eye className="mr-2 h-4 w-4" /> {isSpanish ? 'Publicar' : 'Publicar'}
+                    <Eye className="mr-2 h-4 w-4" /> Publicar
                   </>
                 )}
               </DropdownMenuItem>
@@ -229,34 +228,33 @@ export default function AdminDashboard() {
           type="button" 
           variant="outline" 
           className="flex-1 gap-2 text-primary border-primary hover:bg-primary hover:text-white"
-          onClick={() => handleManageClick(tour.id)}
-          disabled={isNavigating === tour.id}
+          onClick={() => handleNavigateTo(`/admin/tours/${tour.id}`, `manage-${tour.id}`)}
+          disabled={isNavigating === `manage-${tour.id}`}
         >
-          {isNavigating === tour.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />} 
+          {isNavigating === `manage-${tour.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit3 className="w-4 h-4" />} 
           {isSpanish ? 'Gestionar' : 'Manage'}
         </Button>
-        <Link href={`/admin/analytics/tours/${tour.id}`}>
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="icon" 
-            className="text-muted-foreground hover:bg-muted-foreground hover:text-white transition-all" 
-            title={isSpanish ? "Ver Estadísticas" : "View Statistics"}
-          >
-            <BarChart3 className="w-4 h-4" />
-          </Button>
-        </Link>
-        <Link href={`/tour/${tour.slug}`} target="_blank" rel="noopener noreferrer">
-          <Button 
-            type="button" 
-            variant="ghost" 
-            size="icon" 
-            className="text-accent hover:bg-accent hover:text-white transition-all"
-            title={isSpanish ? "Ver Tour" : "View Tour"}
-          >
-            <ExternalLink className="w-4 h-4" />
-          </Button>
-        </Link>
+        <Button 
+          type="button" 
+          variant="ghost" 
+          size="icon" 
+          className="text-muted-foreground hover:bg-muted-foreground hover:text-white transition-all" 
+          title={isSpanish ? "Ver Estadísticas" : "View Statistics"}
+          onClick={() => handleNavigateTo(`/admin/analytics/tours/${tour.id}`, `stats-${tour.id}`)}
+          disabled={isNavigating === `stats-${tour.id}`}
+        >
+          {isNavigating === `stats-${tour.id}` ? <Loader2 className="w-4 h-4 animate-spin" /> : <BarChart3 className="w-4 h-4" />}
+        </Button>
+        <Button 
+          type="button" 
+          variant="ghost" 
+          size="icon" 
+          className="text-accent hover:bg-accent hover:text-white transition-all"
+          title={isSpanish ? "Ver Tour" : "View Tour"}
+          onClick={() => window.open(`/tour/${tour.slug}`, '_blank')}
+        >
+          <ExternalLink className="w-4 h-4" />
+        </Button>
       </CardFooter>
     </Card>
   );
@@ -269,7 +267,7 @@ export default function AdminDashboard() {
             {isSpanish ? 'Gestión de Propiedades' : 'Property Management'}
           </h1>
           <p className="text-sm md:text-base text-muted-foreground">
-            {isSpanish ? 'Organiza y publica tus tours virtuales profesionales' : 'Organize and publish your professional virtual tours'}
+            Organiza y publica tus tours virtuales profesionales
           </p>
         </div>
         <div className="flex items-center gap-2 md:gap-4 overflow-x-auto pb-1 max-w-full">
@@ -288,10 +286,10 @@ export default function AdminDashboard() {
           <Button 
             type="button" 
             className="bg-primary hover:bg-primary/90 rounded-xl px-4 md:px-6 flex-shrink-0"
-            onClick={() => { setIsNavigating('new'); router.push('/admin/tours/new'); }}
-            disabled={isNavigating === 'new'}
+            onClick={() => handleNavigateTo('/admin/tours/new', 'new-btn')}
+            disabled={isNavigating === 'new-btn'}
           >
-            {isNavigating === 'new' && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+            {isNavigating === 'new-btn' && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
             {isSpanish ? 'Nueva Propiedad' : 'New Property'}
           </Button>
         </div>
@@ -359,19 +357,19 @@ export default function AdminDashboard() {
             <Briefcase className="text-muted-foreground w-8 h-8" />
           </div>
           <h2 className="text-xl font-bold mb-2">
-            {isSpanish ? 'No hay propiedades registradas' : 'No registered properties'}
+            No hay propiedades registradas
           </h2>
           <p className="text-muted-foreground mb-6">
-            {isSpanish ? 'Comienza a crear tu primer encargo profesional.' : 'Start creating your first professional assignment.'}
+            Comienza a crear tu primer encargo profesional.
           </p>
           <Button 
             type="button" 
             className="rounded-xl px-8"
-            onClick={() => { setIsNavigating('new-empty'); router.push('/admin/tours/new'); }}
+            onClick={() => handleNavigateTo('/admin/tours/new', 'new-empty')}
             disabled={isNavigating === 'new-empty'}
           >
             {isNavigating === 'new-empty' && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-            {isSpanish ? 'Registrar Propiedad' : 'Register Property'}
+            Registrar Propiedad
           </Button>
         </div>
       )}
@@ -390,17 +388,15 @@ export default function AdminDashboard() {
               <AlertTriangle className="text-destructive w-6 h-6" />
             </div>
             <AlertDialogTitle className="text-xl font-bold">
-              {isSpanish ? '¿Estás completamente seguro?' : 'Are you absolutely sure?'}
+              ¿Estás completamente seguro?
             </AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              {isSpanish 
-                ? 'Esta acción no se puede deshacer. Se eliminará la propiedad permanentemente de nuestros servidores.' 
-                : 'This action cannot be undone. This will permanently delete your property from our servers.'}
+              Esta acción no se puede deshacer. Se eliminará la propiedad permanentemente de nuestros servidores.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
             <AlertDialogCancel className="rounded-xl border-muted-foreground/20">
-              {isSpanish ? 'Cancelar' : 'Cancel'}
+              Cancelar
             </AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
@@ -408,7 +404,7 @@ export default function AdminDashboard() {
               disabled={loadingActions[`delete-${tourToDeleteId}`]}
             >
               {loadingActions[`delete-${tourToDeleteId}`] ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-              {isSpanish ? 'Sí, eliminar propiedad' : 'Yes, delete property'}
+              Sí, eliminar propiedad
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

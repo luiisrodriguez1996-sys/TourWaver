@@ -137,18 +137,21 @@ export default function AnalyticsDashboard() {
     };
   }, [visits, tours]);
 
-  const paginatedTours = useMemo(() => {
-    if (!tours) return [];
-    const sortedTours = [...tours].sort((a, b) => {
-      const visitsA = stats?.visitsByTour[a.id] || 0;
-      const visitsB = stats?.visitsByTour[b.id] || 0;
+  const sortedTours = useMemo(() => {
+    if (!tours || !stats) return [];
+    return [...tours].sort((a, b) => {
+      const visitsA = stats.visitsByTour[a.id] || 0;
+      const visitsB = stats.visitsByTour[b.id] || 0;
       return visitsB - visitsA;
     });
+  }, [tours, stats]);
+
+  const paginatedTours = useMemo(() => {
     const start = (currentPage - 1) * itemsPerPage;
     return sortedTours.slice(start, start + itemsPerPage);
-  }, [tours, currentPage, stats]);
+  }, [sortedTours, currentPage]);
 
-  const totalPages = Math.ceil((tours?.length || 0) / itemsPerPage);
+  const totalPages = Math.ceil((sortedTours.length || 0) / itemsPerPage);
 
   const isLoading = isToursLoading || isVisitsLoading;
 
@@ -157,7 +160,7 @@ export default function AnalyticsDashboard() {
       <div className="space-y-8 p-4">
         <Skeleton className="h-10 w-64" />
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 w-full rounded-3xl" />)}
+          {[1, 2, 3, 4].map(i => <Skeleton key={`stat-skeleton-${i}`} className="h-32 w-full rounded-3xl" />)}
         </div>
         <Skeleton className="h-[400px] w-full rounded-3xl" />
       </div>
@@ -348,7 +351,7 @@ export default function AnalyticsDashboard() {
           </CardHeader>
           <CardContent className="space-y-6">
             {stats?.topTours && stats.topTours.length > 0 ? stats.topTours.map((tour, idx) => (
-              <div key={idx} className="flex items-center gap-4 group">
+              <div key={`top-${idx}`} className="flex items-center gap-4 group">
                 <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-bold shrink-0">
                   {idx + 1}
                 </div>
@@ -408,7 +411,7 @@ export default function AnalyticsDashboard() {
         <div className="flex flex-col gap-3">
           {paginatedTours.map(tour => (
             <Card 
-              key={tour.id} 
+              key={`list-item-${tour.id}`} 
               className="hover:border-primary transition-all cursor-pointer group bg-gray-50/50 border-transparent border-2"
               onClick={() => handleNavigate(`/admin/analytics/tours/${tour.id}`, `list-${tour.id}`)}
             >
