@@ -6,7 +6,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocum
 import { collection, query, where, limit, doc, arrayUnion } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail, Copy, Download } from 'lucide-react';
+import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail, Copy, Download, ChevronLeft, ChevronRight } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -37,6 +37,7 @@ export default function PublicTourViewer() {
   const [highlightContact, setHighlightContact] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [showFloorPlan, setShowFloorPlan] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   const visitIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -107,6 +108,16 @@ export default function PublicTourViewer() {
       };
     }
   }, [tour, firestore, isAdmin, isAdminLoading, isUserLoading]);
+
+  // Temporizador para ocultar onboarding automáticamente
+  useEffect(() => {
+    if (showOnboarding) {
+      const timer = setTimeout(() => {
+        setShowOnboarding(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [showOnboarding]);
 
   const trackConversion = (method: 'whatsapp' | 'phone' | 'email') => {
     if (visitIdRef.current && firestore && !isAdmin) {
@@ -215,6 +226,7 @@ export default function PublicTourViewer() {
     setIsDetailsExpanded(false);
     setSelectedAnnotationId(null);
     setShowFloorPlan(false);
+    if (showOnboarding) setShowOnboarding(false);
   };
 
   const canView = tour ? (tour.published || isAdmin) : false;
@@ -472,6 +484,22 @@ export default function PublicTourViewer() {
               setShowFloorPlan(false);
             }}
           />
+        )}
+
+        {/* Guía de Interacción Inicial */}
+        {showOnboarding && (
+          <div className="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none animate-in fade-in duration-700">
+            <div className="bg-black/40 backdrop-blur-md rounded-[2.5rem] p-8 flex flex-col items-center gap-6 border border-white/10 shadow-2xl">
+              <div className="flex items-center gap-8">
+                <ChevronLeft className="w-10 h-10 text-white/40 animate-pulse" />
+                <div className="text-6xl animate-swipe select-none">👆</div>
+                <ChevronRight className="w-10 h-10 text-white/40 animate-pulse" />
+              </div>
+              <p className="text-white text-lg font-medium text-center max-w-[200px] leading-tight">
+                Interactúa para explorar el espacio
+              </p>
+            </div>
+          </div>
         )}
 
         {activeAnnotation && (

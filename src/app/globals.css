@@ -86,3 +86,12 @@ img {
   max-width: 100%;
   height: auto;
 }
+
+@keyframes swipe {
+  0%, 100% { transform: translateX(-30px); }
+  50% { transform: translateX(30px); }
+}
+
+.animate-swipe {
+  animation: swipe 2.5s ease-in-out infinite;
+}
