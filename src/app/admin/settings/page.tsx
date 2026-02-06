@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState } from 'react';
@@ -22,7 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/dialog";
 
 export default function SettingsPage() {
   const firestore = useFirestore();
@@ -263,7 +262,7 @@ export default function SettingsPage() {
               />
               <div className="bg-muted/30 p-3 rounded-xl space-y-2">
                 <p className="text-[10px] text-muted-foreground leading-relaxed">
-                  <strong>Instrucciones:</strong> En Search Console, elige <strong>Prefijo de URL</strong> > <strong>Etiqueta HTML</strong>. 
+                  <strong>Instrucciones:</strong> En Search Console, elige <strong>Prefijo de URL</strong> &gt; <strong>Etiqueta HTML</strong>. 
                   Copia solo el valor del atributo <code>content</code> (ej: <code>PagIUOTwGh...</code>) y pégalo arriba.
                 </p>
               </div>
