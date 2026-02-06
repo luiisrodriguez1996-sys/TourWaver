@@ -3,12 +3,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Languages, Menu, ShieldAlert, ArrowLeft, BarChart3, Loader2 } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { Skeleton } from '@/components/ui/skeleton';
 import { useRouter, usePathname } from 'next/navigation';
 import { VersionIndicator } from '@/components/VersionIndicator';
 import {
@@ -28,6 +26,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const pathname = usePathname();
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isDashboard = pathname === '/admin';
 
@@ -37,8 +36,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [pathname]);
 
   const handleNavigation = (path: string) => {
-    if (path === pathname) return;
+    if (path === pathname) {
+      setIsMobileMenuOpen(false);
+      return;
+    }
     setIsNavigating(true);
+    setIsMobileMenuOpen(false);
     router.push(path);
   };
 
@@ -67,6 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const handleLogout = async () => {
     try {
       setIsNavigating(true);
+      setIsMobileMenuOpen(false);
       await auth.signOut();
       router.push('/');
     } catch (error) {
@@ -234,7 +238,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="flex items-center gap-4 min-w-0">
             {/* Mobile Menu Trigger */}
             <div className="md:hidden flex-shrink-0">
-              <Sheet>
+              <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
                   <Button variant="ghost" size="icon" className="text-muted-foreground">
                     <Menu className="w-6 h-6" />
