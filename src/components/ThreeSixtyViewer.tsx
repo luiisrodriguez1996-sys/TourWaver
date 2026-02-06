@@ -231,7 +231,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     pointerDownPos.current = { x: event.clientX, y: event.clientY };
     pointerDownTime.current = Date.now();
     
-    // Notificar al padre que ha comenzado una interacción (para cerrar paneles, etc.)
+    // Cierra paneles automáticamente al interactuar
     onInteractionStart?.();
   };
 
@@ -371,7 +371,10 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       )}
 
       <div className="absolute bottom-4 left-4 z-30">
-        <span className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase">
+        <span 
+          className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase"
+          style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(255,255,255,0.8)' }}
+        >
           {isEditing ? 'Configurando Espacio' : 'Inmersión 360°'}
         </span>
       </div>

@@ -7,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocum
 import { collection, query, where, limit, doc, arrayUnion } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail } from 'lucide-react';
+import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail, Copy, QrCode, Download } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -17,11 +17,13 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { VersionIndicator } from '@/components/VersionIndicator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function PublicTourViewer() {
   const { slug } = useParams();
@@ -33,10 +35,12 @@ export default function PublicTourViewer() {
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
   const [highlightContact, setHighlightContact] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
 
   const visitIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
   const contactedMethodsRef = useRef<Set<string>>(new Set());
+  const qrRef = useRef<SVGSVGElement>(null);
 
   const adminRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -131,6 +135,36 @@ export default function PublicTourViewer() {
     }
   };
 
+  const handleCopyLink = () => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(window.location.href);
+      toast({ title: "Enlace copiado al portapapeles" });
+    }
+  };
+
+  const downloadQR = () => {
+    const svg = qrRef.current;
+    if (!svg) return;
+
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    
+    img.onload = () => {
+      canvas.width = 1000;
+      canvas.height = 1000;
+      ctx?.drawImage(img, 0, 0, 1000, 1000);
+      const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
+      downloadLink.download = `QR-${tour?.slug || 'tour'}.png`;
+      downloadLink.href = pngFile;
+      downloadLink.click();
+    };
+    
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
+  };
+
   const scenesRef = useMemoFirebase(() => {
     if (!firestore || !tour) return null;
     return collection(firestore, 'tours', tour.id, 'scenes');
@@ -172,13 +206,6 @@ export default function PublicTourViewer() {
       setActiveFloorId(tour.floors[0].id);
     }
   }, [activeScene, tour, activeFloorId]);
-
-  const handleShare = () => {
-    if (typeof window !== 'undefined') {
-      navigator.clipboard.writeText(window.location.href);
-      toast({ title: "Enlace copiado" });
-    }
-  };
 
   const getMapsUrl = () => {
     if (tour?.googleMapsUrl) return tour.googleMapsUrl;
@@ -229,7 +256,7 @@ export default function PublicTourViewer() {
       <div className="absolute top-0 left-0 right-0 p-4 md:p-6 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="pointer-events-auto w-full md:w-[40%]">
           <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white w-full shadow-2xl overflow-hidden">
-            <div className="p-2 md:p-3 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
+            <div className="p-2 md:p-2.5 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1 className="text-base md:text-xl font-bold font-headline truncate">{tour.name}</h1>
@@ -240,8 +267,8 @@ export default function PublicTourViewer() {
               {isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
             </div>
             
-            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-3", isDetailsExpanded ? "max-h-[600px] pb-3 opacity-100" : "max-h-0 opacity-0")}>
-              <div className="space-y-3 pt-1">
+            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-2.5", isDetailsExpanded ? "max-h-[600px] pb-2.5 opacity-100" : "max-h-0 opacity-0")}>
+              <div className="space-y-2.5 pt-1">
                 {tour.address && (
                   <a href={getMapsUrl() || '#'} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-2 text-xs md:text-sm text-white hover:text-primary transition-colors">
                     <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 mt-0.5 text-primary" /><span className="underline underline-offset-4 decoration-white/20 group-hover:decoration-primary">{tour.address}</span>
@@ -318,7 +345,7 @@ export default function PublicTourViewer() {
               onClick={handleSolicitarInfo}
             >
               <MessageCircle className="w-5 h-5" />
-              <span className="font-black text-[10px] md:text-xs tracking-tight uppercase">Solicitar Info</span>
+              <span className="font-black text-[10px] md:text-xs tracking-tight uppercase">Solicitar Información</span>
             </Button>
           )}
           {(tour.address || tour.googleMapsUrl) && (
@@ -326,7 +353,54 @@ export default function PublicTourViewer() {
               <MapPin className="w-4 h-4" />
             </Button>
           )}
-          <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-10 w-10 md:h-11 md:w-11" onClick={handleShare}><Share2 className="w-4 h-4" /></Button>
+          
+          <Dialog open={isShareOpen} onOpenChange={setIsShareOpen}>
+            <DialogTrigger asChild>
+              <Button variant="secondary" size="icon" className="rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-white/20 h-10 w-10 md:h-11 md:w-11">
+                <Share2 className="w-4 h-4" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="rounded-[2.5rem] bg-white text-foreground sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                  <Share2 className="w-5 h-5 text-primary" /> Compartir Tour
+                </DialogTitle>
+              </DialogHeader>
+              <div className="space-y-6 py-4">
+                <div className="space-y-2">
+                  <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Enlace Directo</p>
+                  <div className="flex items-center gap-2">
+                    <Input 
+                      readOnly 
+                      value={typeof window !== 'undefined' ? window.location.href : ''} 
+                      className="rounded-xl bg-muted/50 border-none" 
+                    />
+                    <Button size="icon" onClick={handleCopyLink} className="rounded-xl shrink-0">
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-4 pt-2">
+                  <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest">Código QR para Impresión</p>
+                  <div className="flex flex-col items-center gap-4 bg-muted/30 p-6 rounded-3xl">
+                    <div className="bg-white p-4 rounded-2xl shadow-sm border">
+                      <QRCodeSVG 
+                        ref={qrRef}
+                        value={typeof window !== 'undefined' ? window.location.href : ''} 
+                        size={180}
+                        level="H"
+                        includeMargin={false}
+                      />
+                    </div>
+                    <Button variant="outline" className="rounded-xl gap-2 w-full" onClick={downloadQR}>
+                      <Download className="w-4 h-4" /> Descargar QR (PNG)
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -443,7 +517,10 @@ export default function PublicTourViewer() {
       <div className="absolute bottom-4 right-4 md:right-8 z-20 pointer-events-none flex flex-col md:flex-row items-end md:items-center gap-2 md:gap-3">
         <VersionIndicator />
         <Link href="/" className="pointer-events-auto">
-          <span className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors">
+          <span 
+            className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors underline decoration-neutral-500/30"
+            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(255,255,255,0.8)' }}
+          >
             Potenciado por Tour Weaver
           </span>
         </Link>
