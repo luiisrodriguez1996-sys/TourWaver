@@ -160,7 +160,7 @@ export default function AnalyticsDashboard() {
     return (
       <div className="space-y-8 p-4">
         <Skeleton className="h-10 w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map(i => <Skeleton key={`stat-skeleton-${i}`} className="h-32 w-full rounded-3xl" />)}
         </div>
         <Skeleton className="h-[400px] w-full rounded-3xl" />
@@ -179,9 +179,9 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4 md:px-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Users className="text-primary w-5 h-5" />
@@ -201,15 +201,15 @@ export default function AnalyticsDashboard() {
                   </DialogContent>
                 </Dialog>
               </div>
-              <TrendingUp className="text-green-500 w-4 h-4" />
+              <TrendingUp className="text-green-500 w-4 h-4 hidden sm:block" />
             </div>
-            <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
+            <p className="text-2xl md:text-3xl font-bold">{stats?.totalVisits || 0}</p>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Aperturas</p>
           </CardContent>
         </Card>
 
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4 md:px-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Clock className="text-accent w-5 h-5" />
@@ -230,13 +230,13 @@ export default function AnalyticsDashboard() {
                 </Dialog>
               </div>
             </div>
-            <p className="text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
+            <p className="text-2xl md:text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Permanencia</p>
           </CardContent>
         </Card>
 
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4 md:px-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Zap className="text-yellow-500 w-5 h-5" />
@@ -258,15 +258,14 @@ export default function AnalyticsDashboard() {
               </div>
             </div>
             <div className="flex items-baseline gap-1">
-              <p className="text-3xl font-bold">{stats?.conversionRate || 0}%</p>
-              <p className="text-xs text-muted-foreground font-bold">({stats?.contactedVisits})</p>
+              <p className="text-2xl md:text-3xl font-bold">{stats?.conversionRate || 0}%</p>
             </div>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tasa de Conversión</p>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Conversión</p>
           </CardContent>
         </Card>
 
         <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 px-4 md:px-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Globe className="text-blue-500 w-5 h-5" />
@@ -287,13 +286,13 @@ export default function AnalyticsDashboard() {
                 </Dialog>
               </div>
             </div>
-            <p className="text-3xl font-bold">{stats?.publishedTours || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Activos</p>
+            <p className="text-2xl md:text-3xl font-bold">{stats?.publishedTours || 0}</p>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Activos</p>
           </CardContent>
         </Card>
 
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
+        <Card className="rounded-[2rem] border-none shadow-md bg-white col-span-2 lg:col-span-1">
+          <CardContent className="pt-6 px-4 md:px-6">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <MousePointer2 className="text-orange-500 w-5 h-5" />
@@ -314,8 +313,8 @@ export default function AnalyticsDashboard() {
                 </Dialog>
               </div>
             </div>
-            <p className="text-3xl font-bold">{stats?.totalVisits ? Math.round((stats.totalVisits / (stats.totalTours || 1)) * 10) / 10 : 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Interacciones / Tour</p>
+            <p className="text-2xl md:text-3xl font-bold">{stats?.totalVisits ? Math.round((stats.totalVisits / (stats.totalTours || 1)) * 10) / 10 : 0}</p>
+            <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Interacciones / Propiedad</p>
           </CardContent>
         </Card>
       </div>

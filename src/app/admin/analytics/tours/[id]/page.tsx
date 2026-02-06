@@ -317,17 +317,17 @@ export default function TourAnalytics() {
                   const deviceInfo = getDeviceInfo(visit.userAgent);
                   return (
                     <TableRow key={visit.id} className="group hover:bg-gray-50/50">
-                      <TableCell className="pl-4 md:pl-8 py-4">
+                      <TableCell className="pl-2 md:pl-8 py-4">
                         <div className="flex flex-col">
-                          <span className="font-medium text-xs md:text-sm">
-                            {format(new Date(visit.timestamp), "d MMM yyyy", { locale: es })}
+                          <span className="font-medium text-[10px] sm:text-xs md:text-sm whitespace-nowrap">
+                            {format(new Date(visit.timestamp), "d MMM yy", { locale: es })}
                           </span>
-                          <span className="text-[9px] md:text-[10px] text-muted-foreground">
+                          <span className="text-[8px] md:text-[10px] text-muted-foreground">
                             {format(new Date(visit.timestamp), "HH:mm")}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center px-2">
+                      <TableCell className="text-center px-1 md:px-2">
                         <div className="flex items-center justify-center">
                           <Dialog>
                             <DialogTrigger asChild>
@@ -360,8 +360,8 @@ export default function TourAnalytics() {
                           </Dialog>
                         </div>
                       </TableCell>
-                      <TableCell className="text-center px-2">
-                        <div className="flex items-center justify-center gap-1.5 md:gap-2">
+                      <TableCell className="text-center px-1 md:px-2">
+                        <div className="flex items-center justify-center gap-1 md:gap-2">
                           {visit.contacted ? (
                             <>
                               {visit.contactMethods?.includes('info_request') && (
@@ -376,17 +376,17 @@ export default function TourAnalytics() {
                               {visit.contactMethods?.includes('share') && <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-500" title="Compartido" />}
                             </>
                           ) : (
-                            <span className="text-[8px] md:text-[9px] text-muted-foreground/30 italic">Sin clic</span>
+                            <span className="text-[8px] text-muted-foreground/30 italic">---</span>
                           )}
                         </div>
                       </TableCell>
-                      <TableCell className="text-right pr-4 md:pr-8">
+                      <TableCell className="text-right pr-2 md:pr-8">
                         {visit.duration ? (
-                          <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-[8px] md:text-[9px] px-1.5 md:px-2 py-0">
+                          <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-[8px] md:text-[9px] px-1 md:px-2 py-0">
                             {stats.formatDuration(visit.duration)}
                           </Badge>
                         ) : (
-                          <span className="text-[8px] md:text-[9px] text-muted-foreground italic">Breve</span>
+                          <span className="text-[8px] text-muted-foreground italic">Breve</span>
                         )}
                       </TableCell>
                     </TableRow>
