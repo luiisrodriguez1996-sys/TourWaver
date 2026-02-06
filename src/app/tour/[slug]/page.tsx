@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -251,7 +250,7 @@ export default function PublicTourViewer() {
   }
 
   const hasContactInfo = !!(tour.contactWhatsApp || tour.contactPhone || tour.contactEmail);
-  const hasDetailsContent = !!(tour.address || activeScene?.description || activeScene?.floorId || hasContactInfo);
+  const hasDetailsContent = !!(tour.address || tour.description || activeScene?.description || activeScene?.floorId || hasContactInfo);
 
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-black flex flex-col touch-none">
@@ -282,6 +281,13 @@ export default function PublicTourViewer() {
                   <a href={getMapsUrl() || '#'} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-2 text-[10px] md:text-xs text-white hover:text-primary transition-colors">
                     <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 mt-0.5 text-primary" /><span className="underline underline-offset-4 decoration-white/20 group-hover:decoration-primary">{tour.address}</span>
                   </a>
+                )}
+
+                {tour.description && (
+                  <div className="bg-white/10 rounded-xl p-2 md:p-3 border border-white/5">
+                    <p className="text-[8px] md:text-[9px] font-black text-primary uppercase tracking-wider mb-1">Descripción de la propiedad</p>
+                    <p className="text-[10px] md:text-sm text-white/70 font-medium leading-relaxed">{tour.description}</p>
+                  </div>
                 )}
                 
                 {(activeScene?.description || activeScene?.floorId) && (
@@ -369,7 +375,6 @@ export default function PublicTourViewer() {
                   setHighlightContact(true);
                   setTimeout(() => setHighlightContact(false), 2000);
                 } else {
-                  // If no content, just open WhatsApp link directly
                   window.open(getWhatsAppLink() || '#', '_blank');
                 }
               }}
