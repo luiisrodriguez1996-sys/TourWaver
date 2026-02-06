@@ -281,7 +281,7 @@ export default function PublicTourViewer() {
                 {(tour.description || tour.address) && (
                   <div className="bg-white/10 rounded-xl overflow-hidden border border-white/5">
                     <div className="flex items-center justify-between bg-primary text-white px-2 py-1">
-                      <p className="text-[8px] md:text-[9px] font-black uppercase tracking-wider">Descripción de la propiedad</p>
+                      <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Descripción de la propiedad</p>
                     </div>
                     
                     <div className="p-1.5 md:p-2 space-y-1.5">
@@ -301,9 +301,9 @@ export default function PublicTourViewer() {
                 {(activeScene?.description || activeScene?.floorId) && (
                   <div className="bg-white/20 rounded-xl overflow-hidden border border-white/10">
                     <div className="flex items-center justify-between bg-accent text-white px-2 py-1">
-                      <p className="text-[8px] md:text-[9px] font-black uppercase tracking-wider">Sobre esta estancia</p>
+                      <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Sobre esta estancia</p>
                       {activeScene?.floorId && tour?.floors?.find((f: any) => f.id === activeScene.floorId) && (
-                        <span className="text-[8px] md:text-[9px] font-bold text-white/60 flex items-center gap-1 uppercase">
+                        <span className="text-[8px] md:text-[9px] font-medium text-white flex items-center gap-1 uppercase">
                           <Layers className="w-2.5 h-2.5" /> {tour.floors.find((f: any) => f.id === activeScene.floorId).name}
                         </span>
                       )}
