@@ -152,7 +152,7 @@ export default function AdminDashboard() {
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3].map(i => <Skeleton key={i} className="aspect-video w-full rounded-xl" />)}
+        {[1, 2, 3].map(i => <Skeleton key={`skeleton-${i}`} className="aspect-video w-full rounded-xl" />)}
       </div>
     );
   }
@@ -201,11 +201,11 @@ export default function AdminDashboard() {
               <DropdownMenuItem className="cursor-pointer" onClick={() => togglePublish(tour.id, tour.published)}>
                 {tour.published ? (
                   <>
-                    <EyeOff className="mr-2 h-4 w-4" /> {isSpanish ? 'Hacer Privada' : 'Make Private'}
+                    <EyeOff className="mr-2 h-4 w-4" /> {isSpanish ? 'Hacer Privada' : 'Hacer Privada'}
                   </>
                 ) : (
                   <>
-                    <Eye className="mr-2 h-4 w-4" /> {isSpanish ? 'Publicar' : 'Publish'}
+                    <Eye className="mr-2 h-4 w-4" /> {isSpanish ? 'Publicar' : 'Publicar'}
                   </>
                 )}
               </DropdownMenuItem>
@@ -236,12 +236,24 @@ export default function AdminDashboard() {
           {isSpanish ? 'Gestionar' : 'Manage'}
         </Button>
         <Link href={`/admin/analytics/tours/${tour.id}`}>
-          <Button type="button" variant="ghost" size="icon" className="text-muted-foreground hover:text-primary transition-colors" title={isSpanish ? "Ver Estadísticas" : "View Statistics"}>
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="icon" 
+            className="text-muted-foreground hover:bg-muted-foreground hover:text-white transition-all" 
+            title={isSpanish ? "Ver Estadísticas" : "View Statistics"}
+          >
             <BarChart3 className="w-4 h-4" />
           </Button>
         </Link>
         <Link href={`/tour/${tour.slug}`} target="_blank" rel="noopener noreferrer">
-          <Button type="button" variant="ghost" size="icon" className="text-accent hover:text-accent/80 transition-colors">
+          <Button 
+            type="button" 
+            variant="ghost" 
+            size="icon" 
+            className="text-accent hover:bg-accent hover:text-white transition-all"
+            title={isSpanish ? "Ver Tour" : "View Tour"}
+          >
             <ExternalLink className="w-4 h-4" />
           </Button>
         </Link>
