@@ -72,15 +72,15 @@ export default function TourAnalytics() {
       ? Math.round(visitsWithDuration.reduce((acc, v) => acc + (v.duration || 0), 0) / visitsWithDuration.length)
       : 0;
 
-    // Grupo 1: Conversión Directa (Contactos explicitos solicitados por el usuario)
+    // Grupo 1: Conversión Directa (WhatsApp, Llamada, Email)
     const directContactVisits = visits.filter(v => 
       v.contactMethods?.some((m: string) => ['whatsapp', 'phone', 'email'].includes(m))
     ).length;
     const contactRate = totalVisits > 0 ? Math.round((directContactVisits / totalVisits) * 100) : 0;
 
-    // Grupo 2: Interés Secundario (Engagement e info general)
+    // Grupo 2: Interés Secundario (Solicitud Info, Ubicación, Compartir)
     const engagementVisits = visits.filter(v => 
-      v.contactMethods?.some((m: string) => ['location', 'share', 'info_request'].includes(m))
+      v.contactMethods?.some((m: string) => ['info_request', 'location', 'share'].includes(m))
     ).length;
     const engagementRate = totalVisits > 0 ? Math.round((engagementVisits / totalVisits) * 100) : 0;
 
@@ -277,7 +277,7 @@ export default function TourAnalytics() {
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="pl-6 md:pl-8 text-[11px] uppercase font-bold">Fecha / Hora</TableHead>
+                  <TableHead className="pl-6 md:pl-8 text-[11px] uppercase font-bold">Fecha</TableHead>
                   <TableHead className="text-center text-[11px] uppercase font-bold">Dispositivo</TableHead>
                   <TableHead className="text-center text-[11px] uppercase font-bold">Interacción</TableHead>
                   <TableHead className="text-right pr-6 md:pr-8 text-[11px] uppercase font-bold">Duración</TableHead>
