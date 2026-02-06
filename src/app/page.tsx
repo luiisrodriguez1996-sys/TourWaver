@@ -53,7 +53,7 @@ const translations = {
     servDesc: "Ofrecemos un servicio integral de captura y creación de tours virtuales optimizados para tus listados inmobiliarios.",
     serv1Title: "Captura de Alta Fidelidad",
     serv1Desc: "Fotografía panorámica profesional con post-procesamiento para que cada estancia luzca impecable y luminosa.",
-    serv2Title: "Navegação Fluida",
+    serv2Title: "Navegación Fluida",
     serv2Desc: "Diseñamos una interfaz personalizada e intuitiva para que tus clientes naveguen por la propiedad de forma natural.",
     serv3Title: "Enfoque Comercial",
     serv3Desc: "Tours diseñados específicamente para brokers, incluyendo información relevante y puntos de contacto directos.",
