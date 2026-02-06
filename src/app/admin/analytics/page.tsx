@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useMemo, useState } from 'react';
@@ -31,13 +30,15 @@ import {
   Tooltip as ChartTooltip, 
   ResponsiveContainer
 } from 'recharts';
-import { useRouter } from 'next/navigation';
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export default function AnalyticsDashboard() {
@@ -178,113 +179,146 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      <TooltipProvider>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Users className="text-primary w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Users className="text-primary w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none p-1 rounded-full hover:bg-muted transition-colors">
                       <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
-                      <p className="text-xs">Suma total de veces que tus tours han sido abiertos por visitantes únicos o recurrentes.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-                <TrendingUp className="text-green-500 w-4 h-4" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Aperturas Totales</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Suma total de veces que tus tours han sido abiertos por visitantes únicos o recurrentes en toda la plataforma.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
-            </CardContent>
-          </Card>
+              <TrendingUp className="text-green-500 w-4 h-4" />
+            </div>
+            <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="text-accent w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Clock className="text-accent w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none p-1 rounded-full hover:bg-muted transition-colors">
                       <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
-                      <p className="text-xs">Tiempo promedio que un usuario permanece interactuando con el tour 360°.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Permanencia Media</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Tiempo promedio que un usuario permanece interactuando con los tours 360° antes de salir.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <p className="text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Zap className="text-yellow-500 w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Zap className="text-yellow-500 w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none p-1 rounded-full hover:bg-muted transition-colors">
                       <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
-                      <p className="text-xs">Porcentaje de visitas que pulsaron al menos un botón de contacto (WhatsApp, Teléfono o Email).</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Tasa de Conversión</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Porcentaje de visitas globales que pulsaron al menos un botón de contacto (WhatsApp, Teléfono o Email).
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <div className="flex items-baseline gap-1">
-                <p className="text-3xl font-bold">{stats?.conversionRate || 0}%</p>
-                <p className="text-xs text-muted-foreground font-bold">({stats?.contactedVisits})</p>
-              </div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tasa de Conversión</p>
-            </CardContent>
-          </Card>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <p className="text-3xl font-bold">{stats?.conversionRate || 0}%</p>
+              <p className="text-xs text-muted-foreground font-bold">({stats?.contactedVisits})</p>
+            </div>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tasa de Conversión</p>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Globe className="text-blue-500 w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Globe className="text-blue-500 w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none p-1 rounded-full hover:bg-muted transition-colors">
                       <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
-                      <p className="text-xs">Propiedades que están actualmente en estado "Publicado" y son accesibles por el público.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Tours Activos</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Número de propiedades que están actualmente en estado "Publicado" y son accesibles por el público.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <p className="text-3xl font-bold">{stats?.publishedTours || 0}</p>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Activos</p>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-3xl font-bold">{stats?.publishedTours || 0}</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tours Activos</p>
+          </CardContent>
+        </Card>
 
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <MousePointer2 className="text-orange-500 w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <MousePointer2 className="text-orange-500 w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none p-1 rounded-full hover:bg-muted transition-colors">
                       <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
-                      <p className="text-xs">Promedio de visitas recibidas por cada propiedad registrada en la plataforma.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Interacciones / Tour</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Promedio de visitas recibidas por cada propiedad registrada en la plataforma (incluyendo borradores).
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <p className="text-3xl font-bold">{stats?.totalVisits ? Math.round((stats.totalVisits / (stats.totalTours || 1)) * 10) / 10 : 0}</p>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Interacciones / Tour</p>
-            </CardContent>
-          </Card>
-        </div>
-      </TooltipProvider>
+            </div>
+            <p className="text-3xl font-bold">{stats?.totalVisits ? Math.round((stats.totalVisits / (stats.totalTours || 1)) * 10) / 10 : 0}</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Interacciones / Tour</p>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <Card className="lg:col-span-2 rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">

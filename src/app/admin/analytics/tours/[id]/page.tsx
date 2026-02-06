@@ -37,15 +37,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { cn } from '@/lib/utils';
 
 export default function TourAnalytics() {
   const { id } = useParams();
@@ -72,13 +75,13 @@ export default function TourAnalytics() {
       ? Math.round(visitsWithDuration.reduce((acc, v) => acc + (v.duration || 0), 0) / visitsWithDuration.length)
       : 0;
 
-    // Grupo 1: Conversión Directa (WhatsApp, Llamada, Email)
+    // Conversión Directa (WhatsApp, Llamada, Email)
     const directContactVisits = visits.filter(v => 
       v.contactMethods?.some((m: string) => ['whatsapp', 'phone', 'email'].includes(m))
     ).length;
     const contactRate = totalVisits > 0 ? Math.round((directContactVisits / totalVisits) * 100) : 0;
 
-    // Grupo 2: Interés Secundario (Solicitud Info, Ubicación, Compartir)
+    // Interés Secundario (Solicitud Info, Ubicación, Compartir)
     const engagementVisits = visits.filter(v => 
       v.contactMethods?.some((m: string) => ['info_request', 'location', 'share'].includes(m))
     ).length;
@@ -177,200 +180,229 @@ export default function TourAnalytics() {
         </Link>
       </div>
 
-      <TooltipProvider>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 px-2">
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6 px-4 md:px-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Users className="text-primary w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="focus:outline-none">
-                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3" side="bottom">
-                      <p className="text-xs">Número total de veces que se ha accedido a esta propiedad específica.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 px-2">
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6 px-4 md:px-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Users className="text-primary w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none hover:bg-muted p-1 rounded-full transition-colors">
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Aperturas Totales</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Número total de veces que se ha accedido a esta propiedad específica por visitantes únicos o recurrentes.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
               </div>
-              <p className="text-2xl md:text-3xl font-bold">{stats?.totalVisits || 0}</p>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6 px-4 md:px-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Clock className="text-accent w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="focus:outline-none">
-                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3" side="bottom">
-                      <p className="text-xs">Promedio de tiempo que los visitantes pasan explorando las estancias de este tour.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-              <p className="text-2xl md:text-3xl font-bold">{stats?.avgDuration}</p>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6 px-4 md:px-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <Zap className="text-yellow-500 w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="focus:outline-none">
-                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3" side="bottom">
-                      <p className="text-xs">Porcentaje de visitantes que utilizaron los métodos de contacto directo: WhatsApp, Llamada o Email.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <p className="text-2xl md:text-3xl font-bold">{stats?.contactRate}%</p>
-                <p className="text-[10px] text-muted-foreground font-bold">({stats?.directContactVisits})</p>
-              </div>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Conversión Directa</p>
-            </CardContent>
-          </Card>
-
-          <Card className="rounded-[2rem] border-none shadow-md bg-white">
-            <CardContent className="pt-6 px-4 md:px-6">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <MousePointer2 className="text-blue-500 w-5 h-5" />
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <button className="focus:outline-none">
-                        <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-                      </button>
-                    </TooltipTrigger>
-                    <TooltipContent className="max-w-[200px] rounded-xl p-3" side="bottom">
-                      <p className="text-xs">Porcentaje de visitantes que interactuaron con el tour: solicitar información general, ver ubicación o compartir.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-              <div className="flex items-baseline gap-1">
-                <p className="text-2xl md:text-3xl font-bold">{stats?.engagementRate}%</p>
-                <p className="text-[10px] text-muted-foreground font-bold">({stats?.engagementVisits})</p>
-              </div>
-              <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Interés en Propiedad</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card className="md:rounded-[2.5rem] rounded-3xl border-none shadow-xl overflow-hidden bg-white mx-2">
-          <CardHeader className="bg-primary/5 p-6">
-            <CardTitle className="text-lg">Historial de Visitas</CardTitle>
-            <CardDescription className="text-xs">Registro individual de cada acceso y contacto detectado.</CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto scrollbar-hide">
-              <Table>
-                <TableHeader className="hidden md:table-header-group">
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="pl-6 md:pl-8 text-[11px] uppercase font-bold">Fecha</TableHead>
-                    <TableHead className="text-center text-[11px] uppercase font-bold">Dispositivo</TableHead>
-                    <TableHead className="text-center text-[11px] uppercase font-bold">Interacción</TableHead>
-                    <TableHead className="text-right pr-6 md:pr-8 text-[11px] uppercase font-bold">Duración</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {stats?.sortedVisits && stats.sortedVisits.length > 0 ? stats.sortedVisits.map((visit) => {
-                    const deviceInfo = getDeviceInfo(visit.userAgent);
-                    return (
-                      <TableRow key={visit.id} className="group hover:bg-gray-50/50">
-                        <TableCell className="pl-4 md:pl-8 py-4">
-                          <div className="flex flex-col">
-                            <span className="font-medium text-xs md:text-sm">
-                              {format(new Date(visit.timestamp), "d MMM yyyy", { locale: es })}
-                            </span>
-                            <span className="text-[9px] md:text-[10px] text-muted-foreground">
-                              {format(new Date(visit.timestamp), "HH:mm")}
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center px-2">
-                          <div className="flex items-center justify-center">
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <button className="focus:outline-none hover:scale-110 transition-transform active:scale-95">
-                                  {deviceInfo.icon}
-                                </button>
-                              </TooltipTrigger>
-                              <TooltipContent className="max-w-[250px] rounded-xl p-3" side="top">
-                                <div className="space-y-1">
-                                  <p className="text-xs font-bold flex items-center gap-2">
-                                    {React.cloneElement(deviceInfo.icon as React.ReactElement, { className: 'w-3 h-3' })}
-                                    {deviceInfo.label}
-                                  </p>
-                                  <p className="text-[9px] text-muted-foreground break-all leading-tight">
-                                    {visit.userAgent}
-                                  </p>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center px-2">
-                          <div className="flex items-center justify-center gap-1.5 md:gap-2">
-                            {visit.contacted ? (
-                              <>
-                                {visit.contactMethods?.includes('info_request') && (
-                                  <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" title="Solicitud Información" />
-                                )}
-                                {visit.contactMethods?.includes('whatsapp') && (
-                                  <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500 fill-green-500" title="WhatsApp Directo" />
-                                )}
-                                {visit.contactMethods?.includes('phone') && <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" title="Llamada" />}
-                                {visit.contactMethods?.includes('email') && <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent" title="Email" />}
-                                {visit.contactMethods?.includes('location') && <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" title="Ver Ubicación" />}
-                                {visit.contactMethods?.includes('share') && <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-500" title="Compartido" />}
-                              </>
-                            ) : (
-                              <span className="text-[8px] md:text-[9px] text-muted-foreground/30 italic">Sin clic</span>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right pr-4 md:pr-8">
-                          {visit.duration ? (
-                            <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-[8px] md:text-[9px] px-1.5 md:px-2 py-0">
-                              {stats.formatDuration(visit.duration)}
-                            </Badge>
-                          ) : (
-                            <span className="text-[8px] md:text-[9px] text-muted-foreground italic">Breve</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  }) : (
-                    <TableRow>
-                      <TableCell colSpan={4} className="h-32 text-center text-muted-foreground italic text-sm">
-                        No hay visitas registradas aún.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
             </div>
+            <p className="text-2xl md:text-3xl font-bold">{stats?.totalVisits || 0}</p>
+            <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
           </CardContent>
         </Card>
-      </TooltipProvider>
+
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6 px-4 md:px-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Clock className="text-accent w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none hover:bg-muted p-1 rounded-full transition-colors">
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Permanencia Media</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Promedio de tiempo que los visitantes pasan explorando las estancias de este tour virtual.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+            <p className="text-2xl md:text-3xl font-bold">{stats?.avgDuration}</p>
+            <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6 px-4 md:px-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <Zap className="text-yellow-500 w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none hover:bg-muted p-1 rounded-full transition-colors">
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Conversión Directa</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Porcentaje de visitantes que utilizaron métodos de contacto directo: WhatsApp, Llamada telefónica o Correo electrónico.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl md:text-3xl font-bold">{stats?.contactRate}%</p>
+              <p className="text-[10px] text-muted-foreground font-bold">({stats?.directContactVisits})</p>
+            </div>
+            <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Conversión Directa</p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-[2rem] border-none shadow-md bg-white">
+          <CardContent className="pt-6 px-4 md:px-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <MousePointer2 className="text-blue-500 w-5 h-5" />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button className="focus:outline-none hover:bg-muted p-1 rounded-full transition-colors">
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </button>
+                  </DialogTrigger>
+                  <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Interés en Propiedad</DialogTitle>
+                      <DialogDescription className="pt-2 text-base">
+                        Porcentaje de visitantes que interactuaron activamente con el tour: solicitaron información general, consultaron la ubicación o compartieron el enlace.
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-1">
+              <p className="text-2xl md:text-3xl font-bold">{stats?.engagementRate}%</p>
+              <p className="text-[10px] text-muted-foreground font-bold">({stats?.engagementVisits})</p>
+            </div>
+            <p className="text-[9px] md:text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Interés en Propiedad</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="md:rounded-[2.5rem] rounded-3xl border-none shadow-xl overflow-hidden bg-white mx-2">
+        <CardHeader className="bg-primary/5 p-6">
+          <CardTitle className="text-lg">Historial de Visitas</CardTitle>
+          <CardDescription className="text-xs">Registro individual de cada acceso y contacto detectado.</CardDescription>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto scrollbar-hide">
+            <Table>
+              <TableHeader className="hidden md:table-header-group">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="pl-6 md:pl-8 text-[11px] uppercase font-bold">Fecha</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase font-bold">Dispositivo</TableHead>
+                  <TableHead className="text-center text-[11px] uppercase font-bold">Interacción</TableHead>
+                  <TableHead className="text-right pr-6 md:pr-8 text-[11px] uppercase font-bold">Duración</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {stats?.sortedVisits && stats.sortedVisits.length > 0 ? stats.sortedVisits.map((visit) => {
+                  const deviceInfo = getDeviceInfo(visit.userAgent);
+                  return (
+                    <TableRow key={visit.id} className="group hover:bg-gray-50/50">
+                      <TableCell className="pl-4 md:pl-8 py-4">
+                        <div className="flex flex-col">
+                          <span className="font-medium text-xs md:text-sm">
+                            {format(new Date(visit.timestamp), "d MMM yyyy", { locale: es })}
+                          </span>
+                          <span className="text-[9px] md:text-[10px] text-muted-foreground">
+                            {format(new Date(visit.timestamp), "HH:mm")}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center px-2">
+                        <div className="flex items-center justify-center">
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="focus:outline-none hover:scale-110 transition-transform active:scale-95 p-2 rounded-lg hover:bg-muted">
+                                {deviceInfo.icon}
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="rounded-3xl max-w-[90vw] sm:max-w-md">
+                              <DialogHeader>
+                                <DialogTitle className="flex items-center gap-3">
+                                  <div className="p-2 bg-primary/10 rounded-xl">
+                                    {React.cloneElement(deviceInfo.icon as React.ReactElement, { className: 'w-6 h-6 text-primary' })}
+                                  </div>
+                                  Detalles del Dispositivo
+                                </DialogTitle>
+                                <div className="pt-4 space-y-4">
+                                  <div className="bg-muted/50 p-4 rounded-2xl border">
+                                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-widest mb-1">Tipo Identificado</p>
+                                    <p className="text-lg font-bold">{deviceInfo.label}</p>
+                                  </div>
+                                  <div className="bg-muted/30 p-4 rounded-2xl border border-dashed">
+                                    <p className="text-xs uppercase font-bold text-muted-foreground tracking-widest mb-2">Información del Navegador</p>
+                                    <p className="text-[10px] text-muted-foreground break-all leading-relaxed font-mono">
+                                      {visit.userAgent}
+                                    </p>
+                                  </div>
+                                </div>
+                              </DialogHeader>
+                            </DialogContent>
+                          </Dialog>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center px-2">
+                        <div className="flex items-center justify-center gap-1.5 md:gap-2">
+                          {visit.contacted ? (
+                            <>
+                              {visit.contactMethods?.includes('info_request') && (
+                                <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" title="Solicitud Información" />
+                              )}
+                              {visit.contactMethods?.includes('whatsapp') && (
+                                <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500 fill-green-500" title="WhatsApp Directo" />
+                              )}
+                              {visit.contactMethods?.includes('phone') && <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" title="Llamada" />}
+                              {visit.contactMethods?.includes('email') && <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent" title="Email" />}
+                              {visit.contactMethods?.includes('location') && <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" title="Ver Ubicación" />}
+                              {visit.contactMethods?.includes('share') && <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-500" title="Compartido" />}
+                            </>
+                          ) : (
+                            <span className="text-[8px] md:text-[9px] text-muted-foreground/30 italic">Sin clic</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right pr-4 md:pr-8">
+                        {visit.duration ? (
+                          <Badge variant="secondary" className="bg-accent/10 text-accent border-accent/20 text-[8px] md:text-[9px] px-1.5 md:px-2 py-0">
+                            {stats.formatDuration(visit.duration)}
+                          </Badge>
+                        ) : (
+                          <span className="text-[8px] md:text-[9px] text-muted-foreground italic">Breve</span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                }) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="h-32 text-center text-muted-foreground italic text-sm">
+                      No hay visitas registradas aún.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
