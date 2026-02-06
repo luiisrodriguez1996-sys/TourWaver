@@ -280,7 +280,9 @@ export default function PublicTourViewer() {
                 
                 {(tour.description || tour.address) && (
                   <div className="bg-white/10 rounded-xl overflow-hidden border border-white/5">
-                    <p className="inline-block text-[8px] md:text-[9px] font-black bg-primary text-white uppercase tracking-wider px-2 py-1 w-full">Descripción de la propiedad</p>
+                    <div className="flex items-center justify-between bg-primary text-white px-2 py-1">
+                      <p className="text-[8px] md:text-[9px] font-black uppercase tracking-wider">Descripción de la propiedad</p>
+                    </div>
                     
                     <div className="p-1.5 md:p-2 space-y-1.5">
                       {tour.address && (
