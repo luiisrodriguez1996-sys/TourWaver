@@ -305,7 +305,7 @@ export default function PublicTourViewer() {
   const hasDetailsContent = !!(tour.address || tour.description || activeScene?.description || activeScene?.floorId || hasContactInfo);
 
   return (
-    <div className="fixed inset-0 w-full h-full overflow-hidden bg-black flex flex-col touch-none select-none z-[100]">
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-black flex flex-col touch-none select-none z-0">
       {/* Header controls */}
       <div className="absolute top-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="pointer-events-auto w-full md:w-[40%]">
