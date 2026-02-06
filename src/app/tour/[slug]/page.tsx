@@ -32,6 +32,7 @@ export default function PublicTourViewer() {
   const [isDetailsExpanded, setIsDetailsExpanded] = useState(false);
   const [activeFloorId, setActiveFloorId] = useState<string | null>(null);
   const [selectedAnnotationId, setSelectedAnnotationId] = useState<string | null>(null);
+  const [highlightContact, setHighlightContact] = useState(false);
 
   const visitIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
@@ -113,6 +114,20 @@ export default function PublicTourViewer() {
           contactMethods: arrayUnion(method)
         });
       }
+    }
+  };
+
+  const handleSolicitarInfo = () => {
+    setIsDetailsExpanded(true);
+    setHighlightContact(true);
+    setTimeout(() => setHighlightContact(false), 2000);
+  };
+
+  const handleCopy = (text: string, label: string, method: 'phone' | 'email') => {
+    if (typeof window !== 'undefined') {
+      navigator.clipboard.writeText(text);
+      toast({ title: `${label} copiado` });
+      trackConversion(method);
     }
   };
 
@@ -209,8 +224,6 @@ export default function PublicTourViewer() {
     );
   }
 
-  const currentFloor = tour.floors?.find((f: any) => f.id === activeFloorId);
-
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-black flex flex-col touch-none">
       <div className="absolute top-0 left-0 right-0 p-4 md:p-6 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
@@ -241,7 +254,10 @@ export default function PublicTourViewer() {
                   </div>
                 )}
                 
-                <div className="space-y-2 pt-2 border-t border-white/10">
+                <div className={cn(
+                  "space-y-2 pt-2 border-t border-white/10 transition-all duration-500",
+                  highlightContact && "bg-primary/20 scale-[1.02] rounded-xl p-2 ring-2 ring-primary shadow-lg"
+                )}>
                   <p className="text-[9px] md:text-[10px] font-black text-white/60 uppercase tracking-wider">Contacto Directo</p>
                   <div className="grid grid-cols-1 gap-2">
                     {tour.contactWhatsApp && (
@@ -253,18 +269,38 @@ export default function PublicTourViewer() {
                     )}
                     <div className="flex gap-2">
                       {tour.contactPhone && (
-                        <a href={`tel:${tour.contactPhone}`} className="flex-1" onClick={() => trackConversion('phone')}>
-                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs h-8 md:h-10 rounded-xl gap-2">
-                            <Phone className="w-4 h-4" /> Llamar
+                        <>
+                          <a href={`tel:${tour.contactPhone}`} className="flex-1 md:hidden" onClick={() => trackConversion('phone')}>
+                            <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-xl gap-2">
+                              <Phone className="w-4 h-4" /> Llamar
+                            </Button>
+                          </a>
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="hidden md:flex flex-1 bg-white/10 hover:bg-white/20 text-white text-xs h-10 rounded-xl gap-2 truncate"
+                            onClick={() => handleCopy(tour.contactPhone!, "Teléfono", "phone")}
+                          >
+                            <Phone className="w-4 h-4 shrink-0" /> {tour.contactPhone}
                           </Button>
-                        </a>
+                        </>
                       )}
                       {tour.contactEmail && (
-                        <a href={`mailto:${tour.contactEmail}`} className="flex-1" onClick={() => trackConversion('email')}>
-                          <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] md:text-xs h-8 md:h-10 rounded-xl gap-2">
-                            <Mail className="w-4 h-4" /> Email
+                        <>
+                          <a href={`mailto:${tour.contactEmail}`} className="flex-1 md:hidden" onClick={() => trackConversion('email')}>
+                            <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-xl gap-2">
+                              <Mail className="w-4 h-4" /> Email
+                            </Button>
+                          </a>
+                          <Button 
+                            size="sm" 
+                            variant="secondary" 
+                            className="hidden md:flex flex-1 bg-white/10 hover:bg-white/20 text-white text-xs h-10 rounded-xl gap-2 truncate"
+                            onClick={() => handleCopy(tour.contactEmail!, "Email", "email")}
+                          >
+                            <Mail className="w-4 h-4 shrink-0" /> {tour.contactEmail}
                           </Button>
-                        </a>
+                        </>
                       )}
                     </div>
                   </div>
@@ -279,7 +315,7 @@ export default function PublicTourViewer() {
             <Button 
               variant="secondary" 
               className="rounded-full bg-[#25D366] text-white hover:bg-[#20ba59] h-10 px-4 md:h-11 md:px-6 border-none shadow-xl gap-2 transition-all active:scale-95"
-              onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
+              onClick={handleSolicitarInfo}
             >
               <MessageCircle className="w-5 h-5" />
               <span className="font-black text-[10px] md:text-xs tracking-tight uppercase">Solicitar Info</span>
