@@ -7,7 +7,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, addDocum
 import { collection, query, where, limit, doc, arrayUnion } from 'firebase/firestore';
 import { ThreeSixtyViewer } from '@/components/ThreeSixtyViewer';
 import { Button } from '@/components/ui/button';
-import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail, Copy, Download } from 'lucide-react';
+import { Globe, Map, ChevronUp, ChevronDown, Share2, Info, Loader2, Check, MapPin, ArrowLeft, Shield, Layers, ImageOff, StickyNote, X, Lock, MessageCircle, Phone, Mail, Copy, Download, ArrowUp } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -251,6 +251,7 @@ export default function PublicTourViewer() {
   }
 
   const hasContactInfo = !!(tour.contactWhatsApp || tour.contactPhone || tour.contactEmail);
+  const hasDetailsContent = !!(tour.address || activeScene?.description || activeScene?.floorId || hasContactInfo);
 
   return (
     <div className="h-[100dvh] w-full relative overflow-hidden bg-black flex flex-col touch-none">
@@ -258,7 +259,13 @@ export default function PublicTourViewer() {
       <div className="absolute top-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="pointer-events-auto w-full md:w-[40%]">
           <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white w-full shadow-2xl overflow-hidden">
-            <div className="p-2 md:p-3 flex items-center justify-between cursor-pointer hover:bg-white/5 transition-colors" onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}>
+            <div 
+              className={cn(
+                "p-2 md:p-3 flex items-center justify-between transition-colors", 
+                hasDetailsContent ? "cursor-pointer hover:bg-white/5" : "cursor-default"
+              )} 
+              onClick={() => hasDetailsContent && setIsDetailsExpanded(!isDetailsExpanded)}
+            >
               <div className="flex-1 min-w-0 pr-4">
                 <div className="flex items-center gap-2 mb-0.5">
                   <h1 className="text-sm md:text-lg font-bold font-headline truncate">{tour.name}</h1>
@@ -266,10 +273,10 @@ export default function PublicTourViewer() {
                 </div>
                 <p className="text-[9px] md:text-[10px] text-white/80 flex items-center gap-1"><Info className="w-2.5 h-2.5" /> {activeScene?.name || 'Cargando...'}</p>
               </div>
-              {isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />}
+              {hasDetailsContent && (isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />)}
             </div>
             
-            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-3", isDetailsExpanded ? "max-h-[600px] pb-3 opacity-100" : "max-h-0 opacity-0")}>
+            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-3", isDetailsExpanded && hasDetailsContent ? "max-h-[600px] pb-3 opacity-100" : "max-h-0 opacity-0")}>
               <div className="space-y-2 pt-1">
                 {tour.address && (
                   <a href={getMapsUrl() || '#'} target="_blank" rel="noopener noreferrer" className="group flex items-start gap-2 text-[10px] md:text-xs text-white hover:text-primary transition-colors">
@@ -357,9 +364,14 @@ export default function PublicTourViewer() {
               variant="secondary" 
               className="rounded-full bg-[#25D366] text-white hover:bg-[#20ba59] h-9 px-4 md:h-10 md:px-6 border-none shadow-xl gap-2 transition-all active:scale-95"
               onClick={() => {
-                setIsDetailsExpanded(true);
-                setHighlightContact(true);
-                setTimeout(() => setHighlightContact(false), 2000);
+                if (hasDetailsContent) {
+                  setIsDetailsExpanded(true);
+                  setHighlightContact(true);
+                  setTimeout(() => setHighlightContact(false), 2000);
+                } else {
+                  // If no content, just open WhatsApp link directly
+                  window.open(getWhatsAppLink() || '#', '_blank');
+                }
               }}
             >
               <MessageCircle className="w-4 h-4 md:w-5 md:h-5" />
