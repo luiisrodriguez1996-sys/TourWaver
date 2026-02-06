@@ -51,6 +51,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
   const onPointerDownMouseY = useRef(0);
   const pointerDownPos = useRef({ x: 0, y: 0 });
   const pointerDownTime = useRef(0);
+  const lastMoveTimeRef = useRef(0); // Referencia para controlar el fin del movimiento
 
   const [visibleHotspots, setVisibleHotspots] = useState<{h: Hotspot, x: number, y: number}[]>([]);
   const [visibleAnnotations, setVisibleAnnotations] = useState<{a: Annotation, x: number, y: number}[]>([]);
@@ -82,7 +83,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     setIsLoadingTexture(true);
     isLoadingRef.current = true;
 
-    // Obtener dimensiones reales del contenedor
     const width = canvasHolderRef.current.clientWidth || window.innerWidth;
     const height = canvasHolderRef.current.clientHeight || window.innerHeight;
 
@@ -103,7 +103,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     geometry.scale(-1, 1, 1);
 
     const textureLoader = new THREE_REAL.TextureLoader();
-    // Crítico para móviles: Permitir carga de imágenes externas (CORS)
     textureLoader.setCrossOrigin('anonymous');
 
     const texture = textureLoader.load(
@@ -128,7 +127,6 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     sphereRef.current = sphere;
 
     const renderer = new THREE_REAL.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-    // Crítico para móviles: Limitar pixel ratio para evitar sobrecarga de GPU
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     
@@ -250,6 +248,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     onPointerDownMouseY.current = event.clientY;
     pointerDownPos.current = { x: event.clientX, y: event.clientY };
     pointerDownTime.current = Date.now();
+    lastMoveTimeRef.current = Date.now();
     
     lonVelocityRef.current = 0;
     latVelocityRef.current = 0;
@@ -271,11 +270,20 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     
     onPointerDownMouseX.current = event.clientX;
     onPointerDownMouseY.current = event.clientY;
+    lastMoveTimeRef.current = Date.now(); // Actualizar tiempo del último movimiento
   };
 
   const onPointerUp = (event: React.PointerEvent) => {
     if (event.isPrimary === false) return;
     isUserInteractingRef.current = false;
+
+    // Si ha pasado más de 100ms desde el último movimiento real, anulamos la inercia
+    // Esto detecta cuando el usuario deja el dedo quieto antes de soltarlo.
+    const timeSinceLastMove = Date.now() - lastMoveTimeRef.current;
+    if (timeSinceLastMove > 100) {
+      lonVelocityRef.current = 0;
+      latVelocityRef.current = 0;
+    }
 
     const moveX = Math.abs(event.clientX - pointerDownPos.current.x);
     const moveY = Math.abs(event.clientY - pointerDownPos.current.y);
