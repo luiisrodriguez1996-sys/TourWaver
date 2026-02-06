@@ -164,6 +164,19 @@ export default function TourEditor() {
     }
   }, [serverScenes, tour]);
 
+  // Protección ante cierre de pestaña con cambios sin guardar
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = ''; // Muestra el mensaje estándar del navegador
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
   const activeScene = localScenes.find((s) => s.id === activeSceneId);
   const activeFloor = localTourInfo.floors.find(f => f.id === activeScene?.floorId);
 
