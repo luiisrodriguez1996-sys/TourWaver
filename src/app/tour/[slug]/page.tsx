@@ -518,8 +518,7 @@ export default function PublicTourViewer() {
         <VersionIndicator />
         <Link href="/" className="pointer-events-auto">
           <span 
-            className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors underline decoration-neutral-500/30"
-            style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(255,255,255,0.8)' }}
+            className="text-neutral-700 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors underline decoration-neutral-700/30"
           >
             Potenciado por Tour Weaver
           </span>

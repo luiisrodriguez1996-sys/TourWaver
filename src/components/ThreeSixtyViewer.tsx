@@ -372,8 +372,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
 
       <div className="absolute bottom-4 left-4 z-30">
         <span 
-          className="text-neutral-500 text-[8px] md:text-[10px] font-bold tracking-widest uppercase"
-          style={{ textShadow: '1px 1px 2px rgba(255,255,255,0.8), -1px -1px 2px rgba(255,255,255,0.8)' }}
+          className="text-neutral-700 text-[8px] md:text-[10px] font-bold tracking-widest uppercase"
         >
           {isEditing ? 'Configurando Espacio' : 'Inmersión 360°'}
         </span>
