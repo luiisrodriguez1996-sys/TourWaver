@@ -1,62 +1,53 @@
-"use client";
 
-import React, { useEffect } from 'react';
+import type { Metadata } from "next";
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
-import { useFirestore, useDoc, useMemoFirebase } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { GoogleAnalyticsTracking } from '@/components/GoogleAnalyticsTracking';
 
 /**
- * Componente para inyectar manualmente los scripts de seguimiento de Google Analytics en el <head>.
- * Este enfoque se utiliza para seguir estrictamente la recomendación de Google de colocar el script
- * en la cabecera, permitiendo al mismo tiempo acceder a la configuración dinámica de Firestore
- * mediante el hook useFirestore (que requiere estar dentro del FirebaseClientProvider).
+ * Configuración de metadatos SEO para buscadores y redes sociales (WhatsApp, Twitter, FB).
  */
-function GoogleAnalyticsTracking() {
-  const firestore = useFirestore();
-  const siteConfigRef = useMemoFirebase(() => {
-    if (!firestore) return null;
-    return doc(firestore, 'siteConfigurations', 'default');
-  }, [firestore]);
-
-  const { data: siteConfig } = useDoc(siteConfigRef);
-  const gaId = siteConfig?.googleAnalyticsId;
-
-  useEffect(() => {
-    if (!gaId || gaId.trim() === '') return;
-
-    // Evitar duplicados si el ID cambia o el componente se vuelve a renderizar
-    const existingScript = document.getElementById('google-analytics-base');
-    if (existingScript) return;
-
-    // 1. Crear el script base (gtag.js)
-    const script1 = document.createElement('script');
-    script1.id = 'google-analytics-base';
-    script1.async = true;
-    script1.src = `https://www.googletagmanager.com/gtag/js?id=${gaId}`;
-
-    // 2. Crear el script de configuración inline
-    const script2 = document.createElement('script');
-    script2.id = 'google-analytics-config';
-    script2.innerHTML = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '${gaId}');
-    `;
-
-    // Insertar en el head del documento como indica Google
-    document.head.appendChild(script1);
-    document.head.appendChild(script2);
-
-    return () => {
-      // Limpieza opcional (GA suele persistir durante la sesión)
-    };
-  }, [gaId]);
-
-  return null;
-}
+export const metadata: Metadata = {
+  title: {
+    default: "Tour Weaver | Tours Virtuales 360° de Alta Gama",
+    template: "%s | Tour Weaver"
+  },
+  description: "Plataforma profesional para la creación y exhibición de tours virtuales 360°. Eleva tus listados inmobiliarios con experiencias inmersivas premium.",
+  keywords: ["tour virtual", "360", "inmobiliaria", "real estate", "vistas panorámicas", "propiedades de lujo", "Tour Weaver", "broker inmobiliario"],
+  authors: [{ name: "Tour Weaver" }],
+  creator: "Tour Weaver",
+  metadataBase: new URL('https://tour-weaver.com'), // Cambiar por el dominio real en producción
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: "Tour Weaver | Tours Virtuales 360° Profesionales",
+    description: "Muestra tus propiedades como nunca antes con experiencias inmersivas 360° de alta fidelidad.",
+    url: "https://tour-weaver.com",
+    siteName: "Tour Weaver",
+    locale: "es_ES",
+    type: "website",
+    images: [
+      {
+        url: "https://picsum.photos/seed/tourweaver-og/1200/630",
+        width: 1200,
+        height: 630,
+        alt: "Tour Weaver Virtual Experience Preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tour Weaver | Tours Virtuales 360°",
+    description: "La mejor solución de visualización inmersiva para el mercado inmobiliario.",
+    images: ["https://picsum.photos/seed/tourweaver-og/1200/630"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function RootLayout({
   children,
