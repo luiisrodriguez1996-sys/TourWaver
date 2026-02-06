@@ -88,10 +88,10 @@ img {
 }
 
 @keyframes swipe {
-  0%, 100% { transform: translateX(-30px); }
-  50% { transform: translateX(30px); }
+  0%, 100% { transform: translateX(-20px); }
+  50% { transform: translateX(20px); }
 }
 
 .animate-swipe {
-  animation: swipe 2.5s ease-in-out infinite;
+  animation: swipe 3s ease-in-out infinite;
 }

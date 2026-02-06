@@ -114,7 +114,7 @@ export default function PublicTourViewer() {
     if (showOnboarding) {
       const timer = setTimeout(() => {
         setShowOnboarding(false);
-      }, 5000);
+      }, 8000); // Aumentado a 8 segundos
       return () => clearTimeout(timer);
     }
   }, [showOnboarding]);
@@ -489,13 +489,13 @@ export default function PublicTourViewer() {
         {/* Guía de Interacción Inicial */}
         {showOnboarding && (
           <div className="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none animate-in fade-in duration-700">
-            <div className="bg-black/40 backdrop-blur-md rounded-[2.5rem] p-8 flex flex-col items-center gap-6 border border-white/10 shadow-2xl">
-              <div className="flex items-center gap-8">
-                <ChevronLeft className="w-10 h-10 text-white/40 animate-pulse" />
-                <div className="text-6xl animate-swipe select-none">👆</div>
-                <ChevronRight className="w-10 h-10 text-white/40 animate-pulse" />
+            <div className="bg-black/40 backdrop-blur-md rounded-[2rem] p-6 flex flex-col items-center gap-4 border border-white/10 shadow-2xl">
+              <div className="flex items-center gap-6">
+                <ChevronLeft className="w-8 h-8 text-white/40 animate-pulse" />
+                <div className="text-4xl animate-swipe select-none">👆</div>
+                <ChevronRight className="w-8 h-8 text-white/40 animate-pulse" />
               </div>
-              <p className="text-white text-lg font-medium text-center max-w-[200px] leading-tight">
+              <p className="text-white text-base font-medium text-center max-w-[180px] leading-tight">
                 Interactúa para explorar el espacio
               </p>
             </div>
