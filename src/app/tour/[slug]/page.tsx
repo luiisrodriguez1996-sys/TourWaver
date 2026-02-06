@@ -109,7 +109,6 @@ export default function PublicTourViewer() {
     }
   }, [tour, firestore, isAdmin, isAdminLoading, isUserLoading]);
 
-  // Temporizador para ocultar onboarding automáticamente
   useEffect(() => {
     if (showOnboarding) {
       const timer = setTimeout(() => {
@@ -231,9 +230,12 @@ export default function PublicTourViewer() {
 
   const canView = tour ? (tour.published || isAdmin) : false;
 
-  if (isTourLoading || (tours === null && !tourError) || (tour && isScenesLoading && !scenesError)) {
+  // Lógica de carga simplificada y más robusta para móviles
+  const isActuallyLoading = isTourLoading || (tours === null && !tourError) || (tour && isScenesLoading && !scenesError);
+
+  if (isActuallyLoading) {
     return (
-      <div className="h-[100dvh] bg-black flex flex-col items-center justify-center text-white gap-4">
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white gap-4">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <p className="text-sm font-medium animate-pulse">Cargando experiencia inmersiva...</p>
       </div>
@@ -242,7 +244,7 @@ export default function PublicTourViewer() {
 
   if (!tour || !canView || scenesError || tourError) {
     return (
-      <div className="h-[100dvh] bg-black flex items-center justify-center text-white p-6">
+      <div className="min-h-screen bg-black flex items-center justify-center text-white p-6">
         <div className="text-center p-12 bg-white/5 backdrop-blur-lg rounded-[2.5rem] border border-white/10 max-w-md shadow-2xl animate-in fade-in zoom-in duration-500">
           <div className="w-20 h-20 bg-destructive/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <Lock className="text-destructive w-10 h-10" />
@@ -322,7 +324,7 @@ export default function PublicTourViewer() {
                     </div>
                     {activeScene?.description && (
                       <div className="p-1.5 md:p-2">
-                        <p className="text-[10px] md:text-sm text-white/80 font-semibold leading-relaxed">{activeScene.description}</p>
+                        <p className="text-[10px] md:text-sm text-white/80 font-medium leading-relaxed">{activeScene.description}</p>
                       </div>
                     )}
                   </div>

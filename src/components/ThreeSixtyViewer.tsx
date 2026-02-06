@@ -10,7 +10,7 @@ import * as THREE_REAL from 'three';
 interface ThreeSixtyViewerProps {
   imageUrl: string;
   hotspots?: Hotspot[];
-  annotations?: Annotation[];
+  annotations?:?: Annotation[];
   onHotspotClick?: (targetSceneId: string, hotspotId: string) => void;
   onAnnotationClick?: (annotationId: string) => void;
   onSceneClick?: (yaw: number, pitch: number) => void;
@@ -82,8 +82,9 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     setIsLoadingTexture(true);
     isLoadingRef.current = true;
 
-    const width = canvasHolderRef.current.clientWidth || 800;
-    const height = canvasHolderRef.current.clientHeight || 600;
+    // Obtener dimensiones reales del contenedor
+    const width = canvasHolderRef.current.clientWidth || window.innerWidth;
+    const height = canvasHolderRef.current.clientHeight || window.innerHeight;
 
     if (rendererRef.current) {
       if (canvasHolderRef.current.contains(rendererRef.current.domElement)) {
@@ -102,6 +103,9 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     geometry.scale(-1, 1, 1);
 
     const textureLoader = new THREE_REAL.TextureLoader();
+    // Crítico para móviles: Permitir carga de imágenes externas (CORS)
+    textureLoader.setCrossOrigin('anonymous');
+
     const texture = textureLoader.load(
       internalImageUrl,
       () => {
@@ -110,7 +114,8 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
         setTimeout(() => setIsFading(false), 50);
       },
       undefined,
-      () => {
+      (err) => {
+        console.error("Error cargando textura 360:", err);
         setIsLoadingTexture(false);
         isLoadingRef.current = false;
         setIsFading(false);
@@ -122,8 +127,9 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     scene.add(sphere);
     sphereRef.current = sphere;
 
-    const renderer = new THREE_REAL.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(window.devicePixelRatio);
+    const renderer = new THREE_REAL.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+    // Crítico para móviles: Limitar pixel ratio para evitar sobrecarga de GPU
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(width, height);
     
     canvasHolderRef.current.appendChild(renderer.domElement);
@@ -133,6 +139,8 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       if (!canvasHolderRef.current || !cameraRef.current || !rendererRef.current) return;
       const w = canvasHolderRef.current.clientWidth;
       const h = canvasHolderRef.current.clientHeight;
+      if (w === 0 || h === 0) return;
+      
       cameraRef.current.aspect = w / h;
       cameraRef.current.updateProjectionMatrix();
       rendererRef.current.setSize(w, h);
@@ -348,14 +356,14 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
                   onHotspotClick?.(h.targetSceneId, h.id);
                 }}
               >
+                {!isEditing && <ArrowUp className="w-5 h-5 text-white" />}
                 {isEditing && <Settings2 className="w-4 h-4 text-white" />}
                 <span className={cn(
                   "overflow-hidden transition-all duration-300 font-medium",
-                  isEditing ? "max-w-[200px]" : "max-w-[200px] md:max-w-0 md:group-hover:max-w-[200px]"
+                  "max-w-[200px]"
                 )}>
                   {h.label}
                 </span>
-                {!isEditing && <ArrowUp className="w-5 h-5 text-white" />}
               </Button>
             </div>
           ))}
