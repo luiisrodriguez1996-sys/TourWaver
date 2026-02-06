@@ -15,7 +15,8 @@ import {
   ArrowRight,
   History,
   Loader2,
-  Info
+  Info,
+  Zap
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -69,6 +70,10 @@ export default function AnalyticsDashboard() {
       ? Math.round(visitsWithDuration.reduce((acc, v) => acc + (v.duration || 0), 0) / visitsWithDuration.length)
       : 0;
 
+    // Calcular tasa de conversión global
+    const contactedVisits = visits.filter(v => v.contacted === true).length;
+    const conversionRate = totalVisits > 0 ? Math.round((contactedVisits / totalVisits) * 100) : 0;
+
     const formatDuration = (sec: number) => {
       if (sec < 60) return `${sec}s`;
       const mins = Math.floor(sec / 60);
@@ -117,6 +122,8 @@ export default function AnalyticsDashboard() {
     return {
       totalVisits,
       avgDuration: formatDuration(avgDuration),
+      conversionRate,
+      contactedVisits,
       topTours,
       chartData,
       totalTours: tours.length,
@@ -150,7 +157,7 @@ export default function AnalyticsDashboard() {
       </div>
 
       <TooltipProvider>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <Card className="rounded-[2rem] border-none shadow-md bg-white">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
@@ -189,6 +196,29 @@ export default function AnalyticsDashboard() {
               </div>
               <p className="text-3xl font-bold">{stats?.avgDuration || '0s'}</p>
               <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="text-yellow-500 w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Porcentaje de visitas que pulsaron al menos un botón de contacto (WhatsApp, Teléfono o Email).</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <p className="text-3xl font-bold">{stats?.conversionRate || 0}%</p>
+                <p className="text-xs text-muted-foreground font-bold">({stats?.contactedVisits})</p>
+              </div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tasa de Conversión</p>
             </CardContent>
           </Card>
 

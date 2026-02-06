@@ -65,6 +65,7 @@ export default function PublicTourViewer() {
   const tour = tours?.[0];
 
   // LOG DE VISITA Y SEGUIMIENTO DE DURACIÓN
+  // Cada carga de página crea un nuevo registro independientemente del dispositivo
   useEffect(() => {
     if (isUserLoading || isAdminLoading) return;
 
@@ -103,12 +104,12 @@ export default function PublicTourViewer() {
     }
   }, [tour, firestore, isAdmin, isAdminLoading, isUserLoading]);
 
-  // FUNCIÓN PARA RASTREAR CONVERSIONES
+  // FUNCIÓN PARA RASTREAR CONVERSIONES (CLICS EN CONTACTO)
   const trackConversion = (method: 'whatsapp' | 'phone' | 'email') => {
     if (visitIdRef.current && firestore && !isAdmin) {
       const docRef = doc(firestore, 'tourVisits', visitIdRef.current);
       
-      // Solo actualizamos si este método no ha sido registrado aún en esta sesión
+      // Registramos el método solo una vez por sesión de visita
       if (!contactedMethodsRef.current.has(method)) {
         contactedMethodsRef.current.add(method);
         updateDocumentNonBlocking(docRef, { 

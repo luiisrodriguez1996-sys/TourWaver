@@ -21,7 +21,8 @@ import {
   MessageCircle,
   Phone,
   Mail,
-  Zap
+  Zap,
+  Info
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,12 @@ import {
 import Link from 'next/link';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function TourAnalytics() {
   const { id } = useParams();
@@ -144,57 +151,99 @@ export default function TourAnalytics() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <Users className="text-primary w-5 h-5" />
-            </div>
-            <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
-          </CardContent>
-        </Card>
+      <TooltipProvider>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Users className="text-primary w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Número total de veces que se ha accedido a esta propiedad específica.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <p className="text-3xl font-bold">{stats?.totalVisits || 0}</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Aperturas Totales</p>
+            </CardContent>
+          </Card>
 
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <Clock className="text-accent w-5 h-5" />
-            </div>
-            <p className="text-3xl font-bold">{stats?.avgDuration}</p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
-          </CardContent>
-        </Card>
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Clock className="text-accent w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Promedio de tiempo que los visitantes pasan explorando las estancias de este tour.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <p className="text-3xl font-bold">{stats?.avgDuration}</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Permanencia Media</p>
+            </CardContent>
+          </Card>
 
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <Zap className="text-yellow-500 w-5 h-5" />
-            </div>
-            <div className="flex items-baseline gap-1">
-              <p className="text-3xl font-bold">{stats?.conversionRate}%</p>
-              <p className="text-xs text-muted-foreground font-bold">({stats?.contactedVisits})</p>
-            </div>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tasa de Conversión</p>
-          </CardContent>
-        </Card>
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Zap className="text-yellow-500 w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Porcentaje de visitantes que hicieron clic en algún medio de contacto desde esta propiedad.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <div className="flex items-baseline gap-1">
+                <p className="text-3xl font-bold">{stats?.conversionRate}%</p>
+                <p className="text-xs text-muted-foreground font-bold">({stats?.contactedVisits})</p>
+              </div>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tasa de Conversión</p>
+            </CardContent>
+          </Card>
 
-        <Card className="rounded-[2rem] border-none shadow-md bg-white">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between mb-2">
-              <Calendar className="text-blue-500 w-5 h-5" />
-            </div>
-            <p className="text-lg font-bold">
-              {tour.createdAt ? format(new Date(tour.createdAt), 'dd/MM/yyyy') : '---'}
-            </p>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fecha de Creación</p>
-          </CardContent>
-        </Card>
-      </div>
+          <Card className="rounded-[2rem] border-none shadow-md bg-white">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <Calendar className="text-blue-500 w-5 h-5" />
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-[200px] rounded-xl p-3">
+                      <p className="text-xs">Fecha en la que esta propiedad fue registrada inicialmente en el sistema.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </div>
+              <p className="text-lg font-bold">
+                {tour.createdAt ? format(new Date(tour.createdAt), 'dd/MM/yyyy') : '---'}
+              </p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Fecha de Creación</p>
+            </CardContent>
+          </Card>
+        </div>
+      </TooltipProvider>
 
       <Card className="rounded-[2.5rem] border-none shadow-xl overflow-hidden bg-white">
         <CardHeader className="bg-primary/5">
           <CardTitle className="text-lg">Historial de Visitas</CardTitle>
-          <CardDescription>Registro individualizado de cada acceso y contacto detectado.</CardDescription>
+          <CardDescription>Registro individualizado de cada acceso y contacto detectado para esta propiedad.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
