@@ -1,13 +1,14 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Languages, Menu, ShieldAlert, ArrowLeft, BarChart3, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { Globe, LayoutDashboard, Settings, LogOut, PlusCircle, Menu, ShieldAlert, ArrowLeft, BarChart3, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
 import { useUser, useDoc, useFirestore, useMemoFirebase, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { VersionIndicator } from '@/components/VersionIndicator';
 import {
   Sheet,
@@ -18,6 +19,23 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from '@/lib/utils';
+
+function SearchBar({ placeholder, onSearch }: { placeholder: string, onSearch: (val: string) => void }) {
+  const searchParams = useSearchParams();
+  const defaultValue = searchParams.get('search') || '';
+  
+  return (
+    <div className="hidden sm:flex items-center relative w-full max-w-[180px] md:max-w-xs transition-all duration-300 focus-within:max-w-md">
+      <Search className="absolute left-3 w-4 h-4 text-muted-foreground" />
+      <Input 
+        placeholder={placeholder}
+        className="pl-9 bg-gray-100/50 border-none rounded-xl h-9 text-xs focus-visible:ring-primary/20 focus-visible:bg-white transition-colors"
+        defaultValue={defaultValue}
+        onChange={(e) => onSearch(e.target.value)}
+      />
+    </div>
+  );
+}
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isUserLoading } = useUser();
@@ -30,7 +48,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const isDashboard = pathname === '/admin';
 
-  // Ocultar el loader cuando cambia el pathname
   useEffect(() => {
     setIsNavigating(false);
   }, [pathname]);
@@ -41,17 +58,25 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       return;
     }
 
-    // Interceptación de navegación interna si hay cambios sin guardar
     if (typeof window !== 'undefined' && (window as any).__IS_DIRTY__) {
       const confirmLeave = window.confirm("Tienes cambios sin guardar en el editor. ¿Estás seguro de que quieres salir de esta página?");
       if (!confirmLeave) return;
-      // Si el usuario acepta salir, limpiamos el flag
       (window as any).__IS_DIRTY__ = false;
     }
 
     setIsNavigating(true);
     setIsMobileMenuOpen(false);
     router.push(path);
+  };
+
+  const handleSearch = (term: string) => {
+    const params = new URLSearchParams(window.location.search);
+    if (term) {
+      params.set('search', term);
+    } else {
+      params.delete('search');
+    }
+    router.replace(`${pathname}?${params.toString()}`);
   };
 
   const adminRef = useMemoFirebase(() => {
@@ -71,10 +96,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const currentLang = siteConfig?.defaultLanguage || 'es';
 
   const menuText = {
-    es: { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Estadísticas', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios', back: 'Volver' },
-    en: { properties: 'Properties', new: 'New Property', settings: 'Settings', analytics: 'Statistics', logout: 'Logout', owner: 'OWNER', viewSite: 'View Public Site', management: 'Service Management', back: 'Back' },
-    pt: { properties: 'Propriedades', new: 'Nova Propriedade', settings: 'Configurações', analytics: 'Estatísticas', logout: 'Sair', owner: 'PROPRIETÁRIO', viewSite: 'Ver Site Público', management: 'Gestão de Servicios', back: 'Voltar' }
-  }[currentLang as 'es' | 'en' | 'pt'] || { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Estadísticas', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios', back: 'Volver' };
+    es: { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Estadísticas', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios', back: 'Volver', search: 'Buscar por nombre o cliente...' },
+    en: { properties: 'Properties', new: 'New Property', settings: 'Settings', analytics: 'Statistics', logout: 'Logout', owner: 'OWNER', viewSite: 'View Public Site', management: 'Service Management', back: 'Back', search: 'Search by name or client...' },
+    pt: { properties: 'Propriedades', new: 'Nova Propriedade', settings: 'Configurações', analytics: 'Estatísticas', logout: 'Sair', owner: 'PROPRIETÁRIO', viewSite: 'Ver Site Público', management: 'Gestão de Servicios', back: 'Voltar', search: 'Buscar por nome ou cliente...' }
+  }[currentLang as 'es' | 'en' | 'pt'] || { properties: 'Propiedades', new: 'Nueva Propiedad', settings: 'Configuración', analytics: 'Estadísticas', logout: 'Cerrar Sesión', owner: 'PROPIETARIO', viewSite: 'Ver Sitio Público', management: 'Gestión de Servicios', back: 'Volver', search: 'Buscar...' };
 
   const handleLogout = async () => {
     try {
@@ -91,7 +116,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const SidebarContent = () => (
     <div className="flex flex-col h-full overflow-y-auto">
       <div className="p-6">
-        <button onClick={() => handleNavigation('/')} className="flex items-center gap-2 group">
+        <button onClick={() => handleNavigation('/')} className="flex items-center gap-2 group text-left">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
             <Globe className="text-white w-5 h-5" />
           </div>
@@ -224,7 +249,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div className="min-h-screen flex bg-[#F8FAFC] max-w-full overflow-x-hidden relative">
-      {/* Global Navigation Loader */}
       {isNavigating && (
         <div className="fixed inset-0 z-[100] bg-white/60 backdrop-blur-md flex flex-col items-center justify-center animate-in fade-in duration-300">
           <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl flex flex-col items-center gap-4 border border-border/50">
@@ -237,15 +261,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       )}
 
-      {/* Desktop Sidebar */}
       <aside className="w-64 bg-white border-r hidden md:flex flex-col fixed inset-y-0 z-50">
         <SidebarContent />
       </aside>
 
       <main className="flex-1 md:ml-64 min-h-screen w-full overflow-x-hidden">
         <header className="h-16 border-b bg-white flex items-center justify-between px-4 md:px-8 sticky top-0 z-40 w-full">
-          <div className="flex items-center gap-4 min-w-0">
-            {/* Mobile Menu Trigger */}
+          <div className="flex items-center gap-4 min-w-0 flex-1">
             <div className="md:hidden flex-shrink-0">
               <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
                 <SheetTrigger asChild>
@@ -264,9 +286,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 </SheetContent>
               </Sheet>
             </div>
-            <h2 className="text-base md:text-lg font-semibold text-muted-foreground truncate">
+            <h2 className="text-base md:text-lg font-semibold text-muted-foreground truncate mr-4">
               {menuText.management}
             </h2>
+            
+            {isDashboard && (
+              <Suspense fallback={<div className="w-10 h-10" />}>
+                <SearchBar placeholder={menuText.search} onSearch={handleSearch} />
+              </Suspense>
+            )}
           </div>
           
           <div className="flex items-center gap-4 flex-shrink-0">

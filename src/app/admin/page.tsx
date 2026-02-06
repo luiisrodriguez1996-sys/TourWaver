@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,7 @@ import {
   Loader2,
   BarChart3
 } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -46,23 +46,25 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const firestore = useFirestore();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
+  
   const [tourToDeleteId, setTourToDeleteId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'all' | 'clients'>('all');
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const [isNavigating, setIsNavigating] = useState<string | null>(null);
   
-  // Persistir la preferencia de vista
+  const searchTerm = searchParams.get('search')?.toLowerCase() || '';
+
   useEffect(() => {
     const savedView = localStorage.getItem('adminViewPreference') as 'all' | 'clients';
     if (savedView) setViewMode(savedView);
   }, []);
 
-  // Limpieza de eventos
   useEffect(() => {
     if (tourToDeleteId === null) {
       const cleanup = () => {
@@ -100,6 +102,15 @@ export default function AdminDashboard() {
   }, [firestore]);
   const { data: siteConfig } = useDoc(siteConfigRef);
   const isSpanish = siteConfig?.defaultLanguage !== 'en';
+
+  const filteredTours = useMemo(() => {
+    if (!tours) return [];
+    if (!searchTerm) return tours;
+    return tours.filter(t => 
+      t.name.toLowerCase().includes(searchTerm) || 
+      (t.clientName && t.clientName.toLowerCase().includes(searchTerm))
+    );
+  }, [tours, searchTerm]);
 
   const togglePublish = (id: string, currentStatus: boolean) => {
     if (!firestore) return;
@@ -139,25 +150,31 @@ export default function AdminDashboard() {
     router.push(path);
   };
 
-  // Lógica de agrupación por clientes
-  const clients = tours ? Array.from(new Set(tours.map((t: any) => t.clientName || (isSpanish ? 'Sin Cliente' : 'No Client')))) : [];
-  const groupedTours = tours ? tours.reduce((acc: any, tour: any) => {
-    const client = tour.clientName || (isSpanish ? 'Sin Cliente' : 'No Client');
-    if (!acc[client]) acc[client] = [];
-    acc[client].push(tour);
-    return acc;
-  }, {}) : {};
+  const clients = useMemo(() => {
+    if (!filteredTours) return [];
+    return Array.from(new Set(filteredTours.map((t: any) => t.clientName || (isSpanish ? 'Sin Cliente' : 'No Client'))));
+  }, [filteredTours, isSpanish]);
+
+  const groupedTours = useMemo(() => {
+    if (!filteredTours) return {};
+    return filteredTours.reduce((acc: any, tour: any) => {
+      const client = tour.clientName || (isSpanish ? 'Sin Cliente' : 'No Client');
+      if (!acc[client]) acc[client] = [];
+      acc[client].push(tour);
+      return acc;
+    }, {});
+  }, [filteredTours, isSpanish]);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {[1, 2, 3].map(i => <Skeleton key={`skeleton-load-${i}`} className="aspect-video w-full rounded-xl" />)}
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
+        {[1, 2, 3, 4].map(i => <Skeleton key={`skeleton-load-${i}`} className="aspect-video w-full rounded-xl" />)}
       </div>
     );
   }
 
   const renderTourCard = (tour: any) => (
-    <Card key={tour.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-none shadow-md">
+    <Card key={tour.id} className="overflow-hidden group hover:shadow-xl transition-all duration-300 border-none shadow-md flex flex-col h-full">
       <div className="relative aspect-video bg-muted overflow-hidden">
         <img 
           src={tour.thumbnailUrl || 'https://picsum.photos/seed/placeholder/600/400'} 
@@ -181,7 +198,7 @@ export default function AdminDashboard() {
             <div className="flex items-center gap-1.5 text-primary text-[10px] font-bold uppercase mb-1">
               <User className="w-3 h-3" /> {tour.clientName || (isSpanish ? 'Sin Cliente' : 'No Client')}
             </div>
-            <CardTitle className="text-xl line-clamp-1">{tour.name}</CardTitle>
+            <CardTitle className="text-lg md:text-xl line-clamp-1">{tour.name}</CardTitle>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -189,32 +206,19 @@ export default function AdminDashboard() {
                 {loadingActions[tour.id] ? <Loader2 className="h-4 w-4 animate-spin" /> : <MoreVertical className="h-4 w-4" />}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent 
-              align="end"
-              onCloseAutoFocus={(e) => {
-                if (tourToDeleteId !== null) {
-                  e.preventDefault();
-                }
-              }}
-            >
+            <DropdownMenuContent align="end">
               <DropdownMenuItem className="cursor-pointer" onClick={() => togglePublish(tour.id, tour.published)}>
                 {tour.published ? (
-                  <>
-                    <EyeOff className="mr-2 h-4 w-4" /> Hacer Privada
-                  </>
+                  <><EyeOff className="mr-2 h-4 w-4" /> Hacer Privada</>
                 ) : (
-                  <>
-                    <Eye className="mr-2 h-4 w-4" /> Publicar
-                  </>
+                  <><Eye className="mr-2 h-4 w-4" /> Publicar</>
                 )}
               </DropdownMenuItem>
               <DropdownMenuItem 
                 className="text-destructive cursor-pointer focus:bg-destructive/10 focus:text-destructive" 
                 onSelect={(e) => {
                   e.preventDefault();
-                  setTimeout(() => {
-                    setTourToDeleteId(tour.id);
-                  }, 150);
+                  setTourToDeleteId(tour.id);
                 }}
               >
                 <Trash2 className="mr-2 h-4 w-4" /> {isSpanish ? 'Eliminar Propiedad' : 'Delete Property'}
@@ -223,7 +227,7 @@ export default function AdminDashboard() {
           </DropdownMenu>
         </div>
       </CardHeader>
-      <CardFooter className="gap-2 border-t pt-4 bg-gray-50/50">
+      <CardFooter className="gap-2 border-t pt-4 bg-gray-50/50 mt-auto">
         <Button 
           type="button" 
           variant="outline" 
@@ -295,6 +299,17 @@ export default function AdminDashboard() {
         </div>
       </div>
 
+      {searchTerm && (
+        <div className="bg-primary/5 border border-primary/10 p-4 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300">
+          <p className="text-sm font-medium">
+            Mostrando resultados para: <span className="font-bold text-primary">"{searchTerm}"</span>
+          </p>
+          <Badge variant="secondary" className="bg-primary/10 text-primary">
+            {filteredTours.length} {isSpanish ? 'encontrados' : 'found'}
+          </Badge>
+        </div>
+      )}
+
       {viewMode === 'clients' && selectedClient && (
         <div className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-300">
           <Button type="button" variant="ghost" onClick={() => setSelectedClient(null)} className="gap-2 text-muted-foreground hover:text-primary">
@@ -307,14 +322,14 @@ export default function AdminDashboard() {
               {groupedTours[selectedClient]?.length} {isSpanish ? 'Propiedades' : 'Properties'}
             </Badge>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6">
             {groupedTours[selectedClient]?.map((tour: any) => renderTourCard(tour))}
           </div>
         </div>
       )}
 
       {viewMode === 'clients' && !selectedClient && (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-in fade-in zoom-in-95 duration-300">
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in zoom-in-95 duration-300">
           {clients.map((client) => (
             <Card 
               key={client} 
@@ -346,58 +361,52 @@ export default function AdminDashboard() {
       )}
 
       {viewMode === 'all' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
-          {tours?.map((tour: any) => renderTourCard(tour))}
+        <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in slide-in-from-bottom-4 duration-300">
+          {filteredTours.map((tour: any) => renderTourCard(tour))}
         </div>
       )}
 
-      {(!tours || tours.length === 0) && (
+      {(!filteredTours || filteredTours.length === 0) && (
         <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed">
           <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
             <Briefcase className="text-muted-foreground w-8 h-8" />
           </div>
           <h2 className="text-xl font-bold mb-2">
-            No hay propiedades registradas
+            {searchTerm ? (isSpanish ? 'No hay resultados' : 'No results') : (isSpanish ? 'No hay propiedades' : 'No properties')}
           </h2>
           <p className="text-muted-foreground mb-6">
-            Comienza a crear tu primer encargo profesional.
+            {searchTerm ? (isSpanish ? 'Prueba con otros términos de búsqueda.' : 'Try with other search terms.') : (isSpanish ? 'Comienza a crear tu primer encargo profesional.' : 'Start creating your first professional job.')}
           </p>
-          <Button 
-            type="button" 
-            className="rounded-xl px-8"
-            onClick={() => handleNavigateTo('/admin/tours/new', 'new-empty')}
-            disabled={isNavigating === 'new-empty'}
-          >
-            {isNavigating === 'new-empty' && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-            Registrar Propiedad
-          </Button>
+          {!searchTerm && (
+            <Button 
+              type="button" 
+              className="rounded-xl px-8"
+              onClick={() => handleNavigateTo('/admin/tours/new', 'new-empty')}
+              disabled={isNavigating === 'new-empty'}
+            >
+              {isNavigating === 'new-empty' && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+              Registrar Propiedad
+            </Button>
+          )}
         </div>
       )}
 
       <AlertDialog 
         open={tourToDeleteId !== null} 
-        onOpenChange={(open) => {
-          if (!open) {
-            setTourToDeleteId(null);
-          }
-        }}
+        onOpenChange={(open) => { if (!open) setTourToDeleteId(null); }}
       >
         <AlertDialogContent className="rounded-[2rem]">
           <AlertDialogHeader>
             <div className="w-12 h-12 bg-destructive/10 rounded-full flex items-center justify-center mb-2">
               <AlertTriangle className="text-destructive w-6 h-6" />
             </div>
-            <AlertDialogTitle className="text-xl font-bold">
-              ¿Estás completamente seguro?
-            </AlertDialogTitle>
+            <AlertDialogTitle className="text-xl font-bold">¿Estás completamente seguro?</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
               Esta acción no se puede deshacer. Se eliminará la propiedad permanentemente de nuestros servidores.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
-            <AlertDialogCancel className="rounded-xl border-muted-foreground/20">
-              Cancelar
-            </AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl border-muted-foreground/20">Cancelar</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDeleteConfirm}
               className="bg-destructive hover:bg-destructive/90 rounded-xl"
@@ -410,5 +419,13 @@ export default function AdminDashboard() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function AdminDashboard() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center py-20"><Loader2 className="w-10 h-10 animate-spin text-primary" /></div>}>
+      <AdminDashboardContent />
+    </Suspense>
   );
 }
