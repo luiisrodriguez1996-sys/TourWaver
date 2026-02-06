@@ -230,12 +230,9 @@ export default function PublicTourViewer() {
 
   const canView = tour ? (tour.published || isAdmin) : false;
 
-  // Lógica de carga simplificada y más robusta para móviles
-  const isActuallyLoading = isTourLoading || (tours === null && !tourError) || (tour && isScenesLoading && !scenesError);
-
-  if (isActuallyLoading) {
+  if (isTourLoading || (tours === null && !tourError) || (tour && isScenesLoading && !scenesError)) {
     return (
-      <div className="min-h-screen bg-black flex flex-col items-center justify-center text-white gap-4">
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center text-white gap-4 z-[999]">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
         <p className="text-sm font-medium animate-pulse">Cargando experiencia inmersiva...</p>
       </div>
@@ -244,7 +241,7 @@ export default function PublicTourViewer() {
 
   if (!tour || !canView || scenesError || tourError) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white p-6">
+      <div className="fixed inset-0 bg-black flex items-center justify-center text-white p-6 z-[999]">
         <div className="text-center p-12 bg-white/5 backdrop-blur-lg rounded-[2.5rem] border border-white/10 max-w-md shadow-2xl animate-in fade-in zoom-in duration-500">
           <div className="w-20 h-20 bg-destructive/20 rounded-full flex items-center justify-center mx-auto mb-6">
             <Lock className="text-destructive w-10 h-10" />
@@ -267,7 +264,7 @@ export default function PublicTourViewer() {
   const hasDetailsContent = !!(tour.address || tour.description || activeScene?.description || activeScene?.floorId || hasContactInfo);
 
   return (
-    <div className="h-[100dvh] w-full relative overflow-hidden bg-black flex flex-col touch-none select-none">
+    <div className="fixed inset-0 w-full h-full overflow-hidden bg-black flex flex-col touch-none select-none">
       {/* Header controls */}
       <div className="absolute top-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
         <div className="pointer-events-auto w-full md:w-[40%]">
@@ -491,7 +488,7 @@ export default function PublicTourViewer() {
         {/* Guía de Interacción Inicial */}
         {showOnboarding && (
           <div className="absolute inset-0 z-[60] flex items-center justify-center pointer-events-none animate-in fade-in duration-700">
-            <div className="bg-black/40 backdrop-blur-md rounded-[2rem] p-6 flex flex-col items-center gap-4 border border-white/10 shadow-2xl">
+            <div className="bg-black/40 backdrop-blur-md rounded-[2rem] p-6 flex flex-col items-center gap-4 border border-white/10 shadow-2xl scale-75 md:scale-100">
               <div className="flex items-center gap-6">
                 <ChevronLeft className="w-8 h-8 text-white/40 animate-pulse" />
                 <div className="text-4xl animate-swipe select-none">👆</div>
@@ -532,8 +529,8 @@ export default function PublicTourViewer() {
         )}
       </div>
 
-      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center">
-        <div className="bg-black/40 backdrop-blur-md px-2 md:px-6 py-1 rounded-full border border-white/10 flex items-center gap-1 md:gap-2 text-white shadow-2xl pointer-events-auto max-w-full overflow-x-auto scrollbar-hide">
+      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center pointer-events-none">
+        <div className="bg-black/40 backdrop-blur-md px-2 md:px-6 py-1 rounded-full border border-white/10 flex items-center gap-1 md:gap-2 text-white shadow-2xl pointer-events-auto max-w-full overflow-x-auto scrollbar-hide touch-pan-x">
            <Dialog>
              <DialogTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-9 px-3 md:px-4 flex-shrink-0">
@@ -600,7 +597,7 @@ export default function PublicTourViewer() {
               </div>
 
               {tour.floors.length > 1 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide touch-pan-x">
                   {tour.floors.map((floor: any) => (
                     <Button 
                       key={floor.id} 
