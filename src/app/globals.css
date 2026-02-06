@@ -52,13 +52,6 @@
   * {
     @apply border-border;
   }
-  html, body {
-    @apply overflow-hidden max-w-full;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overscroll-behavior: none;
-  }
   body {
     @apply bg-background text-foreground font-body;
   }
@@ -90,10 +83,19 @@ img {
 }
 
 @keyframes swipe {
-  0%, 100% { transform: translateX(-15px); }
-  50% { transform: translateX(15px); }
+  0%, 100% { transform: translateX(-10px); }
+  50% { transform: translateX(10px); }
 }
 
 .animate-swipe {
-  animation: swipe 3.5s ease-in-out infinite;
+  animation: swipe 2.5s ease-in-out infinite;
+}
+
+/* Utilitario para ocultar scrollbars pero mantener funcionalidad */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
