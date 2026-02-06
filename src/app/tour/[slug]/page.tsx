@@ -278,11 +278,11 @@ export default function PublicTourViewer() {
           {tour.contactWhatsApp && (
             <Button 
               variant="secondary" 
-              size="icon" 
-              className="rounded-full bg-[#25D366] text-white hover:bg-[#20ba59] h-10 w-10 md:h-11 md:w-11 border-none shadow-xl"
+              className="rounded-full bg-[#25D366] text-white hover:bg-[#20ba59] h-10 px-4 md:h-11 md:px-6 border-none shadow-xl gap-2 transition-all active:scale-95"
               onClick={() => setIsDetailsExpanded(!isDetailsExpanded)}
             >
               <MessageCircle className="w-5 h-5" />
+              <span className="font-black text-[10px] md:text-xs tracking-tight uppercase">Solicitar Info</span>
             </Button>
           )}
           {(tour.address || tour.googleMapsUrl) && (
@@ -404,9 +404,12 @@ export default function PublicTourViewer() {
       {tour.contactWhatsApp && (
         <div className="absolute bottom-4 left-4 z-40 hidden md:block">
           <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackConversion('whatsapp')}>
-            <Button className="bg-[#25D366] hover:bg-[#20ba59] text-white rounded-full px-6 py-6 shadow-2xl gap-3 animate-bounce hover:animate-none">
-              <MessageCircle className="w-6 h-6" />
-              <span className="font-bold">Contactar por WhatsApp</span>
+            <Button className="bg-[#25D366] hover:bg-[#20ba59] text-white rounded-full px-8 py-7 shadow-2xl gap-3 animate-bounce hover:animate-none transition-transform active:scale-95">
+              <MessageCircle className="w-7 h-7" />
+              <div className="flex flex-col items-start">
+                <span className="font-black text-lg leading-none">Solicitar más información</span>
+                <span className="text-[10px] opacity-80 font-bold uppercase tracking-widest mt-1">Respuesta inmediata por WhatsApp</span>
+              </div>
             </Button>
           </a>
         </div>
