@@ -10,7 +10,7 @@ import * as THREE_REAL from 'three';
 interface ThreeSixtyViewerProps {
   imageUrl: string;
   hotspots?: Hotspot[];
-  annotations?:?: Annotation[];
+  annotations?: Annotation[];
   onHotspotClick?: (targetSceneId: string, hotspotId: string) => void;
   onAnnotationClick?: (annotationId: string) => void;
   onSceneClick?: (yaw: number, pitch: number) => void;
