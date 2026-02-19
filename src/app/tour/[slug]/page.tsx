@@ -41,6 +41,8 @@ export default function PublicTourViewer() {
 
   const visitIdRef = useRef<string | null>(null);
   const startTimeRef = useRef<number>(Date.now());
+  const cumulativeTimeRef = useRef<number>(0); // Tiempo acumulado en milisegundos
+  const lastVisibleStartTimeRef = useRef<number>(Date.now()); // Última vez que se hizo visible
   const contactedMethodsRef = useRef<Set<string>>(new Set());
   const qrRef = useRef<SVGSVGElement>(null);
 
@@ -71,25 +73,24 @@ export default function PublicTourViewer() {
   const tour = tours?.[0];
 
   useEffect(() => {
-    // Bloquear scroll del body solo cuando este componente está montado
     document.documentElement.style.overflow = 'hidden';
     document.body.style.overflow = 'hidden';
     document.body.style.overscrollBehavior = 'none';
 
     return () => {
-      // Restaurar scroll al salir
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
       document.body.style.overscrollBehavior = '';
     };
   }, []);
 
-  // Seguimiento de Visita y Duración mejorado
+  // Seguimiento de Visita y Duración Activa (Visibility API)
   useEffect(() => {
     if (isUserLoading || isAdminLoading || !tour || !firestore || isAdmin) return;
 
-    const startTime = Date.now();
-    startTimeRef.current = startTime;
+    // Reiniciar contadores para la nueva sesión
+    cumulativeTimeRef.current = 0;
+    lastVisibleStartTimeRef.current = Date.now();
 
     // 1. Crear el registro de visita inicial
     const createVisitRecord = async () => {
@@ -97,7 +98,7 @@ export default function PublicTourViewer() {
         const visitsRef = collection(firestore, 'tourVisits');
         const docRef = await addDocumentNonBlocking(visitsRef, {
           tourId: tour.id,
-          timestamp: startTime,
+          timestamp: startTimeRef.current,
           userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Unknown',
           contacted: false,
           contactMethods: [],
@@ -114,12 +115,20 @@ export default function PublicTourViewer() {
 
     createVisitRecord();
 
-    // 2. Función para actualizar la duración (Heartbeat)
+    // Calcula el total de segundos activos (acumulado + tramo actual si es visible)
+    const getActiveDurationSeconds = () => {
+      let totalMs = cumulativeTimeRef.current;
+      if (document.visibilityState === 'visible' && lastVisibleStartTimeRef.current) {
+        totalMs += (Date.now() - lastVisibleStartTimeRef.current);
+      }
+      return Math.floor(totalMs / 1000);
+    };
+
+    // 2. Función para actualizar la duración en Firestore (Heartbeat)
     const updateDuration = () => {
       if (!visitIdRef.current || !firestore) return;
       
-      const currentTime = Date.now();
-      const durationSeconds = Math.floor((currentTime - startTime) / 1000);
+      const durationSeconds = getActiveDurationSeconds();
       
       if (durationSeconds > 0) {
         const docRef = doc(firestore, 'tourVisits', visitIdRef.current);
@@ -127,13 +136,21 @@ export default function PublicTourViewer() {
       }
     };
 
-    // Actualizar cada 15 segundos (Latido)
+    // Latido cada 15 segundos para asegurar datos parciales si se cierra bruscamente
     const heartbeatInterval = setInterval(updateDuration, 15000);
 
-    // Eventos de cierre o cambio de pestaña (Móvil y Escritorio)
+    // Manejo de visibilidad para pausar/reanudar el contador
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'hidden') {
-        updateDuration();
+        // Al ocultar la pestaña, guardamos el tramo actual de tiempo en el acumulador
+        if (lastVisibleStartTimeRef.current) {
+          cumulativeTimeRef.current += (Date.now() - lastVisibleStartTimeRef.current);
+          lastVisibleStartTimeRef.current = 0; // Marcamos como no cronometrando
+        }
+        updateDuration(); // Guardamos el estado actual al ocultar
+      } else {
+        // Al volver a la pestaña, iniciamos un nuevo tramo
+        lastVisibleStartTimeRef.current = Date.now();
       }
     };
 
@@ -144,7 +161,7 @@ export default function PublicTourViewer() {
       clearInterval(heartbeatInterval);
       window.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', updateDuration);
-      updateDuration(); // Intento de actualización final al desmontar
+      updateDuration(); // Intento final al desmontar
     };
   }, [tour?.id, firestore, isAdmin, isAdminLoading, isUserLoading]);
 
