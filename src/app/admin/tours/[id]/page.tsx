@@ -205,7 +205,11 @@ export default function TourEditor() {
   const activeScene = localScenes.find((s) => s.id === activeSceneId);
   const activeFloor = localTourInfo.floors.find(f => f.id === activeScene?.floorId);
 
-  const compressImage = (dataUrl: string, maxWidth = 2048, quality = 0.6): Promise<string> => {
+  /**
+   * Comprime la imagen de forma inteligente para no superar el límite de 1MB de Firestore.
+   * Utiliza un enfoque adaptativo: intenta la máxima calidad y la reduce sólo si es necesario.
+   */
+  const compressImage = (dataUrl: string, maxWidth = 3072, initialQuality = 0.8): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = dataUrl;
@@ -213,17 +217,29 @@ export default function TourEditor() {
         const canvas = document.createElement('canvas');
         let width = img.width;
         let height = img.height;
+        
+        // Redimensionar si supera el ancho máximo (para 360, 3072 es una resolución excelente)
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
         }
+        
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        // Usamos una calidad fija para evitar superar el límite de 1MB de Firestore
-        const compressed = canvas.toDataURL('image/jpeg', quality);
-        resolve(compressed);
+        
+        let currentQuality = initialQuality;
+        let result = canvas.toDataURL('image/jpeg', currentQuality);
+        
+        // Límite de seguridad: el string Base64 no debe superar los 950,000 caracteres (aprox 1MB)
+        // ya que el documento tiene otros campos pequeños.
+        while (result.length > 950000 && currentQuality > 0.3) {
+          currentQuality -= 0.05;
+          result = canvas.toDataURL('image/jpeg', currentQuality);
+        }
+        
+        resolve(result);
       };
     });
   };
@@ -235,7 +251,7 @@ export default function TourEditor() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          // Siempre comprimimos para asegurar compatibilidad con Firestore
+          // Comprimir usando el nuevo motor adaptativo
           const imageUrl = await compressImage(reader.result as string);
           
           const sceneId = Math.random().toString(36).substr(2, 9);
@@ -253,7 +269,7 @@ export default function TourEditor() {
           setActiveSceneId(sceneId);
           setHasUnsavedChanges(true);
           setIsUploading(false);
-          toast({ title: "Estancia añadida" });
+          toast({ title: "Estancia añadida con calidad optimizada" });
         } catch (error) {
           setIsUploading(false);
           toast({ variant: "destructive", title: "Error al procesar imagen" });
@@ -439,7 +455,7 @@ export default function TourEditor() {
       setIsSaving(false);
       let errorMsg = "Error al guardar";
       if (error?.code === 'out-of-range' || error?.message?.includes('longer than')) {
-        errorMsg = "Una de las estancias es demasiado pesada. Reduce la calidad de las imágenes.";
+        errorMsg = "Una de las estancias es demasiado pesada a pesar de la compresión. Intenta subir una imagen con menos detalles.";
       }
       toast({ variant: "destructive", title: errorMsg });
     }
