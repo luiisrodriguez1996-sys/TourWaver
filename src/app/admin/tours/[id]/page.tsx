@@ -205,10 +205,6 @@ export default function TourEditor() {
   const activeScene = localScenes.find((s) => s.id === activeSceneId);
   const activeFloor = localTourInfo.floors.find(f => f.id === activeScene?.floorId);
 
-  /**
-   * Comprime la imagen de forma inteligente para no superar el límite de 1MB de Firestore.
-   * Utiliza un enfoque adaptativo: intenta la máxima calidad y la reduce sólo si es necesario.
-   */
   const compressImage = (dataUrl: string, maxWidth = 3072, initialQuality = 0.8): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
@@ -218,7 +214,6 @@ export default function TourEditor() {
         let width = img.width;
         let height = img.height;
         
-        // Redimensionar si supera el ancho máximo (para 360, 3072 es una resolución excelente)
         if (width > maxWidth) {
           height = (maxWidth / width) * height;
           width = maxWidth;
@@ -232,8 +227,6 @@ export default function TourEditor() {
         let currentQuality = initialQuality;
         let result = canvas.toDataURL('image/jpeg', currentQuality);
         
-        // Límite de seguridad: el string Base64 no debe superar los 950,000 caracteres (aprox 1MB)
-        // ya que el documento tiene otros campos pequeños.
         while (result.length > 950000 && currentQuality > 0.3) {
           currentQuality -= 0.05;
           result = canvas.toDataURL('image/jpeg', currentQuality);
@@ -251,7 +244,6 @@ export default function TourEditor() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          // Comprimir usando el nuevo motor adaptativo
           const imageUrl = await compressImage(reader.result as string);
           
           const sceneId = Math.random().toString(36).substr(2, 9);
@@ -344,6 +336,37 @@ export default function TourEditor() {
     });
     setLocalScenes(prev => prev.map(s => s.id === activeSceneId ? { ...s, ...sanitizedUpdates } : s));
     setHasUnsavedChanges(true);
+  };
+
+  const handleDeleteScene = () => {
+    if (!activeSceneId) return;
+    
+    const idToDelete = activeSceneId;
+    
+    // 1. Agregar a la lista de eliminados para el batch de Firestore
+    setDeletedSceneIds(prev => [...prev, idToDelete]);
+    
+    // 2. Filtrar localScenes y LIMPIAR enlaces rotos en otras escenas
+    setLocalScenes(prev => {
+      return prev
+        .filter(s => s.id !== idToDelete)
+        .map(s => ({
+          ...s,
+          hotspots: s.hotspots.filter(h => h.targetSceneId !== idToDelete)
+        }));
+    });
+
+    // 3. Cambiar la escena activa a la primera disponible o null
+    const remainingScenes = localScenes.filter(s => s.id !== idToDelete);
+    setActiveSceneId(remainingScenes.length > 0 ? remainingScenes[0].id : null);
+    
+    // 4. Marcar que hay cambios sin guardar para habilitar el botón
+    setHasUnsavedChanges(true);
+    
+    toast({ 
+      title: "Estancia eliminada", 
+      description: "Se han limpiado automáticamente los enlaces que apuntaban a esta habitación." 
+    });
   };
 
   const handleFloorPlanClick = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -696,7 +719,13 @@ export default function TourEditor() {
                       </div>
                     )}
                   </div>
-                  <Button variant="outline" className="w-full text-destructive border-destructive/20 mt-6" onClick={() => { if(activeSceneId) { setDeletedSceneIds(prev => [...prev, activeSceneId]); setLocalScenes(prev => prev.filter(s => s.id !== activeSceneId)); setActiveSceneId(localScenes[0]?.id || null); } }}>Eliminar Estancia</Button>
+                  <Button 
+                    variant="outline" 
+                    className="w-full text-destructive border-destructive/20 mt-6" 
+                    onClick={handleDeleteScene}
+                  >
+                    Eliminar Estancia
+                  </Button>
                 </TabsContent>
 
                 <TabsContent value="links" className="pt-4 space-y-3">
