@@ -163,26 +163,22 @@ export default function TourEditor() {
     }
   }, [serverScenes, tour]);
 
-  // Protección ante abandono de página con cambios sin guardar
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Flag global para que AdminLayout intercepte la navegación por clics internos
       (window as any).__IS_DIRTY__ = hasUnsavedChanges;
     }
 
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (hasUnsavedChanges) {
         e.preventDefault();
-        e.returnValue = ''; // Muestra el mensaje estándar del navegador al cerrar pestaña
+        e.returnValue = '';
       }
     };
 
-    // Manejo de retroceso del navegador (Back button)
     const handlePopState = (e: PopStateEvent) => {
       if (hasUnsavedChanges) {
         const confirmLeave = window.confirm("Tienes cambios sin guardar. ¿Estás seguro de que quieres volver?");
         if (!confirmLeave) {
-          // Volvemos a meter el estado actual en el historial para cancelar el retroceso visualmente
           window.history.pushState(null, '', window.location.href);
         } else {
           (window as any).__IS_DIRTY__ = false;
@@ -193,7 +189,6 @@ export default function TourEditor() {
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('popstate', handlePopState);
     
-    // Inyectamos un estado artificial si hay cambios para poder capturar el primer retroceso
     if (hasUnsavedChanges) {
       window.history.pushState(null, '', window.location.href);
     }
@@ -210,7 +205,7 @@ export default function TourEditor() {
   const activeScene = localScenes.find((s) => s.id === activeSceneId);
   const activeFloor = localTourInfo.floors.find(f => f.id === activeScene?.floorId);
 
-  const compressImage = (dataUrl: string, maxWidth = 4096, quality = 0.7): Promise<string> => {
+  const compressImage = (dataUrl: string, maxWidth = 2048, quality = 0.6): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = dataUrl;
@@ -226,7 +221,8 @@ export default function TourEditor() {
         canvas.height = height;
         const ctx = canvas.getContext('2d');
         ctx?.drawImage(img, 0, 0, width, height);
-        let compressed = canvas.width > 2048 ? canvas.toDataURL('image/jpeg', 0.6) : canvas.toDataURL('image/jpeg', quality);
+        // Usamos una calidad fija para evitar superar el límite de 1MB de Firestore
+        const compressed = canvas.toDataURL('image/jpeg', quality);
         resolve(compressed);
       };
     });
@@ -239,10 +235,9 @@ export default function TourEditor() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          let imageUrl = reader.result as string;
-          if (file.size > 500000) {
-            imageUrl = await compressImage(imageUrl);
-          }
+          // Siempre comprimimos para asegurar compatibilidad con Firestore
+          const imageUrl = await compressImage(reader.result as string);
+          
           const sceneId = Math.random().toString(36).substr(2, 9);
           const newScene: Scene = {
             id: sceneId,
@@ -261,7 +256,7 @@ export default function TourEditor() {
           toast({ title: "Estancia añadida" });
         } catch (error) {
           setIsUploading(false);
-          toast({ variant: "destructive", title: "Error" });
+          toast({ variant: "destructive", title: "Error al procesar imagen" });
         }
       };
       reader.readAsDataURL(file);
@@ -311,10 +306,7 @@ export default function TourEditor() {
       const reader = new FileReader();
       reader.onloadend = async () => {
         try {
-          let imageUrl = reader.result as string;
-          if (file.size > 300000) {
-            imageUrl = await compressImage(imageUrl, 1500, 0.7);
-          }
+          const imageUrl = await compressImage(reader.result as string, 1500, 0.7);
           updateFloor(floorId, { imageUrl });
           setIsUploading(false);
         } catch (error) {
@@ -442,10 +434,14 @@ export default function TourEditor() {
       if (typeof window !== 'undefined') (window as any).__IS_DIRTY__ = false;
       setIsSaving(false);
       toast({ title: "Guardado con éxito" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error al guardar:", error);
       setIsSaving(false);
-      toast({ variant: "destructive", title: "Error al guardar" });
+      let errorMsg = "Error al guardar";
+      if (error?.code === 'out-of-range' || error?.message?.includes('longer than')) {
+        errorMsg = "Una de las estancias es demasiado pesada. Reduce la calidad de las imágenes.";
+      }
+      toast({ variant: "destructive", title: errorMsg });
     }
   };
 
@@ -503,7 +499,6 @@ export default function TourEditor() {
         </div>
       </div>
 
-      {/* Mobile Unified Controls Row */}
       <div className="lg:hidden flex items-center gap-2 sticky top-[120px] z-40 bg-transparent mb-4">
         <VisibilityToggle />
         <Tabs value={mainEditorTab} onValueChange={setMainEditorTab} className="flex-1">
@@ -526,7 +521,6 @@ export default function TourEditor() {
       {mainEditorTab === 'space' && (
         <div className="space-y-8 animate-in fade-in duration-500">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Left: Scenes List */}
             <div className="lg:col-span-3 space-y-4 bg-white rounded-3xl p-4 border shadow-sm max-h-[calc(100vh-250px)] overflow-y-auto">
               <h3 className="font-semibold text-xs uppercase tracking-widest text-muted-foreground flex items-center gap-2"><ImageIcon className="w-4 h-4" /> Estancias</h3>
               <Button variant="outline" className="w-full gap-2 border-dashed h-12" onClick={() => sceneFileInputRef.current?.click()}>
@@ -570,7 +564,6 @@ export default function TourEditor() {
               </div>
             </div>
 
-            {/* Center: Viewer */}
             <div className="lg:col-span-6 flex flex-col gap-4">
               <div className="rounded-3xl overflow-hidden shadow-xl border relative bg-black aspect-[4/5] w-full max-h-[calc(100vh-250px)] flex items-center justify-center">
                 {activeScene && (
@@ -618,7 +611,6 @@ export default function TourEditor() {
               </div>
             </div>
 
-            {/* Right: Scene Details Sidebar */}
             <div className="lg:col-span-3 space-y-4 bg-white rounded-3xl p-4 border shadow-sm max-h-[calc(100vh-250px)] overflow-y-auto">
               <Tabs value={activeTab} onValueChange={setActiveTab}>
                 <TabsList className="w-full grid grid-cols-3">
