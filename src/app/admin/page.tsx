@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
@@ -58,7 +57,7 @@ function AdminDashboardContent() {
   const [loadingActions, setLoadingActions] = useState<Record<string, boolean>>({});
   const [isNavigating, setIsNavigating] = useState<string | null>(null);
   
-  const searchTerm = searchParams.get('search')?.toLowerCase() || '';
+  const searchTerm = searchParams?.get('search')?.toLowerCase() || '';
 
   useEffect(() => {
     const savedView = localStorage.getItem('adminViewPreference') as 'all' | 'clients';

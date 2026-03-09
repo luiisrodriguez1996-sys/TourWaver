@@ -9,7 +9,7 @@ export const MOCK_TOURS: Tour[] = [
     published: true,
     createdAt: Date.now(),
     updatedAt: Date.now(),
-    scenes: [
+    sceneIds: [
       {
         id: 's1',
         tourId: '1',

@@ -325,7 +325,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       const radius = 500;
       const lat = Math.asin(point.y / radius) * 180 / Math.PI;
       const lon = Math.atan2(correctedX, -point.z) * 180 / Math.PI;
-      onSceneClick(lon, lat);
+      onSceneClick?.(lon, lat);
     }
   };
 

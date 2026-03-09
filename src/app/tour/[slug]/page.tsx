@@ -26,7 +26,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { QRCodeSVG } from 'qrcode.react';
 
 export default function PublicTourViewer() {
-  const { slug } = useParams();
+  const params = useParams();
+  const slug = params?.slug as string;
   const firestore = useFirestore();
   const { toast } = useToast();
   const { user, isUserLoading } = useUser();

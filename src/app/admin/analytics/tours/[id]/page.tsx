@@ -341,7 +341,7 @@ export default function TourAnalytics() {
                               <DialogHeader>
                                 <DialogTitle className="flex items-center gap-3">
                                   <div className="p-2 bg-primary/10 rounded-xl">
-                                    {React.cloneElement(deviceInfo.icon as React.ReactElement, { className: 'w-6 h-6 text-primary' })}
+                                    {React.cloneElement(deviceInfo.icon as React.ReactElement<{ className?: string }>, { className: 'w-6 h-6 text-primary' })}
                                   </div>
                                   Detalles del Dispositivo
                                 </DialogTitle>
@@ -367,15 +367,15 @@ export default function TourAnalytics() {
                           {visit.contacted ? (
                             <>
                               {visit.contactMethods?.includes('info_request') && (
-                                <Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" title="Solicitud Información" />
+                                <span title="Solicitud Información"><Zap className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" /></span>
                               )}
                               {visit.contactMethods?.includes('whatsapp') && (
-                                <MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500 fill-green-500" title="WhatsApp Directo" />
+                                <span title="WhatsApp Directo"><MessageCircle className="w-3.5 h-3.5 md:w-4 md:h-4 text-green-500 fill-green-500" /></span>
                               )}
-                              {visit.contactMethods?.includes('phone') && <Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" title="Llamada" />}
-                              {visit.contactMethods?.includes('email') && <Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent" title="Email" />}
-                              {visit.contactMethods?.includes('location') && <MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" title="Ver Ubicación" />}
-                              {visit.contactMethods?.includes('share') && <Share2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-500" title="Compartido" />}
+                              {visit.contactMethods?.includes('phone') && <span title="Llamada"><Phone className="w-3.5 h-3.5 md:w-4 md:h-4 text-primary" /></span>}
+                              {visit.contactMethods?.includes('email') && <span title="Email"><Mail className="w-3.5 h-3.5 md:w-4 md:h-4 text-accent" /></span>}
+                              {visit.contactMethods?.includes('location') && <span title="Ver Ubicación"><MapPin className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" /></span>}
+                              {visit.contactMethods?.includes('share') && <span title="Compartido"><Share2 className="w-3.5 h-3.5 md:w-4 md:h-4 text-orange-500" /></span>}
                             </>
                           ) : (
                             <span className="text-[8px] text-muted-foreground/30 italic">---</span>

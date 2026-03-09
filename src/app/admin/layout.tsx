@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, Suspense, useRef } from 'react';
@@ -32,7 +31,7 @@ function SearchBar({
   onToggleMobile: (val: boolean) => void
 }) {
   const searchParams = useSearchParams();
-  const defaultValue = searchParams.get('search') || '';
+  const defaultValue = searchParams?.get('search') || '';
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {

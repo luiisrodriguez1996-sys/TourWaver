@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -79,7 +78,8 @@ function sanitizeForFirestore(data: any): any {
 }
 
 export default function TourEditor() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
