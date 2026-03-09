@@ -65,9 +65,12 @@ service cloud.firestore {
     }
 
     match /tours/{tourId} {
-      // AUDITORÍA v1.5.0: Separación de get y list para evitar enumeración masiva
+      // GET individual: permitido si está publicado o es admin
       allow get: if (resource != null && resource.data.published == true) || isAdmin();
-      allow list: if isAdmin();
+      
+      // LIST: permitido para admins, O para el público SIEMPRE QUE filtren por publicados.
+      // Firestore garantiza que si el filtro no coincide con la regla, la query falla.
+      allow list: if isAdmin() || (resource != null && resource.data.published == true);
       
       allow create, update: if isAdmin() && 
         isValidString(request.resource.data.name) && 

@@ -16,9 +16,12 @@ export function FirebaseErrorListener() {
 
   useEffect(() => {
     const handleError = (error: FirestorePermissionError) => {
-      // Si estamos en la vista pública del tour o en login, dejamos que el componente local 
-      // maneje el error para mostrar una interfaz controlada en lugar de crashear la app.
-      if (pathname?.startsWith('/tour/') || pathname === '/login') {
+      // Supressing errors on public or auth routes to prevent full app crashes
+      // if data fetching for optional sections fails.
+      const suppressPaths = ['/tour/', '/login', '/'];
+      const shouldSuppress = suppressPaths.some(p => pathname === p || pathname?.startsWith('/tour/'));
+
+      if (shouldSuppress) {
         console.warn('Controlled permission error suppressed in global listener:', error.message);
         return;
       }
@@ -33,7 +36,7 @@ export function FirebaseErrorListener() {
   }, [pathname]);
 
   if (error) {
-    // Solo lanzamos el error si no estamos en una ruta con manejo local elegante.
+    // Solo lanzamos el error si no estamos en una ruta con manejo local elegante o supresión.
     throw error;
   }
 
