@@ -4,7 +4,7 @@ Plataforma profesional para la creación y exhibición de tours virtuales 360°.
 
 ### Características v1.4.2:
 - **Seguridad Auditada (OWASP ZAP)**: Implementación de cabeceras de seguridad avanzadas (`Content-Security-Policy`, `X-Frame-Options`, `Permissions-Policy`, `HSTS`) para protección contra inyección, clickjacking y ataques de intermediario.
-- **Optimización de Despliegue**: Configuración nativa de infraestructura mediante `render.yaml` para despliegues atómicos y seguros.
+- **Optimización de Despliegue**: Configuración nativa de infraestructura mediante `render.yaml` para despliegues atómicos y seguros en Render.com.
 - **Privacidad Administrativa**: Ofuscación de errores de autenticación para evitar recolección de correos y persistencia de sesión volátil (`browserSessionPersistence`).
 - **SEO Inmobiliario Avanzado**: Los enlaces compartidos muestran la estructura `Nombre de la propiedad | Tour Virtual 360°` con previsualización de imagen real mediante SSR.
 - **Personalización de URL**: Capacidad de editar el Slug (identificador) de cada tour directamente desde el panel de detalles con validación automática de unicidad.

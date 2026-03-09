@@ -15,11 +15,11 @@ services:
       - key: PORT
         value: 10000
     
-    # PRIORIDAD 3: Cabeceras de seguridad globales
+    # Cabeceras de seguridad globales para cumplimiento OWASP
     headers:
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.firebaseapp.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.googleapis.com https://*.unsplash.com https://picsum.photos; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google-analytics.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.firebaseapp.com; media-src 'self' data:;"
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.firebaseapp.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.googleapis.com https://*.unsplash.com https://picsum.photos; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://www.google-analytics.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.firebaseapp.com; media-src 'self' data:;"
       - path: /*
         name: X-Frame-Options
         value: DENY
