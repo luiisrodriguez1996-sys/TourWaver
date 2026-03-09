@@ -6,10 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertCircle, ShieldAlert } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -69,9 +70,9 @@ export default function LoginPage() {
   }, [user, isUserLoading, router]);
 
   const formatTime = (ms: number) => {
-    const seconds = Math.ceil(ms / 1000);
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const totalSeconds = Math.ceil(ms / 1000);
+    const mins = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
@@ -141,6 +142,7 @@ export default function LoginPage() {
   }
 
   const isLocked = timeRemaining > 0;
+  const showSecurityNotice = failedAttempts >= 3;
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -169,14 +171,16 @@ export default function LoginPage() {
           </div>
 
           <CardContent className="space-y-4 pt-8">
-            {isLocked && (
-              <div className="bg-destructive/10 text-destructive p-4 rounded-xl flex items-start gap-3 border border-destructive/20 animate-in fade-in slide-in-from-top-2">
-                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
-                <div className="text-sm font-medium">
-                  <p className="font-bold">Demasiados intentos.</p>
-                  <p>Intentá de nuevo en {formatTime(timeRemaining)} minutos</p>
-                </div>
-              </div>
+            {showSecurityNotice && (
+              <Alert variant={isLocked ? "destructive" : "default"} className="border-2 rounded-xl bg-orange-50/50 border-orange-200 text-orange-800 dark:bg-orange-950/20 dark:border-orange-900 dark:text-orange-200">
+                <ShieldAlert className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                <AlertTitle className="text-xs font-bold uppercase tracking-wider">Protección activa</AlertTitle>
+                <AlertDescription className="text-xs font-medium">
+                  {isLocked 
+                    ? `Demasiados intentos. Intentá de nuevo en ${formatTime(timeRemaining)}` 
+                    : "Acceso temporalmente limitado por seguridad."}
+                </AlertDescription>
+              </Alert>
             )}
 
             <div className="space-y-2">
@@ -189,7 +193,7 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading || isLocked}
-                className="rounded-xl"
+                className="rounded-xl h-11"
               />
             </div>
             <div className="space-y-2">
@@ -201,7 +205,7 @@ export default function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading || isLocked}
-                className="rounded-xl"
+                className="rounded-xl h-11"
               />
             </div>
           </CardContent>

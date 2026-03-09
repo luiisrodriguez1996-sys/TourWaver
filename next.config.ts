@@ -1,6 +1,7 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
   images: {
     remotePatterns: [
       {
@@ -55,6 +56,8 @@ const nextConfig: NextConfig = {
 
     const cspBase = [
       "default-src 'self'",
+      "frame-ancestors 'none'",
+      "form-action 'self'",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https://placehold.co https://images.unsplash.com https://picsum.photos https://*.googleapis.com https://*.gstatic.com https://firebasestorage.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
