@@ -98,7 +98,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     const scene = new THREE_REAL.Scene();
     sceneRef.current = scene;
 
-    const camera = new THREE_REAL.PerspectiveCamera(85, width / height, 1, 1100);
+    const camera = new THREE_REAL.PerspectiveCamera(95, width / height, 1, 1100);
     cameraRef.current = camera;
 
     const geometry = new THREE_REAL.SphereGeometry(500, 60, 40);
