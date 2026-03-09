@@ -52,7 +52,8 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
 export default function TourAnalytics() {
-  const { id } = useParams();
+  const params = useParams();
+  const id = params?.id as string;
   const firestore = useFirestore();
   
   const tourRef = useMemoFirebase(() => {
