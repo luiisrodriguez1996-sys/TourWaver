@@ -59,7 +59,7 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob: https://placehold.co https://images.unsplash.com https://picsum.photos https://*.googleapis.com https://*.gstatic.com https://firebasestorage.googleapis.com",
       "font-src 'self' https://fonts.gstatic.com",
       "connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://firebasestorage.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google-analytics.com wss://*.firebaseio.com",
-      "frame-src 'self' https://*.firebaseapp.com https://recaptchaenterprise.googleapis.com",
+      "frame-src 'self' https://*.firebaseapp.com https://recaptchaenterprise.googleapis.com https://www.google.com",
       "worker-src 'self' blob:",
       "media-src 'self' data: blob: https://firebasestorage.googleapis.com",
       "object-src 'none'",
