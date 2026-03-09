@@ -1,5 +1,3 @@
-# Configuración de despliegue optimizada para Render.com
-# Incluye blindaje de infraestructura según auditoría OWASP v1.5.0
 version: "1"
 services:
   - type: web
@@ -14,5 +12,3 @@ services:
     envVars:
       - key: PORT
         value: 10000
-    
-    # ELIMINADO: sección headers — las cabeceras HTTP ahora se gestionan centralizadamente desde next.config.ts

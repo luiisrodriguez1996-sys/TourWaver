@@ -16,7 +16,6 @@ service cloud.firestore {
 
     function isValidString(val) { return val is string && val.size() > 0; }
     
-    // Validadores de formato (Regex)
     function isValidEmail(val) {
       return val == null || (val is string && val.matches('^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'));
     }
@@ -60,17 +59,15 @@ service cloud.firestore {
 
     match /slug_registry/{slug} {
       allow get: if true; 
-      allow list: if isAdmin();
-      allow create, update, delete: if isAdmin();
+      allow list, create, update, delete: if isAdmin();
     }
 
     match /tours/{tourId} {
-      // GET individual: permitido si está publicado o es admin
+      // GET individual: público si está publicado
       allow get: if (resource != null && resource.data.published == true) || isAdmin();
       
-      // LIST: permitido para admins, O para el público SIEMPRE QUE filtren por publicados.
-      // Firestore garantiza que si el filtro no coincide con la regla, la query falla.
-      allow list: if isAdmin() || (resource != null && resource.data.published == true);
+      // LIST: solo administradores
+      allow list: if isAdmin();
       
       allow create, update: if isAdmin() && 
         isValidString(request.resource.data.name) && 
