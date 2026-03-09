@@ -1,8 +1,8 @@
-# Tour Weaver v1.4.2
+# Tour Weaver v1.5.0
 
 Plataforma profesional para la creación y exhibición de tours virtuales 360°. Unificada con auditoría de seguridad integral, soporte SEO dinámico y compartición inteligente mediante códigos QR.
 
-### Características v1.4.2:
+### Características v1.5.0:
 - **Seguridad Auditada (OWASP ZAP)**: Implementación de cabeceras de seguridad avanzadas (`Content-Security-Policy`, `X-Frame-Options`, `Permissions-Policy`, `HSTS`) para protección contra inyección, clickjacking y ataques de intermediario.
 - **Optimización de Despliegue**: Configuración nativa de infraestructura mediante `render.yaml` para despliegues atómicos y seguros en Render.com.
 - **Privacidad Administrativa**: Ofuscación de errores de autenticación para evitar recolección de correos y persistencia de sesión volátil (`browserSessionPersistence`).
