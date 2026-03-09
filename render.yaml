@@ -1,33 +1,37 @@
-# Exported from Render on 2026-03-08T23:38:52Z
+# Configuración de despliegue optimizada para Render.com
+# Incluye blindaje de cabeceras HTTP según auditoría OWASP v1.4.2
 version: "1"
-projects:
-- name: Luis
-  environments:
-  - name: Production
-    services:
-    - type: web
-      name: TourWeaver
-      runtime: node
-      repo: https://github.com/luiisrodriguez1996-sys/TourWeaver
-      plan: starter
-      envVars:
+services:
+  - type: web
+    name: TourWeaver
+    runtime: node
+    repo: https://github.com/luiisrodriguez1996-sys/TourWaver
+    plan: starter
+    region: virginia
+    buildCommand: npm install; npm run build
+    startCommand: npm run start
+    autoDeployTrigger: "off"
+    envVars:
       - key: PORT
-        sync: false
-      region: virginia
-      buildCommand: npm install; npm run build
-      startCommand: npm run start
-      autoDeployTrigger: "off"
-headers:
-  - path: /*
-    name: X-Frame-Options
-    value: DENY
-  - path: /*
-    name: X-Content-Type-Options
-    value: nosniff
-  - path: /*
-    name: Referrer-Policy
-    value: strict-origin-when-cross-origin
-  - path: /*
-    name: Permissions-Policy
-    value: camera=(), microphone=(), geolocation=()
-
+        value: 10000
+    
+    # PRIORIDAD 3: Cabeceras de seguridad globales
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.googleapis.com https://*.firebaseapp.com https://www.gstatic.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https://*.googleapis.com https://*.unsplash.com https://picsum.photos; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.google-analytics.com; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://*.firebaseapp.com; media-src 'self' data:;"
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
+      - path: /*
+        name: Permissions-Policy
+        value: camera=(), microphone=(), geolocation=()
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains

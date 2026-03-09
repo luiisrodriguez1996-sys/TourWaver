@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -7,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { ShieldCheck, Loader2, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, Loader2 } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -49,21 +48,19 @@ export default function LoginPage() {
       });
       router.push('/admin');
     } catch (error: any) {
-      console.error('Login error:', error);
-      let errorMessage = "Ocurrió un error al intentar iniciar sesión.";
+      console.error('Login error context hidden for security');
       
-      // Detailed error mapping but generic for production security
-      if (error.code === 'auth/invalid-credential') {
-        errorMessage = "Credenciales incorrectas.";
-      } else if (error.code === 'auth/firebase-app-check-token-is-invalid') {
-        errorMessage = "Error de validación de seguridad. Por favor, recarga la página.";
-      } else if (error.code === 'auth/too-many-requests') {
-        errorMessage = "Demasiados intentos. Tu cuenta ha sido bloqueada temporalmente por seguridad.";
+      // PRIORIDAD 1: Mensajes de error genéricos para evitar enumeración de cuentas
+      // No revelamos si el email existe o si la contraseña es la que falló.
+      let errorMessage = "Credenciales inválidas. Por favor, verificá tus datos e intentá de nuevo.";
+      
+      if (error.code === 'auth/too-many-requests') {
+        errorMessage = "Demasiados intentos fallidos. Tu cuenta ha sido bloqueada temporalmente por seguridad.";
       }
 
       toast({
         variant: "destructive",
-        title: "Error de Seguridad",
+        title: "Error de Acceso",
         description: errorMessage,
       });
     } finally {

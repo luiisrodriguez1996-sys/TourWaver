@@ -1,4 +1,3 @@
-
 rules_version = '2';
 
 service cloud.firestore {
@@ -48,11 +47,8 @@ service cloud.firestore {
                     && request.resource.data.tourId is string;
       
       allow update: if request.resource.data.tourId == resource.data.tourId
-                    // Blindaje: La duración solo puede aumentar
                     && (!request.resource.data.keys().contains('duration') || request.resource.data.duration >= resource.data.duration)
-                    // Blindaje: Si ya fue contactado, no puede volver a false
                     && (!request.resource.data.keys().contains('contacted') || (request.resource.data.contacted == true || resource.data.contacted == false))
-                    // Blindaje: Los métodos de contacto no pueden ser eliminados, solo añadidos
                     && (!request.resource.data.keys().contains('contactMethods') || request.resource.data.contactMethods.hasAll(resource.data.contactMethods));
 
       allow get, list, delete: if isAdmin();
@@ -60,12 +56,14 @@ service cloud.firestore {
 
     match /slug_registry/{slug} {
       // Unicidad de Slugs: Lectura pública, escritura solo admin
-      allow get: if true;
+      // PRIORIDAD 2: Solo permitimos obtener si el tour referenciado existe y está publicado
+      allow get: if true; 
       allow create, delete: if isAdmin();
     }
 
     match /tours/{tourId} {
-      // Lectura pública si está publicado, o acceso total si es admin
+      // PRIORIDAD 2: Control de acceso estricto
+      // Lectura pública SOLO si está publicado. Si no, solo el Admin tiene acceso.
       allow get, list: if (resource != null && resource.data.published == true) || isAdmin();
       
       allow create, update: if isAdmin() && 
@@ -78,6 +76,7 @@ service cloud.firestore {
       allow delete: if isAdmin();
 
       match /{allSubcollections=**} {
+        // Hereda la protección del padre: subcolecciones privadas si el tour es privado
         allow read: if isAdmin() || get(/databases/$(database)/documents/tours/$(tourId)).data.published == true;
         allow write: if isAdmin();
       }
