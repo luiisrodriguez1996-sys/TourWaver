@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { ShieldCheck, Loader2 } from 'lucide-react';
+import { ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth, useUser } from '@/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
@@ -14,12 +14,52 @@ import { useToast } from '@/hooks/use-toast';
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [honeypot, setHoneypot] = useState(''); // Anti-bot trap
+  const [honeypot, setHoneypot] = useState(''); 
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Rate limiting states
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [lockoutUntil, setLockoutUntil] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+
   const router = useRouter();
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
   const { toast } = useToast();
+
+  // Load rate limiting state from localStorage
+  useEffect(() => {
+    const savedAttempts = localStorage.getItem('login_attempts');
+    const savedLockout = localStorage.getItem('login_lockout_until');
+    
+    if (savedAttempts) setFailedAttempts(parseInt(savedAttempts, 10));
+    if (savedLockout) {
+      const until = parseInt(savedLockout, 10);
+      if (until > Date.now()) {
+        setLockoutUntil(until);
+      }
+    }
+  }, []);
+
+  // Countdown timer logic
+  useEffect(() => {
+    if (lockoutUntil <= Date.now()) {
+      setTimeRemaining(0);
+      return;
+    }
+
+    const interval = setInterval(() => {
+      const remaining = lockoutUntil - Date.now();
+      if (remaining <= 0) {
+        setTimeRemaining(0);
+        clearInterval(interval);
+      } else {
+        setTimeRemaining(remaining);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [lockoutUntil]);
 
   // Redirect if already logged in
   useEffect(() => {
@@ -28,13 +68,20 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router]);
 
+  const formatTime = (ms: number) => {
+    const seconds = Math.ceil(ms / 1000);
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 1. Honeypot check: If the hidden field is filled, it's likely a bot.
+    if (Date.now() < lockoutUntil) return;
+
     if (honeypot) {
-      console.warn("Bot activity detected via honeypot.");
-      setIsLoading(true); // Simulate loading to confuse the bot
+      setIsLoading(true); 
       setTimeout(() => setIsLoading(false), 2000);
       return;
     }
@@ -42,16 +89,33 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      
+      // Success: Reset rate limiting
+      localStorage.removeItem('login_attempts');
+      localStorage.removeItem('login_lockout_until');
+      
       toast({
         title: "Acceso concedido",
         description: "Bienvenido al panel de administración.",
       });
       router.push('/admin');
     } catch (error: any) {
-      console.error('Login error context hidden for security');
-      
-      // PRIORIDAD 1: Mensajes de error genéricos para evitar enumeración de cuentas
-      // No revelamos si el email existe o si la contraseña es la que falló.
+      // Calculate next rate limiting state
+      const nextAttempts = failedAttempts + 1;
+      setFailedAttempts(nextAttempts);
+      localStorage.setItem('login_attempts', nextAttempts.toString());
+
+      let cooldownMs = 0;
+      if (nextAttempts === 3) cooldownMs = 2000;
+      else if (nextAttempts === 4) cooldownMs = 5000;
+      else if (nextAttempts >= 5) cooldownMs = 15 * 60 * 1000;
+
+      if (cooldownMs > 0) {
+        const until = Date.now() + cooldownMs;
+        setLockoutUntil(until);
+        localStorage.setItem('login_lockout_until', until.toString());
+      }
+
       let errorMessage = "Credenciales inválidas. Por favor, verificá tus datos e intentá de nuevo.";
       
       if (error.code === 'auth/too-many-requests') {
@@ -76,6 +140,8 @@ export default function LoginPage() {
     );
   }
 
+  const isLocked = timeRemaining > 0;
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl border-none overflow-hidden rounded-[2rem]">
@@ -89,7 +155,6 @@ export default function LoginPage() {
           </div>
         </CardHeader>
         <form onSubmit={handleSubmit} className="relative">
-          {/* Honeypot field - Hidden from users, but visible to bots */}
           <div className="sr-only" aria-hidden="true">
             <label htmlFor="website_url">Website URL</label>
             <input 
@@ -104,6 +169,16 @@ export default function LoginPage() {
           </div>
 
           <CardContent className="space-y-4 pt-8">
+            {isLocked && (
+              <div className="bg-destructive/10 text-destructive p-4 rounded-xl flex items-start gap-3 border border-destructive/20 animate-in fade-in slide-in-from-top-2">
+                <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+                <div className="text-sm font-medium">
+                  <p className="font-bold">Demasiados intentos.</p>
+                  <p>Intentá de nuevo en {formatTime(timeRemaining)} minutos</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">Correo Electrónico</Label>
               <Input 
@@ -113,7 +188,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || isLocked}
                 className="rounded-xl"
               />
             </div>
@@ -125,18 +200,24 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || isLocked}
                 className="rounded-xl"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4 pb-8">
-            <Button className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20" type="submit" disabled={isLoading}>
+            <Button 
+              className="w-full h-12 text-base font-semibold rounded-xl shadow-lg shadow-primary/20" 
+              type="submit" 
+              disabled={isLoading || isLocked}
+            >
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                   Verificando...
                 </>
+              ) : isLocked ? (
+                'Bloqueado temporalmente'
               ) : 'Iniciar sesión'}
             </Button>
             <div className="flex items-center gap-2 justify-center text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
