@@ -4,6 +4,7 @@ export const MOCK_TOURS: Tour[] = [
   {
     id: '1',
     name: 'Modern Lakeside Villa',
+    clientName: 'Lakeside Realty',
     slug: 'modern-lakeside-villa',
     description: 'A beautiful contemporary home with panoramic lake views.',
     published: true,
