@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -188,7 +189,7 @@ export default function LoginPage() {
               <Input 
                 id="email" 
                 type="email" 
-                placeholder="admin@tourweaver.com" 
+                placeholder="admin@vistar.com" 
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required

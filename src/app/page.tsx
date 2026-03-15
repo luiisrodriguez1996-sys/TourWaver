@@ -63,7 +63,7 @@ const translations = {
     ctaRates: "Ver Tarifas",
     ctaGuarantee: "Servicio Garantizado",
     ctaQuality: "Calidad Profesional",
-    footerCopy: "© 2026 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
+    footerCopy: "© 2026 Vistar - Servicios de Visualización 360°. Todos los derechos reservados.",
     footerTerms: "Condiciones de Uso",
     footerPrivacy: "Privacidad",
     viewTour: "Ver Tour Virtual"
@@ -94,7 +94,7 @@ const translations = {
     ctaRates: "See Rates",
     ctaGuarantee: "Guaranteed Service",
     ctaQuality: "Professional Quality",
-    footerCopy: "© 2026 Tour Weaver - 360° Visualization Services. All rights reserved.",
+    footerCopy: "© 2026 Vistar - 360° Visualization Services. All rights reserved.",
     footerTerms: "Terms of Use",
     footerPrivacy: "Privacy",
     viewTour: "View Virtual Tour"
@@ -125,7 +125,7 @@ const translations = {
     ctaRates: "Ver Tarifas",
     ctaGuarantee: "Serviço Garantizado",
     ctaQuality: "Qualidade Profissional",
-    footerCopy: "© 2026 Tour Weaver - Servicios de Visualización 360°. Todos los derechos reservados.",
+    footerCopy: "© 2026 Vistar - Servicios de Visualización 360°. Todos los derechos reservados.",
     footerTerms: "Termos de Uso",
     footerPrivacy: "Privacidade",
     viewTour: "Ver Tour Virtual"
@@ -212,7 +212,7 @@ export default function Home() {
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
               <Globe className="text-white w-5 h-5" />
             </div>
-            <span className="text-xl font-bold font-headline tracking-tight text-primary">Tour Weaver</span>
+            <span className="text-xl font-bold font-headline tracking-tight text-primary">Vistar</span>
           </div>
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
             <Link href="#servicios" className="hover:text-primary transition-colors">{t.servicios}</Link>
@@ -430,7 +430,7 @@ export default function Home() {
               <div className="w-6 h-6 bg-primary rounded flex items-center justify-center">
                 <Globe className="text-white w-4 h-4" />
               </div>
-              <span className="font-bold font-headline text-primary">Tour Weaver</span>
+              <span className="font-bold font-headline text-primary">Vistar</span>
             </div>
             <nav className="flex flex-wrap justify-center gap-6">
               <Link href="#servicios" className="text-sm text-muted-foreground hover:text-primary">{t.servicios}</Link>

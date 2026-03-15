@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -705,7 +706,7 @@ export default function PublicTourViewer() {
           <span 
             className="text-neutral-700 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors underline decoration-neutral-700/30"
           >
-            Potenciado por Tour Weaver
+            Potenciado por Vistar
           </span>
         </Link>
       </div>

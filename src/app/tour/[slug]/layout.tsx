@@ -1,3 +1,4 @@
+
 import { Metadata } from "next";
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
  * usar el SDK de cliente de Firebase aquí de forma sencilla.
  */
 async function getTourData(slug: string) {
-  const projectId = "studio-9776081687-fec5d";
+  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "studio-9776081687-fec5d";
   try {
     // 1. Consultar el tourId asociado al slug en el registro de seguridad
     const registryRes = await fetch(
@@ -60,7 +61,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? `${tour.name} | Tour Virtual 360°` 
     : "Propiedad Exclusiva | Experiencia Inmersiva";
   
-  const description = tour?.description || "Explora esta propiedad en detalle con nuestro tour virtual 360°. Una experiencia exclusiva en la plataforma Tour Weaver.";
+  const description = tour?.description || "Explora esta propiedad en detalle con nuestro tour virtual 360°. Una experiencia exclusiva en la plataforma Vistar.";
   const image = tour?.thumbnailUrl || `https://placehold.co/1200x630/29ABE2/white?text=Tour+Virtual+360`;
 
   return {
@@ -69,8 +70,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     openGraph: {
       title: displayTitle,
       description: description,
-      url: `https://tour-weaver.com/tour/${slug}`,
-      siteName: "Tour Weaver",
+      url: `https://vistar-360.com/tour/${slug}`,
+      siteName: "Vistar",
       locale: "es_ES",
       type: 'website',
       images: [

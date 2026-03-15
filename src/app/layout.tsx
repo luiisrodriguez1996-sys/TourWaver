@@ -11,14 +11,14 @@ import { GoogleSearchConsoleVerification } from '@/components/GoogleSearchConsol
  */
 export const metadata: Metadata = {
   title: {
-    default: "Tour Weaver | Tours Virtuales 360° de Alta Gama",
-    template: "%s | Tour Weaver"
+    default: "Vistar | Tours Virtuales 360° de Alta Gama",
+    template: "%s | Vistar"
   },
   description: "Plataforma profesional para la creación y exhibición de tours virtuales 360°. Eleva tus listados inmobiliarios con experiencias inmersivas premium.",
-  keywords: ["tour virtual", "360", "inmobiliaria", "real estate", "vistas panorámicas", "propiedades de lujo", "Tour Weaver", "broker inmobiliario"],
-  authors: [{ name: "Tour Weaver" }],
-  creator: "Tour Weaver",
-  metadataBase: new URL('https://tour-weaver.com'), // Cambiar por el dominio real en producción
+  keywords: ["tour virtual", "360", "inmobiliaria", "real estate", "vistas panorámicas", "propiedades de lujo", "Vistar", "broker inmobiliario"],
+  authors: [{ name: "Vistar" }],
+  creator: "Vistar",
+  metadataBase: new URL('https://vistar-360.com'), // Cambiar por el dominio real en producción
   alternates: {
     canonical: '/',
   },
@@ -26,26 +26,26 @@ export const metadata: Metadata = {
     icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%2329ABE2%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22><circle cx=%2212%22 cy=%2212%22 r=%2210%22/><line x1=%222%22 y1=%2212%22 x2=%2222%22 y2=%2212%22/><path d=%22M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z%22/></svg>',
   },
   openGraph: {
-    title: "Tour Weaver | Tours Virtuales 360° Profesionales",
+    title: "Vistar | Tours Virtuales 360° Profesionales",
     description: "Muestra tus propiedades como nunca antes con experiencias inmersivas 360° de alta fidelidad.",
-    url: "https://tour-weaver.com",
-    siteName: "Tour Weaver",
+    url: "https://vistar-360.com",
+    siteName: "Vistar",
     locale: "es_ES",
     type: "website",
     images: [
       {
-        url: "https://placehold.co/1200x630/29ABE2/white?text=Tour+Weaver+360",
+        url: "https://placehold.co/1200x630/29ABE2/white?text=Vistar+360",
         width: 1200,
         height: 630,
-        alt: "Tour Weaver Brand Identity",
+        alt: "Vistar Brand Identity",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tour Weaver | Tours Virtuales 360°",
+    title: "Vistar | Tours Virtuales 360°",
     description: "La mejor solución de visualización inmersiva para el mercado inmobiliario.",
-    images: ["https://placehold.co/1200x630/29ABE2/white?text=Tour+Weaver+360"],
+    images: ["https://placehold.co/1200x630/29ABE2/white?text=Vistar+360"],
   },
   robots: {
     index: true,

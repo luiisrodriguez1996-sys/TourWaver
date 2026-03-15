@@ -1,4 +1,4 @@
-# Tour Weaver v1.5.7
+# Vistar v1.5.7
 
 Plataforma profesional para la creación y exhibición de tours virtuales 360°. Unificada con auditoría de seguridad integral, soporte SEO dinámico y compartición inteligente mediante códigos QR.
 

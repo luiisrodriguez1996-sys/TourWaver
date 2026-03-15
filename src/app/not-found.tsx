@@ -13,7 +13,7 @@ export default function NotFound() {
         <h1 className="text-6xl font-bold font-headline text-primary mb-2">404</h1>
         <h2 className="text-2xl font-bold mb-4">Página no encontrada</h2>
         <p className="text-muted-foreground mb-8 text-balance">
-          No pudimos encontrar la página que buscas. Es posible que el enlace esté roto o la página haya sido eliminada.
+          No pudimos encontrar la página que buscas. Es posible que el enlace esté roto o la página haya sido eliminada de Vistar.
         </p>
         <div className="flex flex-col gap-3">
           <Link href="/">

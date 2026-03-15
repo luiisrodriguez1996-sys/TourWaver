@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, Suspense, useRef } from 'react';
@@ -159,7 +160,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
             <Globe className="text-white w-5 h-5" />
           </div>
-          <span className="text-xl font-bold font-headline tracking-tight text-primary">Tour Weaver</span>
+          <span className="text-xl font-bold font-headline tracking-tight text-primary">Vistar</span>
         </button>
       </div>
       
