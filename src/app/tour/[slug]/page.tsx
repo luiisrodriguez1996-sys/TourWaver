@@ -212,6 +212,7 @@ export default function PublicTourViewer() {
       canvas.height = 1000;
       ctx?.drawImage(img, 0, 0, 1000, 1000);
       const pngFile = canvas.toDataURL("image/png");
+      const downloadLink = document.createElement("a");
       downloadLink.download = `QR-${tour?.slug || 'tour'}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
@@ -350,7 +351,7 @@ export default function PublicTourViewer() {
                     </div>
                   )}
 
-                  {(tour.description || tour.address) && (
+                  {!tour.hideTourHeader && (tour.description || tour.address) && (
                     <div className="bg-white/10 rounded-xl overflow-hidden border border-white/5">
                       <div className="flex items-center justify-between bg-primary text-white px-2 py-1">
                         <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Descripción de la propiedad</p>
@@ -376,7 +377,7 @@ export default function PublicTourViewer() {
                     </div>
                   )}
                   
-                  {(activeScene?.description || activeScene?.floorId) && (
+                  {!tour.hideTourHeader && (activeScene?.description || activeScene?.floorId) && (
                     <div className="bg-white/20 rounded-xl overflow-hidden border border-white/10">
                       <div className="flex items-center justify-between bg-accent text-white px-2 py-1">
                         <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Sobre esta estancia</p>
