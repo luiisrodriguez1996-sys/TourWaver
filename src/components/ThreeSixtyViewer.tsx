@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
@@ -88,11 +89,13 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     const width = canvasHolderRef.current.clientWidth || window.innerWidth;
     const height = canvasHolderRef.current.clientHeight || window.innerHeight;
 
+    // Limpieza agresiva previa
     if (rendererRef.current) {
       if (canvasHolderRef.current.contains(rendererRef.current.domElement)) {
         canvasHolderRef.current.removeChild(rendererRef.current.domElement);
       }
       rendererRef.current.dispose();
+      rendererRef.current = null;
     }
 
     const scene = new THREE_REAL.Scene();
@@ -128,12 +131,12 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     scene.add(sphere);
     sphereRef.current = sphere;
 
-    let renderer: THREE_REAL.WebGLRenderer;
     try {
-      renderer = new THREE_REAL.WebGLRenderer({ 
+      const renderer = new THREE_REAL.WebGLRenderer({ 
         antialias: true, 
         alpha: true, 
-        powerPreference: 'high-performance' 
+        powerPreference: 'high-performance',
+        failIfMajorPerformanceCaveat: false 
       });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
       renderer.setSize(width, height);
@@ -142,7 +145,7 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
       rendererRef.current = renderer;
     } catch (e) {
       console.error("Error al inicializar WebGL:", e);
-      setWebGLError("Tu navegador o dispositivo no soporta aceleración gráfica WebGL, necesaria para ver tours 360°.");
+      setWebGLError("No se pudo iniciar el motor gráfico. Intenta cerrar otras pestañas o recargar el navegador.");
       setIsLoadingTexture(false);
       isLoadingRef.current = false;
       return;
@@ -247,8 +250,8 @@ export const ThreeSixtyViewer: React.FC<ThreeSixtyViewerProps> = ({
     return () => {
       window.removeEventListener('resize', handleResize);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
-      if (rendererRef.current && canvasHolderRef.current) {
-        if (canvasHolderRef.current.contains(rendererRef.current.domElement)) {
+      if (rendererRef.current) {
+        if (canvasHolderRef.current && canvasHolderRef.current.contains(rendererRef.current.domElement)) {
           canvasHolderRef.current.removeChild(rendererRef.current.domElement);
         }
         rendererRef.current.dispose();

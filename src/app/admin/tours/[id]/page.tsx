@@ -45,7 +45,8 @@ import {
   Eye,
   EyeOff,
   AlertTriangle,
-  EyeClosed
+  EyeClosed,
+  Shield
 } from 'lucide-react';
 import {
   Select,
@@ -355,10 +356,8 @@ export default function TourEditor() {
     
     const idToDelete = activeSceneId;
     
-    // 1. Agregar a la lista de eliminados para el batch de Firestore
     setDeletedSceneIds(prev => [...prev, idToDelete]);
     
-    // 2. Filtrar localScenes y LIMPIAR enlaces rotos en otras escenas
     setLocalScenes(prev => {
       return prev
         .filter(s => s.id !== idToDelete)
@@ -368,11 +367,9 @@ export default function TourEditor() {
         }));
     });
 
-    // 3. Cambiar la escena activa a la primera disponible o null
     const remainingScenes = localScenes.filter(s => s.id !== idToDelete);
     setActiveSceneId(remainingScenes.length > 0 ? remainingScenes[0].id : null);
     
-    // 4. Marcar que hay cambios sin guardar para habilitar el botón
     setHasUnsavedChanges(true);
     
     toast({ 
@@ -458,7 +455,6 @@ export default function TourEditor() {
     try {
       const batch = writeBatch(firestore);
       
-      // Manejo de cambio de Slug si ha ocurrido
       if (localTourInfo.slug !== tour.slug) {
         const slugRegistryRef = doc(firestore, 'slug_registry', localTourInfo.slug);
         const slugSnapshot = await getDoc(slugRegistryRef);
@@ -473,7 +469,6 @@ export default function TourEditor() {
           return;
         }
 
-        // Eliminar slug antiguo y registrar el nuevo
         batch.delete(doc(firestore, 'slug_registry', tour.slug));
         batch.set(slugRegistryRef, { tourId: id });
       }
