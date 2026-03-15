@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
@@ -11,7 +10,7 @@ import { GoogleSearchConsoleVerification } from '@/components/GoogleSearchConsol
  */
 export const metadata: Metadata = {
   title: {
-    default: "Vistar | Tours Virtuales 360° de Alta Gama",
+    default: "Vistar | Tours Virtuales 360°",
     template: "%s | Vistar"
   },
   description: "Plataforma profesional para la creación y exhibición de tours virtuales 360°. Eleva tus listados inmobiliarios con experiencias inmersivas premium.",
