@@ -212,7 +212,6 @@ export default function PublicTourViewer() {
       canvas.height = 1000;
       ctx?.drawImage(img, 0, 0, 1000, 1000);
       const pngFile = canvas.toDataURL("image/png");
-      const downloadLink = document.createElement("a");
       downloadLink.download = `QR-${tour?.slug || 'tour'}.png`;
       downloadLink.href = pngFile;
       downloadLink.click();
@@ -318,128 +317,141 @@ export default function PublicTourViewer() {
   return (
     <div className="fixed inset-0 w-full h-full overflow-hidden bg-black flex flex-col touch-none select-none z-0">
       <div className="absolute top-0 left-0 right-0 p-2 md:p-4 z-20 pointer-events-none flex flex-col md:flex-row justify-between items-start gap-4">
-        <div className="pointer-events-auto w-full md:w-[40%]">
-          <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white w-full shadow-2xl overflow-hidden">
-            <div 
-              className={cn(
-                "p-2 md:p-3 flex items-center justify-between transition-colors", 
-                hasDetailsContent ? "cursor-pointer hover:bg-white/5" : "cursor-default"
-              )} 
-              onClick={() => hasDetailsContent && setIsDetailsExpanded(!isDetailsExpanded)}
-            >
-              <div className="flex-1 min-w-0 pr-4">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <h1 className="text-sm md:text-lg font-bold font-headline truncate">{tour.name}</h1>
-                  {!tour.published && isAdmin && <div className="flex-shrink-0 flex items-center gap-1 bg-accent/20 text-accent px-1.5 py-0.5 rounded text-[8px] font-bold border border-accent/20"><Shield className="w-2.5 h-2.5" /> ADMIN</div>}
+        {(!tour.hideTourHeader || isDetailsExpanded) && (
+          <div className="pointer-events-auto w-full md:w-[40%]">
+            <div className="bg-black/40 backdrop-blur-md rounded-2xl border border-white/10 text-white w-full shadow-2xl overflow-hidden">
+              {!tour.hideTourHeader && (
+                <div 
+                  className={cn(
+                    "p-2 md:p-3 flex items-center justify-between transition-colors", 
+                    hasDetailsContent ? "cursor-pointer hover:bg-white/5" : "cursor-default"
+                  )} 
+                  onClick={() => hasDetailsContent && setIsDetailsExpanded(!isDetailsExpanded)}
+                >
+                  <div className="flex-1 min-w-0 pr-4">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h1 className="text-sm md:text-lg font-bold font-headline truncate">{tour.name}</h1>
+                      {!tour.published && isAdmin && <div className="flex-shrink-0 flex items-center gap-1 bg-accent/20 text-accent px-1.5 py-0.5 rounded text-[8px] font-bold border border-accent/20"><Shield className="w-2.5 h-2.5" /> ADMIN</div>}
+                    </div>
+                    <p className="text-[9px] md:text-[10px] text-white/80 flex items-center gap-1"><Info className="w-2.5 h-2.5" /> {activeScene?.name || 'Cargando...'}</p>
+                  </div>
+                  {hasDetailsContent && (isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />)}
                 </div>
-                <p className="text-[9px] md:text-[10px] text-white/80 flex items-center gap-1"><Info className="w-2.5 h-2.5" /> {activeScene?.name || 'Cargando...'}</p>
-              </div>
-              {hasDetailsContent && (isDetailsExpanded ? <ChevronUp className="w-4 h-4 text-white/60" /> : <ChevronDown className="w-4 h-4 text-white/60" />)}
-            </div>
-            
-            <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-3", isDetailsExpanded && hasDetailsContent ? "max-h-[600px] pb-3 opacity-100" : "max-h-0 opacity-0")}>
-              <div className="space-y-2 pt-1">
-                {(tour.description || tour.address) && (
-                  <div className="bg-white/10 rounded-xl overflow-hidden border border-white/5">
-                    <div className="flex items-center justify-between bg-primary text-white px-2 py-1">
-                      <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Descripción de la propiedad</p>
+              )}
+              
+              <div className={cn("overflow-hidden transition-all duration-300 ease-in-out px-2 md:px-3", isDetailsExpanded && hasDetailsContent ? "max-h-[600px] pb-3 opacity-100" : "max-h-0 opacity-0")}>
+                <div className="space-y-2 pt-1">
+                  {tour.hideTourHeader && isDetailsExpanded && (
+                    <div className="flex items-center justify-between pb-2 border-b border-white/10 mb-2">
+                      <h1 className="text-xs font-bold font-headline truncate pr-4">{tour.name}</h1>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full hover:bg-white/10" onClick={() => setIsDetailsExpanded(false)}>
+                        <X className="w-3.5 h-3.5 text-white/60" />
+                      </Button>
                     </div>
-                    
-                    <div className="p-1.5 md:p-2 space-y-1.5">
-                      {tour.address && (
-                        <a 
-                          href={getMapsUrl() || '#'} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="group flex items-start gap-2 text-[10px] md:text-xs text-white hover:text-primary transition-colors"
-                          onClick={() => trackConversion('location')}
-                        >
-                          <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 mt-0.5 text-primary" />
-                          <span className="underline underline-offset-4 decoration-white/20 group-hover:decoration-primary">{tour.address}</span>
-                        </a>
-                      )}
-                      {tour.description && (
-                        <p className="text-[10px] md:text-sm text-white/70 font-medium leading-relaxed">{tour.description}</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {(activeScene?.description || activeScene?.floorId) && (
-                  <div className="bg-white/20 rounded-xl overflow-hidden border border-white/10">
-                    <div className="flex items-center justify-between bg-accent text-white px-2 py-1">
-                      <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Sobre esta estancia</p>
-                      {activeScene?.floorId && tour?.floors?.find((f: any) => f.id === activeScene.floorId) && (
-                        <span className="text-[8px] md:text-[9px] font-medium text-white flex items-center gap-1 uppercase">
-                          <Layers className="w-2.5 h-2.5" /> {tour.floors.find((f: any) => f.id === activeScene.floorId).name}
-                        </span>
-                      )}
-                    </div>
-                    {activeScene?.description && (
-                      <div className="p-1.5 md:p-2">
-                        <p className="text-[10px] md:text-sm text-white/80 font-medium leading-relaxed">{activeScene.description}</p>
+                  )}
+
+                  {(tour.description || tour.address) && (
+                    <div className="bg-white/10 rounded-xl overflow-hidden border border-white/5">
+                      <div className="flex items-center justify-between bg-primary text-white px-2 py-1">
+                        <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Descripción de la propiedad</p>
                       </div>
-                    )}
-                  </div>
-                )}
-                
-                {hasContactInfo && (
-                  <div className={cn(
-                    "space-y-1.5 pt-2 border-t border-white/10 transition-all duration-500",
-                    highlightContact && "bg-primary/20 scale-[1.02] rounded-xl p-2 ring-2 ring-primary shadow-lg"
-                  )}>
-                    <p className="text-[8px] md:text-[9px] font-black text-white/60 uppercase tracking-wider">Contacto Directo</p>
-                    <div className="grid grid-cols-1 gap-1.5">
-                      {tour.contactWhatsApp && (
-                        <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackConversion('whatsapp')}>
-                          <Button size="sm" className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-[9px] md:text-xs h-7 md:h-8 rounded-xl gap-2 font-bold">
-                            <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                          </Button>
-                        </a>
-                      )}
-                      <div className="flex gap-1.5">
-                        {tour.contactPhone && (
-                          <>
-                            <a href={`tel:${tour.contactPhone}`} className="flex-1 md:hidden" onClick={() => trackConversion('phone')}>
-                              <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[9px] h-7 rounded-xl gap-2">
-                                <Phone className="w-3.5 h-3.5" /> Llamar
-                              </Button>
-                            </a>
-                            <Button 
-                              size="sm" 
-                              variant="secondary" 
-                              className="hidden md:flex flex-1 bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-xl gap-2 truncate"
-                              onClick={() => handleCopy(tour.contactPhone!, "Teléfono", "phone")}
-                            >
-                              <Phone className="w-3.5 h-3.5 shrink-0" /> {tour.contactPhone}
-                            </Button>
-                          </>
+                      
+                      <div className="p-1.5 md:p-2 space-y-1.5">
+                        {tour.address && (
+                          <a 
+                            href={getMapsUrl() || '#'} 
+                            target="_blank" 
+                            rel="noopener noreferrer" 
+                            className="group flex items-start gap-2 text-[10px] md:text-xs text-white hover:text-primary transition-colors"
+                            onClick={() => trackConversion('location')}
+                          >
+                            <MapPin className="w-3 h-3 md:w-3.5 md:h-3.5 mt-0.5 text-primary" />
+                            <span className="underline underline-offset-4 decoration-white/20 group-hover:decoration-primary">{tour.address}</span>
+                          </a>
                         )}
-                        {tour.contactEmail && (
-                          <>
-                            <a href={`mailto:${tour.contactEmail}`} className="flex-1 md:hidden" onClick={() => trackConversion('email')}>
-                              <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[9px] h-7 rounded-xl gap-2">
-                                <Mail className="w-3.5 h-3.5" /> Email
-                              </Button>
-                            </a>
-                            <Button 
-                              size="sm" 
-                              variant="secondary" 
-                              className="hidden md:flex flex-1 bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-xl gap-2 truncate"
-                              onClick={() => handleCopy(tour.contactEmail!, "Email", "email")}
-                            >
-                              <Mail className="w-3.5 h-3.5 shrink-0" /> {tour.contactEmail}
-                            </Button>
-                          </>
+                        {tour.description && (
+                          <p className="text-[10px] md:text-sm text-white/70 font-medium leading-relaxed">{tour.description}</p>
                         )}
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
+                  
+                  {(activeScene?.description || activeScene?.floorId) && (
+                    <div className="bg-white/20 rounded-xl overflow-hidden border border-white/10">
+                      <div className="flex items-center justify-between bg-accent text-white px-2 py-1">
+                        <p className="text-[8px] md:text-[9px] font-medium uppercase tracking-wider">Sobre esta estancia</p>
+                        {activeScene?.floorId && tour?.floors?.find((f: any) => f.id === activeScene.floorId) && (
+                          <span className="text-[8px] md:text-[9px] font-medium text-white flex items-center gap-1 uppercase">
+                            <Layers className="w-2.5 h-2.5" /> {tour.floors.find((f: any) => f.id === activeScene.floorId).name}
+                          </span>
+                        )}
+                      </div>
+                      {activeScene?.description && (
+                        <div className="p-1.5 md:p-2">
+                          <p className="text-[10px] md:text-sm text-white/80 font-medium leading-relaxed">{activeScene.description}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
+                  {hasContactInfo && (
+                    <div className={cn(
+                      "space-y-1.5 pt-2 border-t border-white/10 transition-all duration-500",
+                      highlightContact && "bg-primary/20 scale-[1.02] rounded-xl p-2 ring-2 ring-primary shadow-lg"
+                    )}>
+                      <p className="text-[8px] md:text-[9px] font-black text-white/60 uppercase tracking-wider">Contacto Directo</p>
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {tour.contactWhatsApp && (
+                          <a href={getWhatsAppLink() || '#'} target="_blank" rel="noopener noreferrer" onClick={() => trackConversion('whatsapp')}>
+                            <Button size="sm" className="w-full bg-[#25D366] hover:bg-[#20ba59] text-white text-[9px] md:text-xs h-7 md:h-8 rounded-xl gap-2 font-bold">
+                              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                            </Button>
+                          </a>
+                        )}
+                        <div className="flex gap-1.5">
+                          {tour.contactPhone && (
+                            <>
+                              <a href={`tel:${tour.contactPhone}`} className="flex-1 md:hidden" onClick={() => trackConversion('phone')}>
+                                <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[9px] h-7 rounded-xl gap-2">
+                                  <Phone className="w-3.5 h-3.5" /> Llamar
+                                </Button>
+                              </a>
+                              <Button 
+                                size="sm" 
+                                variant="secondary" 
+                                className="hidden md:flex flex-1 bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-xl gap-2 truncate"
+                                onClick={() => handleCopy(tour.contactPhone!, "Teléfono", "phone")}
+                              >
+                                <Phone className="w-3.5 h-3.5 shrink-0" /> {tour.contactPhone}
+                              </Button>
+                            </>
+                          )}
+                          {tour.contactEmail && (
+                            <>
+                              <a href={`mailto:${tour.contactEmail}`} className="flex-1 md:hidden" onClick={() => trackConversion('email')}>
+                                <Button size="sm" variant="secondary" className="w-full bg-white/10 hover:bg-white/20 text-white text-[9px] h-7 rounded-xl gap-2">
+                                  <Mail className="w-3.5 h-3.5" /> Email
+                                </Button>
+                              </a>
+                              <Button 
+                                size="sm" 
+                                variant="secondary" 
+                                className="hidden md:flex flex-1 bg-white/10 hover:bg-white/20 text-white text-[10px] h-8 rounded-xl gap-2 truncate"
+                                onClick={() => handleCopy(tour.contactEmail!, "Email", "email")}
+                              >
+                                <Mail className="w-3.5 h-3.5 shrink-0" /> {tour.contactEmail}
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
         
         <div className="flex gap-2 pointer-events-auto w-full md:w-auto justify-end items-center">
           {tour.contactWhatsApp && (
@@ -585,58 +597,62 @@ export default function PublicTourViewer() {
         )}
       </div>
 
-      <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center pointer-events-none">
-        <div className="bg-black/40 backdrop-blur-md px-2 md:px-6 py-1 rounded-full border border-white/10 flex items-center gap-1 md:gap-2 text-white shadow-2xl pointer-events-auto max-w-full overflow-x-auto scrollbar-hide touch-pan-x">
-           <Dialog>
-             <DialogTrigger asChild>
-                <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-9 px-3 md:px-4 flex-shrink-0">
-                  <ChevronUp className="w-4 h-4" />
-                  <span className="text-[10px] md:text-sm font-medium whitespace-nowrap">{activeScene?.name || 'Estancias'}</span>
-                </Button>
-             </DialogTrigger>
-             <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[425px] bg-black/80 backdrop-blur-xl border-white/10 text-white p-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
-                <DialogHeader className="p-6 border-b border-white/10 text-left">
-                  <DialogTitle className="font-bold text-lg">Explorar Estancias</DialogTitle>
-                  <DialogDescription>
-                    Lista de todas las habitaciones y estancias disponibles
-                  </DialogDescription>
-                </DialogHeader>
-                <ScrollArea className="max-h-[60vh] p-4">
-                  <div className="grid grid-cols-1 gap-2">
-                    {orderedScenes?.map((scene: any) => {
-                      const floor = tour.floors?.find((f: any) => f.id === scene.floorId);
-                      return (
-                        <DialogClose asChild key={scene.id}>
-                          <button onClick={() => { setActiveSceneId(scene.id); closeAllPanels(); }} className={cn("w-full flex items-center gap-4 p-3 rounded-2xl transition-all group border", activeSceneId === scene.id ? 'bg-primary/20 text-primary border-primary/40' : 'hover:bg-white/10 text-white/70 hover:text-white border-transparent')}>
-                            <div className="relative w-20 md:w-24 h-14 md:h-16 rounded-xl overflow-hidden flex-shrink-0">
-                              <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
-                              {activeSceneId === scene.id && <div className="absolute inset-0 bg-primary/40 flex items-center justify-center"><Check className="w-6 h-6 text-white" /></div>}
-                            </div>
-                            <div className="flex flex-col flex-1 min-w-0 text-left">
-                              <span className="text-xs md:text-sm font-semibold truncate">{scene.name}</span>
-                              {floor && (
-                                <span className="text-[10px] text-white/40 flex items-center gap-1 mt-0.5">
-                                  <Layers className="w-2.5 h-2.5" /> {floor.name}
-                                </span>
-                              )}
-                            </div>
-                          </button>
-                        </DialogClose>
-                      );
-                    })}
-                  </div>
-                </ScrollArea>
-             </DialogContent>
-           </Dialog>
+      {(!tour.hideSceneSelector || tour.showFloorPlan) && (
+        <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-4 w-full px-4 justify-center pointer-events-none">
+          <div className="bg-black/40 backdrop-blur-md px-2 md:px-6 py-1 rounded-full border border-white/10 flex items-center gap-1 md:gap-2 text-white shadow-2xl pointer-events-auto max-w-full overflow-x-auto scrollbar-hide touch-pan-x">
+            {!tour.hideSceneSelector && (
+              <Dialog>
+                <DialogTrigger asChild>
+                    <Button variant="ghost" className="flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-9 px-3 md:px-4 flex-shrink-0">
+                      <ChevronUp className="w-4 h-4" />
+                      <span className="text-[10px] md:text-sm font-medium whitespace-nowrap">{activeScene?.name || 'Estancias'}</span>
+                    </Button>
+                </DialogTrigger>
+                <DialogContent className="w-[calc(100vw-2rem)] sm:max-w-[425px] bg-black/80 backdrop-blur-xl border-white/10 text-white p-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                    <DialogHeader className="p-6 border-b border-white/10 text-left">
+                      <DialogTitle className="font-bold text-lg">Explorar Estancias</DialogTitle>
+                      <DialogDescription>
+                        Lista de todas las habitaciones y estancias disponibles
+                      </DialogDescription>
+                    </DialogHeader>
+                    <ScrollArea className="max-h-[60vh] p-4">
+                      <div className="grid grid-cols-1 gap-2">
+                        {orderedScenes?.map((scene: any) => {
+                          const floor = tour.floors?.find((f: any) => f.id === scene.floorId);
+                          return (
+                            <DialogClose asChild key={scene.id}>
+                              <button onClick={() => { setActiveSceneId(scene.id); closeAllPanels(); }} className={cn("w-full flex items-center gap-4 p-3 rounded-2xl transition-all group border", activeSceneId === scene.id ? 'bg-primary/20 text-primary border-primary/40' : 'hover:bg-white/10 text-white/70 hover:text-white border-transparent')}>
+                                <div className="relative w-20 md:w-24 h-14 md:h-16 rounded-xl overflow-hidden flex-shrink-0">
+                                  <img src={scene.imageUrl} className="w-full h-full object-cover" alt={scene.name} />
+                                  {activeSceneId === scene.id && <div className="absolute inset-0 bg-primary/40 flex items-center justify-center"><Check className="w-6 h-6 text-white" /></div>}
+                                </div>
+                                <div className="flex flex-col flex-1 min-w-0 text-left">
+                                  <span className="text-xs md:text-sm font-semibold truncate">{scene.name}</span>
+                                  {floor && (
+                                    <span className="text-[10px] text-white/40 flex items-center gap-1 mt-0.5">
+                                      <Layers className="w-2.5 h-2.5" /> {floor.name}
+                                    </span>
+                                  )}
+                                </div>
+                              </button>
+                            </DialogClose>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                </DialogContent>
+              </Dialog>
+            )}
 
-           {(tour.showFloorPlan && tour.floors?.length > 0) && (
-             <>
-               <div className="h-4 w-px bg-white/20 mx-1 md:mx-2 flex-shrink-0" />
-               <Button variant="ghost" onClick={() => { setShowFloorPlan(!showFloorPlan); setIsDetailsExpanded(false); setSelectedAnnotationId(null); }} className={cn("flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-9 px-3 md:px-4 flex-shrink-0", showFloorPlan && 'text-primary bg-primary/10')}><Map className="w-4 h-4" /><span className="text-[10px] md:text-sm font-medium whitespace-nowrap">Plano</span></Button>
-             </>
-           )}
+            {(tour.showFloorPlan && tour.floors?.length > 0) && (
+              <>
+                {!tour.hideSceneSelector && <div className="h-4 w-px bg-white/20 mx-1 md:mx-2 flex-shrink-0" />}
+                <Button variant="ghost" onClick={() => { setShowFloorPlan(!showFloorPlan); setIsDetailsExpanded(false); setSelectedAnnotationId(null); }} className={cn("flex items-center gap-2 text-white hover:bg-white/10 hover:text-white rounded-full h-9 px-3 md:px-4 flex-shrink-0", showFloorPlan && 'text-primary bg-primary/10')}><Map className="w-4 h-4" /><span className="text-[10px] md:text-sm font-medium whitespace-nowrap">Plano</span></Button>
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {(showFloorPlan && tour.showFloorPlan && tour.floors?.length > 0) && (
         <div 
@@ -690,13 +706,15 @@ export default function PublicTourViewer() {
 
       <div className="absolute bottom-1 right-4 md:right-8 z-20 pointer-events-none flex flex-col md:flex-row items-end md:items-center gap-2 md:gap-3">
         <VersionIndicator />
-        <Link href="/" className="pointer-events-auto">
-          <span 
-            className="text-neutral-700 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors underline decoration-neutral-700/30"
-          >
-            Potenciado por Vistar
-          </span>
-        </Link>
+        {!tour.hidePoweredBy && (
+          <Link href="/" className="pointer-events-auto">
+            <span 
+              className="text-neutral-700 text-[8px] md:text-[10px] font-bold tracking-widest uppercase hover:text-primary transition-colors underline decoration-neutral-700/30"
+            >
+              Potenciado por Vistar
+            </span>
+          </Link>
+        )}
       </div>
 
       <div className="absolute bottom-1.5 left-4 md:left-8 z-20 pointer-events-none">

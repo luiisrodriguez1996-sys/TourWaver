@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -43,7 +44,8 @@ import {
   Lock,
   Eye,
   EyeOff,
-  AlertTriangle
+  AlertTriangle,
+  EyeClosed
 } from 'lucide-react';
 import {
   Select,
@@ -111,7 +113,10 @@ export default function TourEditor() {
     googleMapsUrl: '',
     contactPhone: '',
     contactEmail: '',
-    contactWhatsApp: ''
+    contactWhatsApp: '',
+    hidePoweredBy: false,
+    hideSceneSelector: false,
+    hideTourHeader: false
   });
 
   const [localScenes, setLocalScenes] = useState<Scene[]>([]);
@@ -141,7 +146,10 @@ export default function TourEditor() {
         googleMapsUrl: tour.googleMapsUrl || '',
         contactPhone: tour.contactPhone || '',
         contactEmail: tour.contactEmail || '',
-        contactWhatsApp: tour.contactWhatsApp || ''
+        contactWhatsApp: tour.contactWhatsApp || '',
+        hidePoweredBy: !!tour.hidePoweredBy,
+        hideSceneSelector: !!tour.hideSceneSelector,
+        hideTourHeader: !!tour.hideTourHeader
       });
     }
   }, [tour]);
@@ -952,13 +960,51 @@ export default function TourEditor() {
               <Separator className="my-4" />
 
               <div className="space-y-4">
-                <h3 className="font-bold flex items-center gap-2"><Briefcase className="w-5 h-5 text-primary" /> Opciones de Portafolio</h3>
-                <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
-                  <div>
-                    <p className="text-sm font-bold">Mostrar en Portafolio</p>
-                    <p className="text-[10px] text-muted-foreground">Hace que esta propiedad aparezca destacada en la página de inicio pública.</p>
+                <h3 className="font-bold flex items-center gap-2"><LayoutGrid className="w-5 h-5 text-primary" /> Opciones de Interfaz</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
+                    <div className="flex items-center gap-3">
+                      <EyeClosed className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs font-bold">Ocultar Cabecera Informativa</p>
+                        <p className="text-[9px] text-muted-foreground">Oculta el nombre y descripción del tour arriba a la izquierda.</p>
+                      </div>
+                    </div>
+                    <Switch checked={localTourInfo.hideTourHeader} onCheckedChange={checked => { setLocalTourInfo({...localTourInfo, hideTourHeader: checked}); setHasUnsavedChanges(true); }} />
                   </div>
-                  <Switch checked={localTourInfo.showInPortfolio} onCheckedChange={checked => { setLocalTourInfo({...localTourInfo, showInPortfolio: checked}); setHasUnsavedChanges(true); }} />
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
+                    <div className="flex items-center gap-3">
+                      <LayoutGrid className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs font-bold">Ocultar Selector de Estancias</p>
+                        <p className="text-[9px] text-muted-foreground">Oculta el botón inferior para abrir la lista de habitaciones.</p>
+                      </div>
+                    </div>
+                    <Switch checked={localTourInfo.hideSceneSelector} onCheckedChange={checked => { setLocalTourInfo({...localTourInfo, hideSceneSelector: checked}); setHasUnsavedChanges(true); }} />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
+                    <div className="flex items-center gap-3">
+                      <Shield className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs font-bold">Ocultar "Potenciado por Vistar"</p>
+                        <p className="text-[9px] text-muted-foreground">Elimina los créditos de la plataforma en la esquina inferior derecha.</p>
+                      </div>
+                    </div>
+                    <Switch checked={localTourInfo.hidePoweredBy} onCheckedChange={checked => { setLocalTourInfo({...localTourInfo, hidePoweredBy: checked}); setHasUnsavedChanges(true); }} />
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 bg-muted/30 rounded-2xl border border-border">
+                    <div className="flex items-center gap-3">
+                      <Briefcase className="w-4 h-4 text-muted-foreground" />
+                      <div>
+                        <p className="text-xs font-bold">Mostrar en Portafolio</p>
+                        <p className="text-[9px] text-muted-foreground">Destaca esta propiedad en la página de inicio pública.</p>
+                      </div>
+                    </div>
+                    <Switch checked={localTourInfo.showInPortfolio} onCheckedChange={checked => { setLocalTourInfo({...localTourInfo, showInPortfolio: checked}); setHasUnsavedChanges(true); }} />
+                  </div>
                 </div>
               </div>
             </CardContent>

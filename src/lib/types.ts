@@ -20,6 +20,9 @@ export interface Tour {
   createdAt: number;
   updatedAt: number;
   sceneIds?: string[];
+  hidePoweredBy?: boolean;
+  hideSceneSelector?: boolean;
+  hideTourHeader?: boolean;
 }
 
 export interface SiteConfiguration {
